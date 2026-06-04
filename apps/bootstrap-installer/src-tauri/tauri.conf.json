@@ -34,13 +34,14 @@
     "active": true,
     "category": "DeveloperTool",
     "shortDescription": "Hermes Setup",
-    "longDescription": "Installs Hermes Agent on your machine. Drives scripts/install.ps1 (Windows) and scripts/install.sh (macOS/Linux).",
+    "longDescription": "Installs Jolly LLB on your machine. Drives scripts/install.ps1 (Windows) and scripts/install.sh (macOS/Linux).",
     "publisher": "Nous Research",
     "copyright": "Copyright © 2026 Nous Research",
     "targets": [
       "app",
       "dmg",
-      "appimage"
+      "appimage",
+      "nsis"
     ],
     "icon": [
       "icons/32x32.png",

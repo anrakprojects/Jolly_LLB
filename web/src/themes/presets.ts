@@ -40,18 +40,37 @@ const DEFAULT_LAYOUT: ThemeLayout = {
 
 export const defaultTheme: DashboardTheme = {
   name: "default",
-  label: "Hermes Teal",
-  description: "Classic dark teal — the canonical Hermes look",
+  label: "Pure White",
+  description: "Clean pure-white canvas — the canonical Anrak Legal look",
   palette: {
-    background: { hex: "#041c1c", alpha: 1 },
-    midground: { hex: "#ffe6cb", alpha: 1 },
+    // Pure-white canvas with near-black text/accent. The DS cascade in
+    // index.css derives every shadcn token (card, border, muted, …) from
+    // this triplet, so a white background + dark midground yields a fully
+    // light theme without per-token overrides.
+    background: { hex: "#ffffff", alpha: 1 },
+    midground: { hex: "#171717", alpha: 1 },
     foreground: { hex: "#ffffff", alpha: 0 },
-    warmGlow: "rgba(255, 189, 56, 0.35)",
-    noiseOpacity: 1,
+    // Warm glow is composited with `lighten` over white, so it's a no-op
+    // here; kept transparent for clarity.
+    warmGlow: "rgba(0, 0, 0, 0)",
+    // No grain — a clean, flat white surface.
+    noiseOpacity: 0,
   },
   typography: DEFAULT_TYPOGRAPHY,
   layout: DEFAULT_LAYOUT,
-  terminalBackground: "#000000",
+  // Chat pane matches the white canvas; ChatPage derives a readable
+  // (dark) foreground from this automatically.
+  terminalBackground: "#ffffff",
+  // Kill the faint inverted filler texture so the canvas is truly white.
+  componentStyles: {
+    backdrop: { fillerOpacity: "0" },
+  },
+  // The DS status colors (#4ade80 / #ffbd38) are tuned for dark canvases
+  // and wash out on white — pin readable variants for the light theme.
+  colorOverrides: {
+    success: "#16a34a",
+    warning: "#b45309",
+  },
 };
 
 export const midnightTheme: DashboardTheme = {
@@ -191,8 +210,8 @@ export const roseTheme: DashboardTheme = {
  */
 export const defaultLargeTheme: DashboardTheme = {
   name: "default-large",
-  label: "Hermes Teal (Large)",
-  description: "Hermes Teal with bigger fonts and roomier spacing",
+  label: "Pure White (Large)",
+  description: "Pure White with bigger fonts and roomier spacing",
   palette: defaultTheme.palette,
   typography: {
     ...DEFAULT_TYPOGRAPHY,
@@ -203,6 +222,9 @@ export const defaultLargeTheme: DashboardTheme = {
     ...DEFAULT_LAYOUT,
     density: "spacious",
   },
+  terminalBackground: defaultTheme.terminalBackground,
+  componentStyles: defaultTheme.componentStyles,
+  colorOverrides: defaultTheme.colorOverrides,
 };
 
 export const BUILTIN_THEMES: Record<string, DashboardTheme> = {

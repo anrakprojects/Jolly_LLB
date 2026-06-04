@@ -82,41 +82,12 @@ function CompactBanner({ cols, t }: { cols: number; t: Theme }) {
   )
 }
 
-export function Banner({ maxWidth, t }: { maxWidth?: number; t: Theme }) {
-  const term = useStdout().stdout?.columns ?? 80
-  const cols = Math.max(1, Math.min(term, maxWidth ?? term))
-
-  if (cols < HIDE_BELOW) {
-    return null
-  }
-
-  const logoLines = logo(t.color, t.bannerLogo || undefined)
-  const logoW = t.bannerLogo ? artWidth(logoLines) : LOGO_WIDTH
-
-  if (cols >= logoW + 2) {
-    return (
-      <Box flexDirection="column" marginBottom={1}>
-        <ArtLines lines={logoLines} />
-        <Text color={t.color.muted} wrap="truncate-end">
-          {t.brand.icon} {TAG_FULL}
-        </Text>
-      </Box>
-    )
-  }
-
-  if (cols >= COMPACT_FROM) {
-    return <CompactBanner cols={cols} t={t} />
-  }
-
-  const name = cols >= 52 ? t.brand.name : (t.brand.name.split(' ')[0] ?? t.brand.name)
-  const tag = cols >= 64 ? TAG_FULL : cols >= 46 ? TAG_MID : TAG_TINY
-
-  return (
-    <Box flexDirection="column" marginBottom={1}>
-      <Text bold color={t.color.primary} wrap="truncate-end">{t.brand.icon} {name}</Text>
-      <Text color={t.color.muted} wrap="truncate-end">{t.brand.icon} {tag}</Text>
-    </Box>
-  )
+// The big ASCII wordmark + tagline splash was removed to keep the chat
+// interface simple/unbranded. Kept as a no-op so callers and tests still
+// resolve the export; CompactBanner / the TAG_* constants stay available for
+// any future minimal-header use.
+export function Banner(_props: { maxWidth?: number; t: Theme }) {
+  return null
 }
 
 // ── Collapsible helpers ──────────────────────────────────────────────
@@ -286,7 +257,6 @@ export function SessionPanel({ info, maxWidth, sid, t }: SessionPanelProps) {
 
           <Text color={t.color.accent}>
             {info.model.split('/').pop()}
-            <Text color={t.color.muted}> · Nous Research</Text>
           </Text>
 
           <Text color={t.color.muted} wrap="truncate-end">
@@ -317,7 +287,6 @@ export function SessionPanel({ info, maxWidth, sid, t }: SessionPanelProps) {
           <Box flexDirection="column" marginBottom={1}>
             <Text color={t.color.accent} wrap="truncate-end">
               {info.model.split('/').pop()}
-              <Text color={t.color.muted}> · Nous Research</Text>
             </Text>
             <Text color={t.color.muted} wrap="truncate-end">
               {info.cwd || process.cwd()}

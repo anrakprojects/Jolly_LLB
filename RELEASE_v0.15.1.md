@@ -1,4 +1,4 @@
-# Hermes Agent v0.15.1 (v2026.5.29)
+# Jolly LLB v0.15.1 (v2026.5.29)
 
 **Release Date:** May 29, 2026
 **Since v0.15.0:** 28 commits · 21 merged PRs · hotfix release · 9 contributors

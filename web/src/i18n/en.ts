@@ -50,12 +50,12 @@ export const en: Translations = {
   },
 
   app: {
-    brand: "Hermes Agent",
-    brandShort: "HA",
+    brand: "Jolly LLB",
+    brandShort: "AL",
     closeNavigation: "Close navigation",
     closeModelTools: "Close model and tools",
     footer: {
-      org: "Nous Research",
+      org: "Anrak.legal",
     },
     activeSessionsLabel: "Active Sessions:",
     gatewayStatusLabel: "Gateway Status:",
@@ -65,12 +65,14 @@ export const en: Translations = {
       running: "Running",
       starting: "Starting",
       stopped: "Stopped",
+      turnOff: "Turn off",
+      turnOn: "Turn on",
     },
     nav: {
       analytics: "Analytics",
       chat: "Chat",
       config: "Config",
-      cron: "Cron",
+      cron: "Automate",
       documentation: "Documentation",
       keys: "Keys",
       logs: "Logs",
@@ -534,7 +536,7 @@ export const en: Translations = {
         "Share on X opens a pre-filled post in a new tab. Click Copy image first if you want the 1200×630 badge attached — X lets you paste it right into the tweet composer. Download PNG saves the file for use anywhere.",
       clipboard_unsupported:
         "Clipboard image copy not supported in this browser — use Download instead.",
-      tweet_text: "Just unlocked {tier_part}\"{name}\" in Hermes Agent ☤",
+      tweet_text: "Just unlocked {tier_part}\"{name}\" in Anrak Legal ☤",
     },
   },
 

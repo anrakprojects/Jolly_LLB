@@ -349,6 +349,35 @@ def test_start_noops_when_gateway_already_running(monkeypatch, capsys):
     assert "27128" in out
 
 
+def test_start_direct_spawns_when_noninteractive_and_no_service(monkeypatch, capsys):
+    """The dashboard 'Turn on' button spawns ``hermes gateway start`` detached
+    with ``stdin=DEVNULL`` + ``HERMES_NONINTERACTIVE=1``. With no service
+    installed it must direct-spawn the gateway rather than reach the interactive
+    install prompt — ``input()`` there would hit EOF and abort before anything
+    starts.
+    """
+    calls = []
+    monkeypatch.setattr(gateway_windows, "_assert_windows", lambda: None)
+    monkeypatch.setattr(gateway_windows, "_gateway_pids", lambda: [])
+    monkeypatch.setattr(gateway_windows, "is_task_registered", lambda: False)
+    monkeypatch.setattr(gateway_windows, "is_startup_entry_installed", lambda: False)
+    monkeypatch.setattr(gateway_windows, "_spawn_detached", lambda path=None: calls.append(("spawn", path)) or 12345)
+    monkeypatch.setattr(gateway_windows, "_report_gateway_start", lambda via: calls.append(("report_start", via)))
+    monkeypatch.setenv("HERMES_NONINTERACTIVE", "1")
+
+    def _no_prompt(*args, **kwargs):
+        calls.append(("prompt", args))
+        raise AssertionError("prompt_yes_no must not run in a non-interactive start")
+
+    monkeypatch.setattr(setup, "prompt_yes_no", _no_prompt)
+
+    gateway_windows.start()
+
+    assert ("spawn", None) in calls
+    assert not any(c[0] == "prompt" for c in calls)
+    assert any(c[0] == "report_start" for c in calls)
+
+
 def test_install_startup_fallback_does_not_spawn_when_gateway_already_running(monkeypatch, tmp_path, capsys):
     """Repeated Windows fallback installs should not spawn duplicate gateways."""
     script_path, calls = _arrange_startup_fallback(monkeypatch, tmp_path, [24476])

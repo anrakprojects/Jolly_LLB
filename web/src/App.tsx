@@ -19,7 +19,6 @@ import {
 import {
   Activity,
   BarChart3,
-  BookOpen,
   Clock,
   Code,
   Cpu,
@@ -52,9 +51,11 @@ import {
   Zap,
 } from "lucide-react";
 import { Button } from "@nous-research/ui/ui/components/button";
+import { Typography } from "@nous-research/ui/ui/components/typography/index";
+import { Toast } from "@nous-research/ui/ui/components/toast";
+import { useToast } from "@nous-research/ui/hooks/use-toast";
 import { SelectionSwitcher } from "@nous-research/ui/ui/components/selection-switcher";
 import { Spinner } from "@nous-research/ui/ui/components/spinner";
-import { Typography } from "@nous-research/ui/ui/components/typography/index";
 import { cn } from "@/lib/utils";
 import { Backdrop } from "@/components/Backdrop";
 import { SidebarFooter } from "@/components/SidebarFooter";
@@ -109,7 +110,7 @@ const CHAT_NAV_ITEM: NavItem = {
   path: "/chat",
   labelKey: "chat",
   label: "Chat",
-  icon: Terminal,
+  icon: MessageSquare,
 };
 
 /**
@@ -162,14 +163,7 @@ const BUILTIN_NAV_REST: NavItem[] = [
     label: "Analytics",
     icon: BarChart3,
   },
-  {
-    path: "/models",
-    labelKey: "models",
-    label: "Models",
-    icon: Cpu,
-  },
-  { path: "/logs", labelKey: "logs", label: "Logs", icon: FileText },
-  { path: "/cron", labelKey: "cron", label: "Cron", icon: Clock },
+  { path: "/cron", label: "Automate", icon: Clock },
   { path: "/skills", labelKey: "skills", label: "Skills", icon: Package },
   { path: "/plugins", labelKey: "plugins", label: "Plugins", icon: Puzzle },
   { path: "/mcp", label: "MCP", icon: Plug },
@@ -180,12 +174,6 @@ const BUILTIN_NAV_REST: NavItem[] = [
   { path: "/config", labelKey: "config", label: "Config", icon: Settings },
   { path: "/env", labelKey: "keys", label: "Keys", icon: KeyRound },
   { path: "/system", label: "System", icon: Wrench },
-  {
-    path: "/docs",
-    labelKey: "documentation",
-    label: "Documentation",
-    icon: BookOpen,
-  },
 ];
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
@@ -338,6 +326,7 @@ export default function App() {
   const { pathname } = useLocation();
   const { manifests, loading: pluginsLoading } = usePlugins();
   const { theme } = useTheme();
+  const { toast, showToast } = useToast();
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -360,7 +349,8 @@ export default function App() {
   const isMobile = useBelowBreakpoint(1024);
   const isDesktopCollapsed = collapsed && !isMobile;
   const tooltipWarmRef = useRef(0);
-  const sidebarStatus = useSidebarStatus();
+  const { status: sidebarStatus, refresh: refreshSidebarStatus } =
+    useSidebarStatus();
   const isDocsRoute = pathname === "/docs" || pathname === "/docs/";
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
   const isChatRoute = normalizedPath === "/chat";
@@ -413,14 +403,24 @@ export default function App() {
     [embeddedChat],
   );
 
+  // Clicking "Chat" opens a fresh chat in the native desktop app rather than
+  // the embedded terminal. launchDesktop() with no session id starts a new chat.
+  const handleOpenDesktopChat = useCallback(() => {
+    showToast("Opening a new chat in the desktop app…", "success");
+    void api
+      .launchDesktop()
+      .catch((e) =>
+        showToast(`Couldn't open the desktop app: ${e}`, "error"),
+      );
+  }, [showToast]);
+
   const builtinNav = useMemo(() => {
-    const base = embeddedChat
-      ? [CHAT_NAV_ITEM, ...BUILTIN_NAV_REST]
-      : BUILTIN_NAV_REST;
+    const chatItem: NavItem = { ...CHAT_NAV_ITEM, onSelect: handleOpenDesktopChat };
+    const base = [chatItem, ...BUILTIN_NAV_REST];
     return showTokenAnalytics
       ? base
       : base.filter((n) => n.path !== "/analytics");
-  }, [embeddedChat, showTokenAnalytics]);
+  }, [handleOpenDesktopChat, showTokenAnalytics]);
 
   const sidebarNav = useMemo(
     () => partitionSidebarNav(builtinNav, manifests),
@@ -472,6 +472,7 @@ export default function App() {
       className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-black text-text-primary antialiased"
     >
       <SelectionSwitcher />
+      <Toast toast={toast} />
       <Backdrop />
       <PluginSlot name="backdrop" />
 
@@ -562,9 +563,9 @@ export default function App() {
                   className="font-bold text-[1.125rem] leading-[0.95] tracking-[0.0525rem] text-midground uppercase"
                   style={{ mixBlendMode: "plus-lighter" }}
                 >
-                  Hermes
+                  Jolly
                   <br />
-                  Agent
+                  LLB
                 </Typography>
               </div>
 
@@ -648,6 +649,7 @@ export default function App() {
             <SidebarSystemActions
               collapsed={isDesktopCollapsed}
               onNavigate={closeMobile}
+              onRefresh={refreshSidebarStatus}
               status={sidebarStatus}
               tooltipWarmRef={tooltipWarmRef}
             />
@@ -778,7 +780,7 @@ function SidebarNavLink({
   tooltipWarmRef,
   t,
 }: SidebarNavLinkProps) {
-  const { path, label, labelKey, icon: Icon } = item;
+  const { path, label, labelKey, icon: Icon, onSelect } = item;
   const liRef = useRef<HTMLLIElement>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -786,37 +788,82 @@ function SidebarNavLink({
     ? ((t.app.nav as Record<string, string>)[labelKey] ?? label)
     : label;
 
+  const navClass = (isActive: boolean) =>
+    cn(
+      "group/nav relative flex w-full items-center gap-3",
+      "px-5 py-2.5",
+      "font-mondwest text-display uppercase text-sm tracking-[0.12em]",
+      "whitespace-nowrap transition-colors cursor-pointer text-left",
+      "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-midground",
+      isActive
+        ? "text-midground"
+        : "text-text-secondary hover:text-midground",
+    );
+
+  const navInner = (isActive: boolean) => (
+    <>
+      <Icon className="h-3.5 w-3.5 shrink-0" />
+
+      <span
+        className={cn(
+          "truncate transition-opacity duration-300",
+          collapsed ? "lg:opacity-0" : "lg:opacity-100",
+        )}
+      >
+        {navLabel}
+      </span>
+
+      <span
+        aria-hidden
+        className="absolute inset-y-0.5 left-1.5 right-1.5 bg-midground opacity-0 pointer-events-none transition-opacity duration-200 group-hover/nav:opacity-5"
+      />
+
+      {isActive && (
+        <span
+          aria-hidden
+          className="absolute left-0 top-0 bottom-0 w-px bg-midground"
+          style={{ mixBlendMode: "plus-lighter" }}
+        />
+      )}
+    </>
+  );
+
   return (
     <li
       ref={liRef}
       onMouseEnter={collapsed ? () => setHovered(true) : undefined}
       onMouseLeave={collapsed ? () => setHovered(false) : undefined}
     >
-      <NavLink
-        to={path}
-        end={path === "/sessions"}
-        onClick={closeMobile}
-        aria-label={collapsed ? navLabel : undefined}
-        onFocus={collapsed ? () => setHovered(true) : undefined}
-        onBlur={collapsed ? () => setHovered(false) : undefined}
-        className={({ isActive }) =>
-          cn(
-            "group/nav relative flex items-center gap-3",
-            "px-5 py-2.5",
-            "font-mondwest text-display uppercase text-sm tracking-[0.12em]",
-            "whitespace-nowrap transition-colors cursor-pointer",
-            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-midground",
-            isActive
-              ? "text-midground"
-              : "text-text-secondary hover:text-midground",
-          )
-        }
-        style={{
-          clipPath: "var(--component-tab-clip-path)",
-        }}
-      >
-        {({ isActive }) => (
-          <>
+      {onSelect ? (
+        <button
+          type="button"
+          onClick={() => {
+            onSelect();
+            closeMobile();
+          }}
+          aria-label={collapsed ? navLabel : undefined}
+          onFocus={collapsed ? () => setHovered(true) : undefined}
+          onBlur={collapsed ? () => setHovered(false) : undefined}
+          className={navClass(false)}
+          style={{ clipPath: "var(--component-tab-clip-path)" }}
+        >
+          {navInner(false)}
+        </button>
+      ) : (
+        <NavLink
+          to={path}
+          end={path === "/sessions"}
+          onClick={closeMobile}
+          aria-label={collapsed ? navLabel : undefined}
+          onFocus={collapsed ? () => setHovered(true) : undefined}
+          onBlur={collapsed ? () => setHovered(false) : undefined}
+          className={({ isActive }) => navClass(isActive)}
+          style={{
+            clipPath: "var(--component-tab-clip-path)",
+          }}
+        >
+          {({ isActive }) => (
+            <>
             <Icon className="h-3.5 w-3.5 shrink-0" />
 
             <span
@@ -842,7 +889,8 @@ function SidebarNavLink({
             )}
           </>
         )}
-      </NavLink>
+        </NavLink>
+      )}
 
       {collapsed && hovered && liRef.current && (
         <SidebarTooltip anchor={liRef.current} label={navLabel} warmRef={tooltipWarmRef} />
@@ -854,6 +902,7 @@ function SidebarNavLink({
 function SidebarSystemActions({
   collapsed,
   onNavigate,
+  onRefresh,
   status,
   tooltipWarmRef,
 }: SidebarSystemActionsProps) {
@@ -905,7 +954,7 @@ function SidebarSystemActions({
       </span>
 
       <div className={cn(collapsed && "lg:hidden")}>
-        <SidebarStatusStrip status={status} />
+        <SidebarStatusStrip onRefresh={onRefresh} status={status} />
       </div>
 
       <GatewayDot collapsed={collapsed} status={status} tooltipWarmRef={tooltipWarmRef} />
@@ -1145,6 +1194,9 @@ interface NavItem {
   label: string;
   labelKey?: string;
   path: string;
+  /** When set, the sidebar renders a button that runs this instead of
+   *  navigating to `path` (e.g. "Chat" launches the desktop app). */
+  onSelect?: () => void;
 }
 
 interface SidebarIconWithTooltipProps {
@@ -1165,6 +1217,7 @@ interface SidebarNavLinkProps {
 interface SidebarSystemActionsProps {
   collapsed: boolean;
   onNavigate: () => void;
+  onRefresh: () => void;
   status: StatusResponse | null;
   tooltipWarmRef: TooltipWarmRef;
 }

@@ -1,8 +1,8 @@
-# Hermes Agent v0.2.0 (v2026.3.12)
+# Jolly LLB v0.2.0 (v2026.3.12)
 
 **Release Date:** March 12, 2026
 
-> First tagged release since v0.1.0 (the initial pre-public foundation). In just over two weeks, Hermes Agent went from a small internal project to a full-featured AI agent platform — thanks to an explosion of community contributions. This release covers **216 merged pull requests** from **63 contributors**, resolving **119 issues**.
+> First tagged release since v0.1.0 (the initial pre-public foundation). In just over two weeks, Jolly LLB went from a small internal project to a full-featured AI agent platform — thanks to an explosion of community contributions. This release covers **216 merged pull requests** from **63 contributors**, resolving **119 issues**.
 
 ---
 
@@ -354,7 +354,7 @@
 
 ## 👥 Contributors
 
-Thank you to the 63 contributors who made this release possible! In just over two weeks, the Hermes Agent community came together to ship an extraordinary amount of work.
+Thank you to the 63 contributors who made this release possible! In just over two weeks, the Jolly LLB community came together to ship an extraordinary amount of work.
 
 ### Core
 - **@teknium1** — 43 PRs: Project lead, core architecture, provider router, sessions, skills, CLI, documentation

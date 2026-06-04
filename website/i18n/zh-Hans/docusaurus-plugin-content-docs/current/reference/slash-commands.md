@@ -225,7 +225,7 @@ hermes config set model.aliases.grok x-ai/grok-4
 | `/commands [page]` | 浏览所有命令和 skill（分页）。 |
 | `/approve [session\|always]` | 审批并执行待处理的危险命令。`session` 仅为本次会话审批；`always` 添加到永久白名单。 |
 | `/deny` | 拒绝待处理的危险命令。 |
-| `/update` | 将 Hermes Agent 更新到最新版本。 |
+| `/update` | 将 Jolly LLB 更新到最新版本。 |
 | `/restart` | 在排空活动运行后优雅重启 gateway。gateway 重新上线后，会向请求者的聊天/线程发送确认消息。 |
 | `/debug` | 上传调试报告（系统信息 + 日志）并获取可分享链接。 |
 | `/help` | 显示消息平台帮助。 |

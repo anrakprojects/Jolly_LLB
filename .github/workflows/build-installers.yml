@@ -1,0 +1,109 @@
+name: Build Installers
+
+# Builds the "Hermes Setup" one-click installer for all three desktop OSes:
+#   - Windows  → NSIS  (.exe)   apps/.../bundle/nsis/*.exe
+#   - macOS    → DMG   (.dmg)   apps/.../bundle/dmg/*.dmg
+#   - Linux    → AppImage       apps/.../bundle/appimage/*.AppImage
+#
+# Each installer is a small native GUI (Tauri) that downloads and runs the
+# pinned scripts/install.{ps1,sh} for its platform — the same scripts behind
+# the README one-liners — so a user just double-clicks to install.
+#
+# This is the cross-platform counterpart to build-windows-installer.yml, which
+# additionally signs + publishes the official Windows build. This workflow
+# produces UNSIGNED artifacts for every platform (no org secrets required), so
+# forks and PR validation can build the installers too. Download the artifacts
+# from the run summary.
+
+on:
+  workflow_dispatch:
+    inputs:
+      pin_ref:
+        description: >-
+          Git ref the installer bakes in and fetches install scripts from at
+          install time (branch name or 40-char commit SHA). Defaults to the
+          branch this workflow runs on.
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    strategy:
+      # Don't cancel the other OSes if one fails — we still want the artifacts
+      # that did build.
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            label: Windows (.exe)
+            artifact: Hermes-Setup-windows
+            bundle_glob: apps/bootstrap-installer/src-tauri/target/release/bundle/nsis/*.exe
+          - os: macos-latest
+            label: macOS (.dmg)
+            artifact: Hermes-Setup-macos
+            bundle_glob: apps/bootstrap-installer/src-tauri/target/release/bundle/dmg/*.dmg
+          - os: ubuntu-latest
+            label: Linux (.AppImage)
+            artifact: Hermes-Setup-linux
+            bundle_glob: apps/bootstrap-installer/src-tauri/target/release/bundle/appimage/*.AppImage
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      # Tauri's Linux bundler (webkit2gtk + AppImage tooling) needs these
+      # system libraries; macOS and Windows ship everything in the SDK/WebView2.
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            file \
+            build-essential \
+            curl \
+            wget \
+            libssl-dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8  # stable
+
+      - name: Cache Rust targets
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32  # v2
+        with:
+          workspaces: apps/bootstrap-installer/src-tauri
+
+      - name: Build installer
+        run: npm run tauri:build
+        working-directory: apps/bootstrap-installer
+        env:
+          # Bake the install-script pin. An explicit pin_ref input wins;
+          # otherwise follow this workflow's branch HEAD (build.rs default).
+          HERMES_BUILD_PIN_BRANCH: ${{ github.ref_name }}
+          HERMES_BUILD_PIN_COMMIT: ${{ inputs.pin_ref }}
+
+      - name: Upload installer
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.bundle_glob }}
+          if-no-files-found: error

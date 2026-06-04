@@ -89,7 +89,7 @@ Z={QUERY}
 
 ---
 
-## Using with Hermes Agent
+## Using with Jolly LLB
 
 ### As ephemeral system prompt (config.yaml)
 

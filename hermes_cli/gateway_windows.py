@@ -49,7 +49,7 @@ _FALLBACK_PATTERNS = re.compile(
 _ACCESS_DENIED_PATTERN = re.compile(r"(access is denied|acceso denegado)", re.IGNORECASE)
 
 _TASK_NAME_DEFAULT = "Hermes_Gateway"
-_TASK_DESCRIPTION = "Hermes Agent Gateway - Messaging Platform Integration"
+_TASK_DESCRIPTION = "Jolly LLB Gateway - Messaging Platform Integration"
 
 
 # ---------------------------------------------------------------------------
@@ -976,6 +976,23 @@ def status(deep: bool = False) -> None:
         print("  hermes gateway install")
 
 
+def _start_is_noninteractive() -> bool:
+    """True when no human can answer prompts (dashboard button / headless).
+
+    The dashboard's ``POST /api/gateway/start`` spawns ``hermes gateway start``
+    detached with ``stdin=DEVNULL`` and ``HERMES_NONINTERACTIVE=1``. In that
+    context ``input()`` raises ``EOFError`` and aborts before anything starts,
+    so we must take a prompt-free path instead of offering the interactive
+    Scheduled Task install.
+    """
+    if os.environ.get("HERMES_NONINTERACTIVE") == "1":
+        return True
+    try:
+        return not bool(sys.stdin and sys.stdin.isatty())
+    except Exception:
+        return True
+
+
 def start() -> None:
     """Start the gateway. Prefers /Run on the scheduled task if present."""
     _assert_windows()
@@ -988,6 +1005,16 @@ def start() -> None:
     startup_installed = is_startup_entry_installed()
 
     if not task_installed and not startup_installed:
+        # No service installed. Interactive callers get offered the install;
+        # non-interactive callers (the dashboard "Turn on" button, cron, any
+        # detached/headless spawn) can't answer the prompt, so just direct-
+        # spawn a detached gateway. Installing the Scheduled Task stays an
+        # opt-in, interactive step — the button only needs the process up.
+        if _start_is_noninteractive():
+            pid = _spawn_detached()
+            _report_gateway_start(f"direct spawn (PID {pid})")
+            return
+
         from hermes_cli.setup import prompt_yes_no
 
         print("✗ Gateway service is not installed")

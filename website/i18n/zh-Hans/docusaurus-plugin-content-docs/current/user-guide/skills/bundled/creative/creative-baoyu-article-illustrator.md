@@ -30,7 +30,7 @@ description: "文章插图：类型 × 风格 × 调色板一致性"
 
 # 文章配图助手
 
-改编自 [baoyu-article-illustrator](https://github.com/JimLiu/baoyu-skills)，适配 Hermes Agent 的工具生态系统。
+改编自 [baoyu-article-illustrator](https://github.com/JimLiu/baoyu-skills)，适配 Jolly LLB 的工具生态系统。
 
 分析文章，识别插图位置，以 **类型 × 风格 × 调色板** 一致性生成图像。
 

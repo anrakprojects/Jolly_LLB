@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "Updating & Uninstalling"
-description: "How to update Hermes Agent to the latest version or uninstall it"
+description: "How to update Jolly LLB to the latest version or uninstall it"
 ---
 
 # Updating & Uninstalling
@@ -105,7 +105,7 @@ Expected output looks like:
 
 ```
 $ hermes update
-Updating Hermes Agent...
+Updating Jolly LLB...
 📥 Pulling latest code...
 Already up to date.  (or: Updating abc1234..def5678)
 📦 Updating dependencies...
@@ -114,7 +114,7 @@ Already up to date.  (or: Updating abc1234..def5678)
 ✅ Config is up to date  (or: Found 2 new options — running migration...)
 🔄 Restarting gateways...
 ✅ Gateway restarted
-✅ Hermes Agent updated successfully!
+✅ Jolly LLB updated successfully!
 ```
 
 ### Recommended Post-Update Validation

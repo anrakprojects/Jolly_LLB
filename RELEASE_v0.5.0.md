@@ -1,4 +1,4 @@
-# Hermes Agent v0.5.0 (v2026.3.28)
+# Jolly LLB v0.5.0 (v2026.3.28)
 
 **Release Date:** March 28, 2026
 
@@ -8,7 +8,7 @@
 
 ## ✨ Highlights
 
-- **Nous Portal now supports 400+ models** — The Nous Research inference portal has expanded dramatically, giving Hermes Agent users access to over 400 models through a single provider endpoint
+- **Nous Portal now supports 400+ models** — The Nous Research inference portal has expanded dramatically, giving Jolly LLB users access to over 400 models through a single provider endpoint
 
 - **Hugging Face as a first-class inference provider** — Full integration with HF Inference API including curated agentic model picker that maps to OpenRouter analogues, live `/models` endpoint probe, and setup wizard flow ([#3419](https://github.com/NousResearch/hermes-agent/pull/3419), [#3440](https://github.com/NousResearch/hermes-agent/pull/3440))
 

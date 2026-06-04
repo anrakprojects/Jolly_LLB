@@ -81,6 +81,8 @@ export interface Translations {
       running: string;
       starting: string;
       stopped: string;
+      turnOff: string;
+      turnOn: string;
     };
     nav: {
       analytics: string;

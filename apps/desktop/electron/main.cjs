@@ -1694,7 +1694,7 @@ function resolveHermesBackend(dashboardArgs) {
   //    is a recoverable state the GUI can drive through.
   return {
     kind: 'bootstrap-needed',
-    label: 'Hermes Agent not installed yet; bootstrap required',
+    label: 'Jolly LLB not installed yet; bootstrap required',
     command: null,
     args: dashboardArgs,
     bootstrap: true,
@@ -3148,7 +3148,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 620,
-    title: 'Hermes',
+    title: 'Anrak Legal',
     // Frameless title bar on every platform so the renderer can paint the
     // "hide sidebar" button (and other left-side titlebar tools) flush with
     // the top edge — matching the macOS layout where the traffic lights sit
@@ -3206,15 +3206,37 @@ function createWindow() {
     openExternalUrl(url)
   })
 
+  // When launched from the dashboard ("Open in Desktop"), HERMES_DESKTOP_RESUME_SESSION
+  // carries the session id to continue. The renderer uses a HashRouter and
+  // auto-resumes the session named in the URL hash (#/<sessionId>), so we just
+  // append it to the initial URL — no extra IPC needed.
+  const resumeSessionId = (process.env.HERMES_DESKTOP_RESUME_SESSION || '').trim()
+  const resumeHash = resumeSessionId ? `#/${encodeURIComponent(resumeSessionId)}` : ''
+
   if (DEV_SERVER) {
-    mainWindow.loadURL(DEV_SERVER)
+    mainWindow.loadURL(DEV_SERVER + resumeHash)
   } else {
-    mainWindow.loadURL(pathToFileURL(resolveRendererIndex()).toString())
+    mainWindow.loadURL(pathToFileURL(resolveRendererIndex()).toString() + resumeHash)
   }
 
   mainWindow.webContents.once('did-finish-load', () => {
     broadcastBootProgress()
     sendWindowStateChanged()
+    // Bring the window to the front. When launched from the dashboard's
+    // background server process, Windows otherwise only flashes the taskbar
+    // instead of foregrounding the new window — making it look like nothing
+    // opened. A brief always-on-top toggle reliably pulls it forward.
+    try {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        if (mainWindow.isMinimized()) mainWindow.restore()
+        mainWindow.show()
+        mainWindow.setAlwaysOnTop(true)
+        mainWindow.focus()
+        mainWindow.setAlwaysOnTop(false)
+      }
+    } catch {
+      // best-effort focus; never block boot
+    }
     startHermes().catch(error => rememberLog(error.stack || error.message))
   })
 }

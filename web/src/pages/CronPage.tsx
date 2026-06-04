@@ -103,7 +103,7 @@ export default function CronPage() {
   const [loading, setLoading] = useState(true);
   const { toast, showToast } = useToast();
   const { t } = useI18n();
-  const { setEnd } = usePageHeader();
+  const { setEnd, setTitle } = usePageHeader();
 
   // New job modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -275,6 +275,14 @@ export default function CronPage() {
       [jobs, loadJobs, showToast, t.common.delete, t.status.error],
     ),
   });
+
+  // Override the page heading to "Automate" (the renamed Cron feature).
+  useLayoutEffect(() => {
+    setTitle("Automate");
+    return () => {
+      setTitle(null);
+    };
+  }, [setTitle]);
 
   // Put "Create" button in page header
   useLayoutEffect(() => {

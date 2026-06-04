@@ -30,7 +30,7 @@ description: "知识漫画：教育、传记、教程"
 
 # 知识漫画创作器
 
-改编自 [baoyu-comic](https://github.com/JimLiu/baoyu-skills)，适配 Hermes Agent 的工具生态系统。
+改编自 [baoyu-comic](https://github.com/JimLiu/baoyu-skills)，适配 Jolly LLB 的工具生态系统。
 
 创作具有灵活艺术风格 × 基调组合的原创知识漫画。
 

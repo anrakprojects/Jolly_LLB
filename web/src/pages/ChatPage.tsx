@@ -13,7 +13,8 @@
  *          ▼                                                              .
  *     FastAPI pty_ws  (hermes_cli/web_server.py)                          .
  *          ▼                                                              .
- *     POSIX PTY → `node ui-tui/dist/entry.js` → tui_gateway + AIAgent     .
+ *     PTY (ptyprocess on POSIX, ConPTY/pywinpty on Windows)               .
+ *       → `node ui-tui/dist/entry.js` → tui_gateway + AIAgent             .
  */
 
 import { FitAddon } from "@xterm/addon-fit";
@@ -63,18 +64,47 @@ function generateChannelId(): string {
   return `chat-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
 }
 
-// Colors for the terminal body.  Matches the dashboard's dark teal canvas
-// with cream foreground — we intentionally don't pick monokai or a loud
-// theme, because the TUI's skin engine already paints the content; the
-// terminal chrome just needs to sit quietly inside the dashboard.
-// `background` is omitted here — it's supplied dynamically from the active
-// theme's `terminalBackground` field so users can control it via YAML themes.
-const TERMINAL_THEME_STATIC = {
-  foreground: "#f0e6d2",
-  cursor: "#f0e6d2",
-  cursorAccent: "#0d2626",
-  selectionBackground: "#f0e6d244",
+// Colors for the chat body.  The TUI's skin engine paints most content via
+// ANSI escapes, so these only style the *default* (uncolored) glyphs, the
+// cursor, and selection — they just need to sit quietly inside the dashboard
+// and stay readable against the pane background.
+//
+// `background` comes from the active theme's `terminalBackground`; the
+// foreground/cursor/selection are derived from it so a light canvas (the
+// default Pure White theme) gets dark glyphs and a dark canvas gets light
+// ones, instead of a fixed cream that vanishes on white.
+type TerminalPalette = {
+  foreground: string;
+  cursor: string;
+  cursorAccent: string;
+  selectionBackground: string;
 };
+
+/** True when `hex` (`#rgb` / `#rrggbb`) is a light color. Non-hex values
+ *  (rare custom YAML themes) fall back to `false` so the prior light-on-dark
+ *  behavior is preserved. */
+function isLightHex(hex: string): boolean {
+  const m = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.exec(hex.trim());
+  if (!m) return false;
+  let h = m[1];
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  // Perceptual luminance (sRGB coefficients), 0–1.
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.6;
+}
+
+function buildTerminalPalette(bg: string): TerminalPalette {
+  const light = isLightHex(bg);
+  const fg = light ? "#1a1a1a" : "#f0e6d2";
+  return {
+    foreground: fg,
+    cursor: fg,
+    cursorAccent: bg,
+    selectionBackground: light ? "rgba(0, 0, 0, 0.12)" : "#f0e6d244",
+  };
+}
 
 /**
  * CSS width for xterm font tiers.
@@ -161,9 +191,13 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
 
   const { theme } = useTheme();
   const terminalBg = theme.terminalBackground ?? "#000000";
-  const terminalTheme = useMemo(
-    () => ({ ...TERMINAL_THEME_STATIC, background: terminalBg }),
+  const terminalPalette = useMemo(
+    () => buildTerminalPalette(terminalBg),
     [terminalBg],
+  );
+  const terminalTheme = useMemo(
+    () => ({ ...terminalPalette, background: terminalBg }),
+    [terminalPalette, terminalBg],
   );
 
   // The dashboard keeps ChatPage mounted persistently so the PTY survives tab
@@ -735,8 +769,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   useEffect(() => {
     const term = termRef.current;
     if (!term) return;
-    term.options.theme = { ...TERMINAL_THEME_STATIC, background: terminalBg };
-  }, [terminalBg]);
+    term.options.theme = { ...terminalPalette, background: terminalBg };
+  }, [terminalPalette, terminalBg]);
 
   // Layout:
   //   outer flex column — sits inside the dashboard's content area
@@ -842,11 +876,12 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
         <div
           className={cn(
             "relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg",
+            "border border-border",
             "p-2 sm:p-3",
           )}
           style={{
             backgroundColor: terminalBg,
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.08)",
           }}
         >
           <div
@@ -863,13 +898,13 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
               "absolute z-10",
               "normal-case tracking-normal font-normal",
               "rounded border border-current/30",
-              "bg-black/20 backdrop-blur-sm",
+              "bg-foreground/10 backdrop-blur-sm",
               "opacity-70 hover:opacity-100 hover:border-current/60",
               "transition-opacity duration-150",
               "bottom-2 right-2 px-2 py-1 text-xs sm:bottom-3 sm:right-3 sm:px-2.5 sm:py-1.5",
               "lg:bottom-4 lg:right-4",
             )}
-            style={{ color: TERMINAL_THEME_STATIC.foreground }}
+            style={{ color: terminalPalette.foreground }}
           >
             <span className="inline-flex items-center gap-1.5">
               <Copy className="h-3 w-3 shrink-0" />

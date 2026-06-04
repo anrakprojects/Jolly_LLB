@@ -17,7 +17,7 @@ Linear：通过 GraphQL + curl 管理 issues、项目和团队。
 | 来源 | 内置（默认安装） |
 | 路径 | `skills/productivity/linear` |
 | 版本 | `1.0.0` |
-| 作者 | Hermes Agent |
+| 作者 | Jolly LLB |
 | 许可证 | MIT |
 | 平台 | linux, macos, windows |
 | 标签 | `Linear`, `Project Management`, `Issues`, `GraphQL`, `API`, `Productivity` |

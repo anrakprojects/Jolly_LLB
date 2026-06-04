@@ -21,7 +21,7 @@
             combined = pkgs.lib.concatStringsSep "\n" (builtins.filter (h: h != "") hooks);
           in
           ''
-            echo "Hermes Agent dev shell"
+            echo "Jolly LLB dev shell"
             ${combined}
             echo "Ready. Run 'hermes' to start."
           '';

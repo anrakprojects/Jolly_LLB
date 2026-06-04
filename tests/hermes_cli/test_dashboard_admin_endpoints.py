@@ -388,6 +388,59 @@ class TestWebhookToggleEndpoint:
 
 
 
+class TestGatewayLifecycleEndpoints:
+    """The dashboard's gateway power toggle drives /api/gateway/{start,stop},
+    which spawn the real ``hermes gateway`` verbs. We mock the spawn so the
+    test asserts the request contract + CLI verb parity without launching a
+    gateway process."""
+
+    @pytest.fixture(autouse=True)
+    def _setup(self, _isolate_hermes_home):
+        self.client, self.header = _client()
+
+    def _patch_spawn(self, monkeypatch):
+        from hermes_cli import web_server
+
+        calls = []
+
+        class _FakeProc:
+            pid = 4242
+
+        def _fake_spawn(subcommand, name):
+            calls.append((list(subcommand), name))
+            return _FakeProc()
+
+        monkeypatch.setattr(web_server, "_spawn_hermes_action", _fake_spawn)
+        return calls
+
+    def test_start_spawns_gateway_start(self, monkeypatch):
+        calls = self._patch_spawn(monkeypatch)
+        r = self.client.post("/api/gateway/start")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["ok"] is True
+        assert body["pid"] == 4242
+        assert calls == [(["gateway", "start"], "gateway-start")]
+
+    def test_stop_spawns_gateway_stop(self, monkeypatch):
+        calls = self._patch_spawn(monkeypatch)
+        r = self.client.post("/api/gateway/stop")
+        assert r.status_code == 200
+        body = r.json()
+        assert body["ok"] is True
+        assert calls == [(["gateway", "stop"], "gateway-stop")]
+
+    def test_start_spawn_failure_returns_500(self, monkeypatch):
+        from hermes_cli import web_server
+
+        def _boom(subcommand, name):
+            raise OSError("spawn failed")
+
+        monkeypatch.setattr(web_server, "_spawn_hermes_action", _boom)
+        r = self.client.post("/api/gateway/start")
+        assert r.status_code == 500
+
+
 class TestAdminEndpointsAuthGate:
     """Every admin endpoint must sit behind the dashboard session-token gate."""
 

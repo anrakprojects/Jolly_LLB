@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "更新与卸载"
-description: "如何将 Hermes Agent 更新至最新版本或将其卸载"
+description: "如何将 Jolly LLB 更新至最新版本或将其卸载"
 ---
 
 # 更新与卸载
@@ -93,7 +93,7 @@ $ hermes update
 
 ```
 $ hermes update
-Updating Hermes Agent...
+Updating Jolly LLB...
 📥 Pulling latest code...
 Already up to date.  (or: Updating abc1234..def5678)
 📦 Updating dependencies...
@@ -102,7 +102,7 @@ Already up to date.  (or: Updating abc1234..def5678)
 ✅ Config is up to date  (or: Found 2 new options — running migration...)
 🔄 Restarting gateways...
 ✅ Gateway restarted
-✅ Hermes Agent updated successfully!
+✅ Jolly LLB updated successfully!
 ```
 
 ### 更新后建议的验证步骤

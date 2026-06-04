@@ -1,5 +1,5 @@
 """
-Hermes Agent — Web UI server.
+Jolly LLB — Web UI server.
 
 Provides a FastAPI backend serving the Vite/React frontend and REST API
 endpoints for managing configuration, environment variables, and sessions.
@@ -84,7 +84,7 @@ except ImportError:
 WEB_DIST = Path(os.environ["HERMES_WEB_DIST"]) if "HERMES_WEB_DIST" in os.environ else Path(__file__).parent / "web_dist"
 _log = logging.getLogger(__name__)
 
-app = FastAPI(title="Hermes Agent", version=__version__)
+app = FastAPI(title="Jolly LLB", version=__version__)
 
 # ---------------------------------------------------------------------------
 # Session token for protecting sensitive endpoints (reveal).
@@ -1097,6 +1097,82 @@ async def restart_gateway():
         "pid": proc.pid,
         "name": "gateway-restart",
     }
+
+
+class DesktopLaunchRequest(BaseModel):
+    """Body for ``POST /api/desktop/launch``."""
+
+    session_id: Optional[str] = None
+
+
+def _spawn_desktop_detached(env: Dict[str, str]) -> tuple[bool, str]:
+    """Launch the native Hermes Desktop (Electron) app detached.
+
+    Prefers the packaged unpacked app for this OS; falls back to running the
+    unpackaged Electron app from a local renderer build.  Returns
+    ``(ok, detail)`` so the endpoint can surface a friendly 503 when the
+    desktop hasn't been built yet rather than a 500.
+    """
+    import shutil
+
+    from hermes_cli.main import (
+        _desktop_dist_exists,
+        _desktop_packaged_executable,
+    )
+
+    desktop_dir = PROJECT_ROOT / "apps" / "desktop"
+    exe = _desktop_packaged_executable(desktop_dir)
+
+    if exe is not None:
+        cmd: List[str] = [str(exe)]
+    elif _desktop_dist_exists(desktop_dir) and shutil.which("npm"):
+        cmd = [shutil.which("npm") or "npm", "exec", "--", "electron", "."]
+    else:
+        return False, (
+            "Hermes Desktop isn't built yet. Build it once with: "
+            "hermes gui --build-only"
+        )
+
+    popen_kwargs: Dict[str, Any] = {
+        "cwd": str(desktop_dir),
+        "stdin": subprocess.DEVNULL,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+        "env": env,
+    }
+    if sys.platform == "win32":
+        popen_kwargs["creationflags"] = (
+            subprocess.CREATE_NEW_PROCESS_GROUP  # type: ignore[attr-defined]
+            | getattr(subprocess, "DETACHED_PROCESS", 0)
+        )
+    else:
+        popen_kwargs["start_new_session"] = True
+
+    subprocess.Popen(cmd, **popen_kwargs)
+    return True, "launched"
+
+
+@app.post("/api/desktop/launch")
+async def launch_desktop(body: DesktopLaunchRequest):
+    """Open the native Hermes Desktop app, optionally resuming a session.
+
+    The dashboard Sessions page calls this so a click can hand a conversation
+    off to the desktop app.  The session id is passed via the
+    ``HERMES_DESKTOP_RESUME_SESSION`` env var, which the Electron main process
+    turns into a ``#/<session_id>`` route the renderer auto-resumes.
+    """
+    env: Dict[str, str] = {**os.environ}
+    sid = (body.session_id or "").strip()
+    if sid:
+        env["HERMES_DESKTOP_RESUME_SESSION"] = sid
+    try:
+        ok, detail = _spawn_desktop_detached(env)
+    except Exception as exc:
+        _log.exception("Failed to launch Hermes Desktop")
+        raise HTTPException(status_code=500, detail=f"Failed to launch desktop: {exc}")
+    if not ok:
+        raise HTTPException(status_code=503, detail=detail)
+    return {"ok": True, "session_id": sid or None}
 
 
 @app.post("/api/hermes/update")
@@ -2289,6 +2365,12 @@ _PLATFORM_ORDER: tuple[str, ...] = (
     "webhook",
 )
 
+# Channels exposed in the dashboard's Channels page. The gateway still
+# *supports* every platform in _PLATFORM_ORDER, but this deployment only
+# surfaces WhatsApp and Telegram in the UI (set via the /api/messaging/platforms
+# endpoint filter). Widen this allowlist to re-expose other platforms.
+_VISIBLE_CHANNELS: frozenset[str] = frozenset({"telegram", "whatsapp"})
+
 # Display labels for env vars not in OPTIONAL_ENV_VARS (HOME_CHANNEL_*, bridge
 # toggles, Twilio, HASS, Email, etc.). Anything missing from OPTIONAL_ENV_VARS
 # falls back here so the UI can still render a friendly label.
@@ -2643,6 +2725,7 @@ async def get_messaging_platforms():
         "platforms": [
             _messaging_platform_payload(entry, env_on_disk, runtime)
             for entry in _messaging_platform_catalog()
+            if entry["id"] in _VISIBLE_CHANNELS
         ]
     }
 
@@ -6085,10 +6168,13 @@ async def get_models_analytics(days: int = 30):
 
 import re
 
-# PTY bridge is POSIX-only (depends on fcntl/termios/ptyprocess).  On native
-# Windows the import raises; catch and leave PtyBridge=None so the rest of
+# The PTY bridge is cross-platform (ptyprocess on POSIX, pywinpty/ConPTY on
+# Windows) and imports cleanly on every OS.  This guard only trips if the
+# module itself is broken; in that case leave PtyBridge=None so the rest of
 # the dashboard (sessions, jobs, metrics, config editor) still loads and the
-# /api/pty endpoint cleanly refuses with a WSL-suggested message.
+# /api/pty endpoint refuses cleanly.  A missing backend *package* (e.g.
+# pywinpty absent on Windows) instead surfaces later as PtyUnavailableError
+# from PtyBridge.spawn(), which the handler reports inline.
 try:
     from hermes_cli.pty_bridge import PtyBridge, PtyUnavailableError
     _PTY_BRIDGE_AVAILABLE = True
@@ -6385,14 +6471,16 @@ async def pty_ws(ws: WebSocket) -> None:
 
     await ws.accept()
 
-    # On native Windows, the POSIX PTY bridge can't be imported.  Tell the
-    # client and close cleanly rather than pretending the feature works.
+    # The bridge module failed to import entirely (broken install / dev env).
+    # Tell the client and close cleanly rather than pretending it works.  A
+    # merely-missing backend package is handled below via PtyUnavailableError.
     if not _PTY_BRIDGE_AVAILABLE:
         await ws.send_text(
-            "\r\n\x1b[31mChat unavailable: the embedded terminal requires a "
-            "POSIX PTY, which native Windows Python doesn't provide.\x1b[0m\r\n"
-            "\x1b[33mInstall Hermes inside WSL2 to use the dashboard's /chat "
-            "tab — the rest of the dashboard works here.\x1b[0m\r\n"
+            "\r\n\x1b[31mChat unavailable: the embedded terminal bridge "
+            "could not be loaded.\x1b[0m\r\n"
+            "\x1b[33mReinstall Hermes with the PTY backend "
+            "(`pip install -e '.[pty]'`) and restart the dashboard — the rest "
+            "of the dashboard works here.\x1b[0m\r\n"
         )
         await ws.close(code=1011)
         return
@@ -6731,8 +6819,8 @@ def mount_spa(application: FastAPI):
 # Built-in dashboard themes — label + description only.  The actual color
 # definitions live in the frontend (web/src/themes/presets.ts).
 _BUILTIN_DASHBOARD_THEMES = [
-    {"name": "default",       "label": "Hermes Teal",         "description": "Classic dark teal — the canonical Hermes look"},
-    {"name": "default-large", "label": "Hermes Teal (Large)", "description": "Hermes Teal with bigger fonts and roomier spacing"},
+    {"name": "default",       "label": "Pure White",         "description": "Clean pure-white canvas — the canonical Jolly LLB look"},
+    {"name": "default-large", "label": "Pure White (Large)", "description": "Pure White with bigger fonts and roomier spacing"},
     {"name": "midnight",      "label": "Midnight",            "description": "Deep blue-violet with cool accents"},
     {"name": "ember",     "label": "Ember",          "description": "Warm crimson and bronze — forge vibes"},
     {"name": "mono",      "label": "Mono",           "description": "Clean grayscale — minimal and focused"},
@@ -7650,7 +7738,7 @@ def start_server(
         if not list_providers():
             # Surface the *specific* reason any bundled provider declined
             # to register (e.g. missing HERMES_DASHBOARD_OAUTH_CLIENT_ID).
-            # Each provider plugin that ships with Hermes Agent exposes a
+            # Each provider plugin that ships with Jolly LLB exposes a
             # module-level ``LAST_SKIP_REASON`` string for this purpose;
             # without it the operator would only see "no providers" which
             # is misleading when the provider IS installed but unconfigured.

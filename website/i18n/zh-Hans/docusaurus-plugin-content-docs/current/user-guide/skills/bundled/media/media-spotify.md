@@ -17,7 +17,7 @@ Spotify：播放、搜索、队列、管理播放列表和设备。
 | 来源 | 内置（默认安装） |
 | 路径 | `skills/media/spotify` |
 | 版本 | `1.0.0` |
-| 作者 | Hermes Agent |
+| 作者 | Jolly LLB |
 | 许可证 | MIT |
 | 平台 | linux, macos, windows |
 | 标签 | `spotify`, `music`, `playback`, `playlists`, `media` |

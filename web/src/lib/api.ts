@@ -478,6 +478,17 @@ export const api = {
       { method: "POST" },
     ),
 
+  // Open the native Hermes Desktop app, optionally resuming a session.
+  launchDesktop: (sessionId?: string) =>
+    fetchJSON<{ ok: boolean; session_id: string | null }>(
+      "/api/desktop/launch",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sessionId ? { session_id: sessionId } : {}),
+      },
+    ),
+
   // Gateway / update actions
   restartGateway: () =>
     fetchJSON<ActionResponse>("/api/gateway/restart", { method: "POST" }),

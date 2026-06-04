@@ -28,7 +28,7 @@ Webhook subscriptions：事件驱动的 agent 运行。
 
 # Webhook Subscriptions
 
-创建动态 webhook 订阅，使外部服务（GitHub、GitLab、Stripe、CI/CD、IoT 传感器、监控工具）能够通过向 URL 发送 POST 请求来触发 Hermes agent 运行。
+创建动态 webhook 订阅，使外部服务（GitHub、GitLab、Stripe、CI/CD、IoT 传感器、监控工具）能够通过向 URL 发送 POST 请求来触发 Jolly LLB 运行。
 
 ## 设置（必须先完成）
 

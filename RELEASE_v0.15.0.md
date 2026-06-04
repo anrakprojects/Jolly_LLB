@@ -1,4 +1,4 @@
-# Hermes Agent v0.15.0 (v2026.5.28)
+# Jolly LLB v0.15.0 (v2026.5.28)
 
 **Release Date:** May 28, 2026
 **Since v0.14.0:** 1,302 commits · 747 merged PRs · 1,746 files changed · 282,712 insertions · 36,699 deletions · 560+ issues closed (15 P0, 65 P1, 19 security-tagged) · 321 community contributors (including co-authors)

@@ -5,7 +5,6 @@ import {
   useCallback,
   useRef,
 } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -22,7 +21,7 @@ import {
   MessageCircle,
   Hash,
   X,
-  Play,
+  Monitor,
   Download,
   Pencil,
   Check,
@@ -62,7 +61,6 @@ import { useToast } from "@nous-research/ui/hooks/use-toast";
 import { useI18n } from "@/i18n";
 import { usePageHeader } from "@/contexts/usePageHeader";
 import { PluginSlot } from "@/plugins";
-import { isDashboardEmbeddedChatEnabled } from "@/lib/dashboard-flags";
 
 const SOURCE_CONFIG: Record<string, { icon: typeof Terminal; color: string }> =
   {
@@ -277,7 +275,7 @@ function SessionRow({
   onDelete,
   onRename,
   onExport,
-  resumeInChatEnabled,
+  onOpenDesktop,
 }: {
   session: SessionInfo;
   snippet?: string;
@@ -287,7 +285,7 @@ function SessionRow({
   onDelete: () => void;
   onRename: (id: string, title: string) => Promise<void>;
   onExport: (id: string) => void;
-  resumeInChatEnabled: boolean;
+  onOpenDesktop: () => void;
 }) {
   const [messages, setMessages] = useState<SessionMessage[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -296,7 +294,6 @@ function SessionRow({
   const [renameValue, setRenameValue] = useState(session.title ?? "");
   const [renameSaving, setRenameSaving] = useState(false);
   const { t } = useI18n();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (isExpanded && messages === null && !loading) {
@@ -336,21 +333,32 @@ function SessionRow({
         {session.source ?? "local"}
       </Badge>
 
-      {resumeInChatEnabled && (
-        <Button
-          ghost
-          size="icon"
-          className="text-muted-foreground hover:text-success"
-          aria-label={t.sessions.resumeInChat}
-          title={t.sessions.resumeInChat}
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/chat?resume=${encodeURIComponent(session.id)}`);
-          }}
-        >
-          <Play />
-        </Button>
-      )}
+      <Button
+        ghost
+        size="icon"
+        className="text-muted-foreground hover:text-foreground"
+        aria-label={isExpanded ? t.common.collapse : t.common.expand}
+        title={isExpanded ? t.common.collapse : t.common.expand}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+      >
+        {isExpanded ? <ChevronDown /> : <ChevronRight />}
+      </Button>
+
+      <Button
+        size="icon"
+        className="text-primary"
+        aria-label="Open in Anrak Legal Desktop"
+        title="Open & continue this session in the Anrak Legal desktop app"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenDesktop();
+        }}
+      >
+        <Monitor />
+      </Button>
 
       <Button
         ghost
@@ -410,7 +418,8 @@ function SessionRow({
     >
       <div
         className="flex cursor-pointer items-start gap-3 p-3 transition-colors hover:bg-secondary/30"
-        onClick={onToggle}
+        onClick={onOpenDesktop}
+        title="Open & continue this session in the Anrak Legal desktop app"
       >
         <div className={`shrink-0 pt-0.5 ${sourceInfo.color}`}>
           <SourceIcon className="h-4 w-4" />
@@ -614,7 +623,18 @@ export default function SessionsPage() {
   const { t } = useI18n();
   const { setAfterTitle, setEnd } = usePageHeader();
   const { activeAction, actionStatus, dismissLog } = useSystemActions();
-  const resumeInChatEnabled = isDashboardEmbeddedChatEnabled();
+
+  const handleOpenDesktop = useCallback(
+    async (id: string) => {
+      try {
+        await api.launchDesktop(id);
+        showToast("Opening this session in the Anrak Legal desktop app…", "success");
+      } catch (e) {
+        showToast(`Failed to open desktop app: ${e}`, "error");
+      }
+    },
+    [showToast],
+  );
 
   useLayoutEffect(() => {
     if (loading) {
@@ -1161,7 +1181,7 @@ export default function SessionsPage() {
                   onDelete={() => sessionDelete.requestDelete(s.id)}
                   onRename={handleRename}
                   onExport={handleExport}
-                  resumeInChatEnabled={resumeInChatEnabled}
+                  onOpenDesktop={() => void handleOpenDesktop(s.id)}
                 />
               ))}
             </div>
@@ -1196,7 +1216,9 @@ export default function SessionsPage() {
                 {recentSessions.map((s) => (
                   <div
                     key={s.id}
-                    className="flex min-w-0 max-w-full flex-col gap-2 border border-border p-3 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex min-w-0 max-w-full cursor-pointer flex-col gap-2 border border-border p-3 transition-colors hover:bg-secondary/30 sm:flex-row sm:items-center sm:justify-between"
+                    onClick={() => void handleOpenDesktop(s.id)}
+                    title="Open & continue this session in the Anrak Legal desktop app"
                   >
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <span className="font-mondwest normal-case min-w-0 truncate text-sm font-medium">

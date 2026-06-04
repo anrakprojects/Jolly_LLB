@@ -1,4 +1,4 @@
-"""``hermes debug`` debug tools for Hermes Agent.
+"""``hermes debug`` debug tools for Jolly LLB.
 
 Currently supports:
     hermes debug share    Upload debug report (system info + logs) to a

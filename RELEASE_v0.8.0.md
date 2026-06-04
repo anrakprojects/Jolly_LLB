@@ -1,4 +1,4 @@
-# Hermes Agent v0.8.0 (v2026.4.8)
+# Jolly LLB v0.8.0 (v2026.4.8)
 
 **Release Date:** April 8, 2026
 

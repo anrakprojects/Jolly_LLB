@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/banner.png" alt="Hermes Agent" width="100%">
+  <img src="assets/banner.png" alt="Jolly LLB" width="100%">
 </p>
 
-# Hermes Agent ☤
+# Jolly LLB ☤
 
 <p align="center">
   <a href="https://hermes-agent.nousresearch.com/docs/"><img src="https://img.shields.io/badge/Docs-hermes--agent.nousresearch.com-FFD700?style=for-the-badge" alt="Documentation"></a>
@@ -52,7 +52,13 @@ If you already have Git installed, the installer detects it and uses that instea
 
 > **Android / Termux:** The tested manual path is documented in the [Termux guide](https://hermes-agent.nousresearch.com/docs/getting-started/termux). On Termux, Hermes installs a curated `.[termux]` extra because the full `.[all]` extra currently pulls Android-incompatible voice dependencies.
 >
-> **Windows:** Native Windows is fully supported — the PowerShell one-liner above installs everything. If you'd rather use WSL2, the Linux command works there too. Native Windows install lives under `%LOCALAPPDATA%\hermes`; WSL2 installs under `~/.hermes` as on Linux.  The only Hermes feature that currently needs WSL2 specifically is the browser-based dashboard chat pane (it uses a POSIX PTY — classic CLI and gateway both run natively).
+> **Windows:** Native Windows is fully supported — the PowerShell one-liner above installs everything, including the browser-based dashboard chat pane (it uses native ConPTY via `pywinpty`; classic CLI and gateway run natively too). If you'd rather use WSL2, the Linux command works there too. Native Windows install lives under `%LOCALAPPDATA%\hermes`; WSL2 installs under `~/.hermes` as on Linux.
+
+### Prefer to click instead of paste? (graphical installer)
+
+**Hermes Setup** is a tiny native installer for **Windows** (`.exe`), **macOS** (`.dmg`), and **Linux** (`.AppImage`). Download it, double-click, and press **Install** — no terminal required. It drives the very same `install.ps1` / `install.sh` scripts as the one-liners above, so the result is identical.
+
+To get it, run the **Build Installers** GitHub Actions workflow (*Actions → Build Installers → Run workflow*); each run produces a downloadable `Hermes-Setup-<os>` artifact for Windows, macOS, and Linux. (The official, code-signed Windows build comes from the separate *Build Windows Installer* workflow.)
 
 After installation:
 
@@ -205,7 +211,7 @@ scripts/run_tests.sh
 - 📚 [Skills Hub](https://agentskills.io)
 - 🐛 [Issues](https://github.com/NousResearch/hermes-agent/issues)
 - 🔌 [computer-use-linux](https://github.com/avifenesh/computer-use-linux) — Linux desktop-control MCP server for Hermes and other MCP hosts, with AT-SPI accessibility trees, Wayland/X11 input, screenshots, and compositor window targeting.
-- 🔌 [HermesClaw](https://github.com/AaronWong1999/hermesclaw) — Community WeChat bridge: Run Hermes Agent and OpenClaw on the same WeChat account.
+- 🔌 [HermesClaw](https://github.com/AaronWong1999/hermesclaw) — Community WeChat bridge: Run Jolly LLB and OpenClaw on the same WeChat account.
 
 ---
 
