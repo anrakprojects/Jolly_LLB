@@ -1112,6 +1112,19 @@ function Install-Repository {
                 git -c windows.appendAtomically=false init 2>$null
                 git -c windows.appendAtomically=false config windows.appendAtomically false 2>$null
                 git remote add origin $RepoUrlHttps 2>$null
+                # Create an initial commit so HEAD exists.  The desktop build's
+                # write-build-stamp.cjs runs `git rev-parse HEAD` to pin the
+                # packaged app's first-launch install ref; a bundled-source
+                # install starts from a fresh `git init` with NO commits, so
+                # without this the desktop stage dies with "could not determine
+                # git commit".  Identity / GPG / hooks are forced inline so this
+                # succeeds on machines with no global git identity configured.
+                git -c windows.appendAtomically=false add -A 2>$null
+                git -c windows.appendAtomically=false `
+                    -c user.email="installer@jolly-llb.local" `
+                    -c user.name="Jolly LLB Installer" `
+                    -c commit.gpgsign=false `
+                    commit -m "Bundled-source install" --quiet --no-verify 2>$null
                 Pop-Location
                 Write-Success "Installed from bundled source (no network clone)"
                 return
@@ -2132,11 +2145,26 @@ function Install-Desktop {
     $prevCSCAuto = $env:CSC_IDENTITY_AUTO_DISCOVERY
     $prevWinCscLink = $env:WIN_CSC_LINK
     $prevWinCscKeyPassword = $env:WIN_CSC_KEY_PASSWORD
+    $prevGithubSha = $env:GITHUB_SHA
+    $prevGithubRef = $env:GITHUB_REF_NAME
+    $prevSelfContained = $env:HERMES_SELFCONTAINED_BUILD
     try {
         $ErrorActionPreference = "Continue"
         $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
         $env:WIN_CSC_LINK = ""
         $env:WIN_CSC_KEY_PASSWORD = ""
+        # write-build-stamp.cjs needs a git ref to pin the packaged app's
+        # first-launch install. When the installer pinned a real upstream
+        # commit, hand it over via $GITHUB_SHA so the stamp records the true
+        # SHA (preferred over the synthetic local commit a bundled-source
+        # install creates). HERMES_SELFCONTAINED_BUILD lets the stamp script
+        # fall back gracefully if no commit can be determined at all, so a
+        # self-contained install can never hard-fail at this stage.
+        $env:HERMES_SELFCONTAINED_BUILD = "1"
+        if ($Commit) {
+            $env:GITHUB_SHA = $Commit
+            if ($Branch) { $env:GITHUB_REF_NAME = $Branch }
+        }
         & $npmExe run pack 2>&1 | ForEach-Object { "$_" } | Tee-Object -FilePath $buildLog
         $code = $LASTEXITCODE
         $ErrorActionPreference = $prevEAP
@@ -2163,6 +2191,9 @@ function Install-Desktop {
         $env:CSC_IDENTITY_AUTO_DISCOVERY = $prevCSCAuto
         $env:WIN_CSC_LINK = $prevWinCscLink
         $env:WIN_CSC_KEY_PASSWORD = $prevWinCscKeyPassword
+        $env:GITHUB_SHA = $prevGithubSha
+        $env:GITHUB_REF_NAME = $prevGithubRef
+        $env:HERMES_SELFCONTAINED_BUILD = $prevSelfContained
     }
     Pop-Location
 
