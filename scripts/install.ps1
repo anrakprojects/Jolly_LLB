@@ -4,11 +4,12 @@
 # Installation script for Windows (PowerShell).
 # Uses uv for fast Python provisioning and package management.
 #
-# Usage:
-#   iex (irm https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.ps1)
+# Usage (internal repo — requires a GitHub token with access to anrakprojects/Jolly_LLB):
+#   $env:HERMES_GH_TOKEN = "<your-token>"
+#   iex (irm -Headers @{ Authorization = "token $env:HERMES_GH_TOKEN" } https://raw.githubusercontent.com/anrakprojects/Jolly_LLB/main/scripts/install.ps1)
 #
 # Or download and run with options:
-#   .\install.ps1 -NoVenv -SkipSetup
+#   .\install.ps1 -NoVenv -SkipSetup -GitHubToken "<your-token>"
 #
 # ============================================================================
 
@@ -56,7 +57,21 @@ param(
     #   * The canonical CLI one-liner (irm | iex) omits the flag too;
     #     terminal users don't need a desktop binary built for them, and
     #     `hermes desktop` already builds on demand.
-    [switch]$IncludeDesktop
+    [switch]$IncludeDesktop,
+
+    # --- Internal-repo auth (Jolly LLB distribution) ----------------------
+    # The Jolly LLB repo (anrakprojects/Jolly_LLB) is an INTERNAL GitHub repo,
+    # so anonymous SSH/HTTPS clones and ZIP archive downloads return 404 / fail.
+    # Supply a GitHub token (PAT or fine-grained token) with read access to it.
+    # Defaults from the environment so the desktop installer can pass it through
+    # via an inherited env var rather than on the command line / process list:
+    #   HERMES_GH_TOKEN  (preferred)  >  GITHUB_TOKEN  >  GH_TOKEN
+    [string]$GitHubToken = $(
+        if ($env:HERMES_GH_TOKEN) { $env:HERMES_GH_TOKEN }
+        elseif ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN }
+        elseif ($env:GH_TOKEN) { $env:GH_TOKEN }
+        else { "" }
+    )
 )
 
 $ErrorActionPreference = "Stop"
@@ -92,8 +107,8 @@ try {
 # Configuration
 # ============================================================================
 
-$RepoUrlSsh = "git@github.com:NousResearch/hermes-agent.git"
-$RepoUrlHttps = "https://github.com/NousResearch/hermes-agent.git"
+$RepoUrlSsh = "git@github.com:anrakprojects/Jolly_LLB.git"
+$RepoUrlHttps = "https://github.com/anrakprojects/Jolly_LLB.git"
 $PythonVersion = "3.11"
 $NodeVersion = "22"
 
@@ -1155,8 +1170,21 @@ function Install-Repository {
             if (Test-Path $InstallDir) { Remove-Item -Recurse -Force $InstallDir -ErrorAction SilentlyContinue }
             Write-Info "SSH failed, trying HTTPS..."
             try {
-                git -c windows.appendAtomically=false clone --branch $Branch --recurse-submodules $RepoUrlHttps $InstallDir
-                if ($LASTEXITCODE -eq 0) { $cloneSuccess = $true }
+                # For the internal repo, embed the token for THIS clone only.
+                # The stored origin remote is reset to the clean URL right after
+                # so the PAT is never persisted into .git/config.
+                $httpsCloneUrl = $RepoUrlHttps
+                if ($GitHubToken) {
+                    $httpsCloneUrl = "https://x-access-token:$GitHubToken@github.com/anrakprojects/Jolly_LLB.git"
+                }
+                git -c windows.appendAtomically=false clone --branch $Branch --recurse-submodules $httpsCloneUrl $InstallDir
+                if ($LASTEXITCODE -eq 0) {
+                    $cloneSuccess = $true
+                    if ($GitHubToken) {
+                        # Scrub the token out of the persisted remote URL.
+                        git -C $InstallDir remote set-url origin $RepoUrlHttps 2>$null
+                    }
+                }
             } catch { }
         }
 
@@ -1168,20 +1196,31 @@ function Install-Repository {
                 # Pick the ZIP URL for the most-specific ref the caller asked
                 # for.  GitHub supports archive URLs for commits, tags, and
                 # branches; we honour Commit > Tag > Branch.
-                if ($Commit) {
-                    $zipUrl = "https://github.com/NousResearch/hermes-agent/archive/$Commit.zip"
-                    $zipLabel = $Commit
-                } elseif ($Tag) {
-                    $zipUrl = "https://github.com/NousResearch/hermes-agent/archive/refs/tags/$Tag.zip"
-                    $zipLabel = $Tag
-                } else {
-                    $zipUrl = "https://github.com/NousResearch/hermes-agent/archive/refs/heads/$Branch.zip"
-                    $zipLabel = $Branch
-                }
+                if ($Commit) { $zipRef = $Commit; $zipLabel = $Commit }
+                elseif ($Tag) { $zipRef = $Tag; $zipLabel = $Tag }
+                else { $zipRef = $Branch; $zipLabel = $Branch }
+
                 $zipPath = "$env:TEMP\hermes-agent-$zipLabel.zip"
                 $extractPath = "$env:TEMP\hermes-agent-extract"
 
-                Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
+                if ($GitHubToken) {
+                    # Internal repo: hit the authenticated API zipball endpoint.
+                    # It 302-redirects to a pre-signed codeload URL, so the token
+                    # only needs to ride the first request.  zipball accepts a
+                    # branch, tag, or commit SHA as the ref.
+                    $zipUrl = "https://api.github.com/repos/anrakprojects/Jolly_LLB/zipball/$zipRef"
+                    Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing `
+                        -Headers @{ Authorization = "token $GitHubToken"; "User-Agent" = "jolly-llb-installer" }
+                } else {
+                    if ($Commit) {
+                        $zipUrl = "https://github.com/anrakprojects/Jolly_LLB/archive/$Commit.zip"
+                    } elseif ($Tag) {
+                        $zipUrl = "https://github.com/anrakprojects/Jolly_LLB/archive/refs/tags/$Tag.zip"
+                    } else {
+                        $zipUrl = "https://github.com/anrakprojects/Jolly_LLB/archive/refs/heads/$Branch.zip"
+                    }
+                    Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing
+                }
                 if (Test-Path $extractPath) { Remove-Item -Recurse -Force $extractPath }
                 Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
 
@@ -2816,7 +2855,8 @@ try {
     Write-Err "Installation failed: $_"
     Write-Host ""
     Write-Info "If the error is unclear, try downloading and running the script directly:"
-    Write-Host "  Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.ps1' -OutFile install.ps1" -ForegroundColor Yellow
+    Write-Host "  `$env:HERMES_GH_TOKEN = '<your-token>'" -ForegroundColor Yellow
+    Write-Host "  Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/anrakprojects/Jolly_LLB/main/scripts/install.ps1' -Headers @{ Authorization = \"token `$env:HERMES_GH_TOKEN\" } -OutFile install.ps1" -ForegroundColor Yellow
     Write-Host "  .\install.ps1" -ForegroundColor Yellow
     Write-Host ""
 }
