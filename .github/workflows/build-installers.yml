@@ -92,6 +92,23 @@ jobs:
         with:
           workspaces: apps/bootstrap-installer/src-tauri
 
+      # Self-contained installer: bundle the install scripts and a source
+      # snapshot (git archive of HEAD — tracked files only, no .git history)
+      # as Tauri resources. This lets the .exe install the (private/internal)
+      # repo with no GitHub token and no network clone — install.ps1 unpacks
+      # the bundled source instead of cloning. tauri.conf.json references these
+      # paths under bundle.resources, so they must exist before the build.
+      - name: Stage bundled source (self-contained installer)
+        shell: bash
+        run: |
+          set -euo pipefail
+          res="apps/bootstrap-installer/src-tauri/resources"
+          mkdir -p "$res"
+          cp scripts/install.ps1 "$res/install.ps1"
+          cp scripts/install.sh  "$res/install.sh"
+          git archive --format=zip -o "$res/jolly-llb-source.zip" HEAD
+          ls -lh "$res"
+
       - name: Build installer
         run: npm run tauri:build
         working-directory: apps/bootstrap-installer

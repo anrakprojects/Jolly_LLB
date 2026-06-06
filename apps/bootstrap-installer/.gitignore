@@ -16,6 +16,10 @@ vite.config.js
 # Tauri generated artifacts (regenerated on each build)
 /src-tauri/gen/schemas/
 
+# Bundled self-contained-installer resources, staged by CI before the build
+# (scripts/install.* copies + jolly-llb-source.zip from `git archive`).
+/src-tauri/resources/
+
 # Logs
 *.log
 npm-debug.log*

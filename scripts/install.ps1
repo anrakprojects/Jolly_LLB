@@ -71,7 +71,16 @@ param(
         elseif ($env:GITHUB_TOKEN) { $env:GITHUB_TOKEN }
         elseif ($env:GH_TOKEN) { $env:GH_TOKEN }
         else { "" }
-    )
+    ),
+
+    # --- Self-contained install (bundled source) --------------------------
+    # When the desktop installer ships the repo INSIDE the .exe, it sets this
+    # to the bundled source -- either a `git archive` .zip or an already
+    # extracted directory. install.ps1 then installs from it directly instead
+    # of cloning from GitHub, so a private/internal repo needs NO token and NO
+    # network clone. Defaults from the environment so the installer can pass it
+    # via an inherited env var.  Takes precedence over clone/update.
+    [string]$LocalSource = $(if ($env:HERMES_LOCAL_SOURCE) { $env:HERMES_LOCAL_SOURCE } else { "" })
 )
 
 $ErrorActionPreference = "Stop"
@@ -1060,6 +1069,58 @@ function Install-Repository {
     Write-Info "Installing to $InstallDir..."
 
     $didUpdate = $false
+
+    # Self-contained / bundled-source install.  When $LocalSource points at the
+    # repo shipped inside the installer (.zip from `git archive`, or an extracted
+    # directory), install from it verbatim -- no clone, no network, no token.
+    # This is the path the self-contained desktop installer takes; it wins over
+    # the existing-dir update and the GitHub clone paths below.
+    if ($LocalSource -and (Test-Path $LocalSource)) {
+        try {
+            Write-Info "Installing from bundled source: $LocalSource"
+            if (Test-Path $InstallDir) { Remove-Item -Recurse -Force $InstallDir -ErrorAction SilentlyContinue }
+            New-Item -ItemType Directory -Force -Path (Split-Path $InstallDir) -ErrorAction SilentlyContinue | Out-Null
+
+            $srcItem = Get-Item -LiteralPath $LocalSource
+            if ($srcItem.PSIsContainer) {
+                # Bundled as an extracted directory tree -- copy it wholesale.
+                Copy-Item -LiteralPath $LocalSource -Destination $InstallDir -Recurse -Force
+            } else {
+                # Bundled as a .zip (e.g. `git archive --format=zip HEAD`).
+                $extractPath = "$env:TEMP\jolly-llb-bundled-extract"
+                if (Test-Path $extractPath) { Remove-Item -Recurse -Force $extractPath -ErrorAction SilentlyContinue }
+                Expand-Archive -Path $LocalSource -DestinationPath $extractPath -Force
+                # `git archive` zips lay the files out at the archive root; a
+                # GitHub-style archive wraps them in one <repo>-<ref>/ dir. Handle
+                # both: descend into a lone wrapper directory, else move contents.
+                $entries = @(Get-ChildItem -Force -LiteralPath $extractPath)
+                if ($entries.Count -eq 1 -and $entries[0].PSIsContainer) {
+                    Move-Item -LiteralPath $entries[0].FullName -Destination $InstallDir -Force
+                } else {
+                    New-Item -ItemType Directory -Force -Path $InstallDir -ErrorAction SilentlyContinue | Out-Null
+                    # -Force on Get-ChildItem so dotfiles (.github, .gitignore) move too.
+                    Get-ChildItem -Force -LiteralPath $extractPath | Move-Item -Destination $InstallDir -Force
+                }
+                Remove-Item -Recurse -Force $extractPath -ErrorAction SilentlyContinue
+            }
+
+            if (Test-Path (Join-Path $InstallDir "scripts")) {
+                # Make it a git repo so later updates work; origin uses the clean
+                # (tokenless) HTTPS URL.  Pulling updates from the internal repo
+                # will still need credentials, but install itself does not.
+                Push-Location $InstallDir
+                git -c windows.appendAtomically=false init 2>$null
+                git -c windows.appendAtomically=false config windows.appendAtomically false 2>$null
+                git remote add origin $RepoUrlHttps 2>$null
+                Pop-Location
+                Write-Success "Installed from bundled source (no network clone)"
+                return
+            }
+            Write-Warn "Bundled source at $LocalSource missing expected layout; falling back to clone."
+        } catch {
+            Write-Warn "Bundled source install failed ($_); falling back to network clone."
+        }
+    }
 
     if (Test-Path $InstallDir) {
         # Test-Path "$InstallDir\.git" returns True when .git is a file OR a

@@ -77,6 +77,7 @@ fn is_valid_commit(s: &str) -> bool {
 pub async fn resolve(
     kind: ScriptKind,
     pin: &Pin,
+    bundled_dir: Option<&Path>,
     emit_log: &impl Fn(&str),
 ) -> Result<ResolvedScript> {
     // 1. Dev shortcut.
@@ -97,7 +98,25 @@ pub async fn resolve(
         }
     }
 
-    // 2. (Not implemented) bundled fallback.
+    // 2. Bundled fallback. The self-contained installer ships
+    //    scripts/install.{ps1,sh} as a Tauri resource, so an offline /
+    //    private-repo install resolves the script with no network fetch.
+    if let Some(dir) = bundled_dir {
+        let candidate = dir.join("scripts").join(kind.filename());
+        if candidate.exists() {
+            emit_log(&format!(
+                "[bootstrap] using bundled {} at {}",
+                kind.filename(),
+                candidate.display()
+            ));
+            return Ok(ResolvedScript {
+                path: candidate,
+                source: ScriptSource::Bundled,
+                commit: pin.commit.clone(),
+                branch: pin.branch.clone(),
+            });
+        }
+    }
 
     // 3. Network. Pin must be a real commit or a branch ref.
     let commit_or_ref = match (&pin.commit, &pin.branch) {

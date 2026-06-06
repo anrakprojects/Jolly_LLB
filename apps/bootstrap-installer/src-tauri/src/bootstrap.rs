@@ -18,7 +18,7 @@ use std::time::Instant;
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::{mpsc, Mutex};
 
 use crate::events::{BootstrapEvent, Manifest, StageState};
@@ -271,8 +271,26 @@ async fn run_bootstrap(
         tracing::info!(target: "bootstrap.log", "{line}");
     };
 
-    // 1. Resolve install.ps1
-    let script = install_script::resolve(kind, &pin, &emit_log)
+    // Self-contained installer: the .exe bundles scripts/install.{ps1,sh} and a
+    // jolly-llb-source.zip (git archive of the repo) as Tauri resources, so a
+    // private/internal-repo install needs no GitHub token and no network clone.
+    // Resolve the resource dir, and when the bundled source archive is present
+    // hand it to install.ps1 via env (inherited by the child process — never on
+    // the command line, so it can't leak into a process listing).
+    let bundled_dir = app.path().resource_dir().ok();
+    if let Some(rd) = &bundled_dir {
+        let src_zip = rd.join("jolly-llb-source.zip");
+        if src_zip.exists() {
+            std::env::set_var("HERMES_LOCAL_SOURCE", &src_zip);
+            emit_log(&format!(
+                "[bootstrap] self-contained: bundled source at {}",
+                src_zip.display()
+            ));
+        }
+    }
+
+    // 1. Resolve install.ps1 (dev checkout > bundled resource > cache > network)
+    let script = install_script::resolve(kind, &pin, bundled_dir.as_deref(), &emit_log)
         .await
         .map_err(|e| {
             let msg = format!("resolve install script failed: {e:#}");
