@@ -62,7 +62,9 @@ ignored/
 environments/benchmarks/evals/
 
 # Web UI build output
-hermes_cli/web_dist/
+# NOTE: hermes_cli/web_dist/ is intentionally COMMITTED (not ignored) so a fresh
+# clone ships the prebuilt dashboard — the runtime sys.exit(1)s if web_dist is
+# absent and npm isn't on the install's PATH. Rebuild + recommit when web/ changes.
 apps/desktop/build/
 apps/desktop/dist/
 apps/desktop/release/
