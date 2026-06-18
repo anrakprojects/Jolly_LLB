@@ -6787,6 +6787,14 @@ def _build_web_ui(web_dir: Path, *, fatal: bool = False) -> bool:
 
     npm = shutil.which("npm")
     if not npm:
+        # A prebuilt web_dist shipped in the repo is sufficient to serve — do NOT
+        # force a rebuild (and fail) merely because a fresh `git clone` resets
+        # every file's mtime to checkout time, which makes the staleness check
+        # above think the committed dist is out of date. Only treat the missing
+        # build as fatal when there is genuinely no built frontend to serve.
+        _proj_root = web_dir.parent.parent if web_dir.parent.name == "apps" else web_dir.parent
+        if (_proj_root / "hermes_cli" / "web_dist" / "index.html").exists():
+            return True
         if fatal:
             _say("Web UI frontend not built and npm is not available.")
             _say("Install Node.js, then run:  cd web && npm install && npm run build")
