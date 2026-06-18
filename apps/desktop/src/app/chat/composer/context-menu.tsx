@@ -81,9 +81,9 @@ export function ContextMenu({
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent className="w-72">
             {[
-              { label: 'Code review', text: 'Please review this for bugs, regressions, and missing tests.' },
-              { label: 'Implementation plan', text: 'Please make a concise implementation plan before changing code.' },
-              { label: 'Explain this', text: 'Please explain how this works and point me to the key files.' }
+              { label: 'Summarise judgment', text: 'Please summarise this judgment: the facts, the issues, the holding, and the ratio. Cite the paragraphs you rely on.' },
+              { label: 'Research the point', text: 'Please research this point of law on AnrakLegal — the governing statute and the leading authorities — and verify every citation.' },
+              { label: 'Draft a notice', text: 'Please prepare a first draft of a legal notice for this matter, then flag anything that needs an advocate’s judgment.' }
             ].map(snippet => (
               <ContextMenuItem icon={MessageSquareText} key={snippet.label} onSelect={() => onInsertText(snippet.text)}>
                 {snippet.label}

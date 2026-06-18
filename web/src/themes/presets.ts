@@ -40,36 +40,61 @@ const DEFAULT_LAYOUT: ThemeLayout = {
 
 export const defaultTheme: DashboardTheme = {
   name: "default",
-  label: "Pure White",
-  description: "Clean pure-white canvas — the canonical Anrak Legal look",
+  label: "AnrakLegal",
+  description: "AnrakLegal house style — light, blue, sharp-cornered",
   palette: {
-    // Pure-white canvas with near-black text/accent. The DS cascade in
-    // index.css derives every shadcn token (card, border, muted, …) from
-    // this triplet, so a white background + dark midground yields a fully
-    // light theme without per-token overrides.
-    background: { hex: "#ffffff", alpha: 1 },
-    midground: { hex: "#171717", alpha: 1 },
+    // AnrakLegal canvas: slate-50 page, slate-900 text. The DS cascade in
+    // index.css derives shadcn tokens from this triplet; the blue accent and
+    // exact surface/border values are pinned in colorOverrides below.
+    background: { hex: "#f8fafc", alpha: 1 },
+    midground: { hex: "#0f172a", alpha: 1 },
     foreground: { hex: "#ffffff", alpha: 0 },
-    // Warm glow is composited with `lighten` over white, so it's a no-op
-    // here; kept transparent for clarity.
     warmGlow: "rgba(0, 0, 0, 0)",
-    // No grain — a clean, flat white surface.
+    // No grain — clean, flat, professional surface.
     noiseOpacity: 0,
   },
-  typography: DEFAULT_TYPOGRAPHY,
-  layout: DEFAULT_LAYOUT,
-  // Chat pane matches the white canvas; ChatPage derives a readable
-  // (dark) foreground from this automatically.
-  terminalBackground: "#ffffff",
-  // Kill the faint inverted filler texture so the canvas is truly white.
+  typography: {
+    // AnrakLegal type system: IBM Plex Sans body, Playfair Display headings
+    // (the serif that gives the legal-authority feel), IBM Plex Mono code.
+    fontSans: `"IBM Plex Sans", ${SYSTEM_SANS}`,
+    fontMono: `"IBM Plex Mono", ${SYSTEM_MONO}`,
+    fontDisplay: `"Playfair Display", Georgia, "Times New Roman", serif`,
+    fontUrl:
+      "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap",
+    baseSize: "15px",
+    lineHeight: "1.55",
+    letterSpacing: "0",
+  },
+  layout: {
+    // Sharp corners are AnrakLegal's signature (it forces border-radius:0).
+    radius: "0",
+    density: "comfortable",
+  },
+  // Dark chat pane for readable code/output against the light shell.
+  terminalBackground: "#0f172a",
   componentStyles: {
     backdrop: { fillerOpacity: "0" },
   },
-  // The DS status colors (#4ade80 / #ffbd38) are tuned for dark canvases
-  // and wash out on white — pin readable variants for the light theme.
+  // Pin AnrakLegal's exact palette: blue accent, white surfaces, slate borders.
   colorOverrides: {
+    primary: "#2563eb",
+    primaryForeground: "#ffffff",
+    accent: "#2563eb",
+    accentForeground: "#ffffff",
+    ring: "#2563eb",
+    border: "#e2e8f0",
+    input: "#e2e8f0",
+    card: "#ffffff",
+    cardForeground: "#0f172a",
+    popover: "#ffffff",
+    popoverForeground: "#0f172a",
+    muted: "#f1f5f9",
+    mutedForeground: "#475569",
+    secondary: "#f1f5f9",
+    secondaryForeground: "#0f172a",
     success: "#16a34a",
     warning: "#b45309",
+    destructive: "#dc2626",
   },
 };
 

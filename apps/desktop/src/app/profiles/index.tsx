@@ -543,7 +543,7 @@ function CreateProfileDialog({
         <DialogHeader>
           <DialogTitle>New profile</DialogTitle>
           <DialogDescription>
-            Profiles are independent Hermes environments: separate config, skills, and SOUL.md.
+            Profiles are independent Jolly LLB environments: separate config, skills, and SOUL.md.
           </DialogDescription>
         </DialogHeader>
 

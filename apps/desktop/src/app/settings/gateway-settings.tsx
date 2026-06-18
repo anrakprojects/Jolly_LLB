@@ -138,7 +138,7 @@ export function GatewaySettings() {
       notify({
         kind: 'success',
         title: apply ? 'Gateway connection restarting' : 'Gateway settings saved',
-        message: apply ? 'Hermes Desktop will reconnect using the saved settings.' : 'Saved for the next restart.'
+        message: apply ? 'Jolly LLB Desktop will reconnect using the saved settings.' : 'Saved for the next restart.'
       })
     } catch (err) {
       notifyError(err, apply ? 'Could not apply gateway settings' : 'Could not save gateway settings')
@@ -168,7 +168,7 @@ export function GatewaySettings() {
         remoteUrl: state.remoteUrl.trim()
       })
 
-      const message = `Connected to ${result.baseUrl}${result.version ? ` · Hermes ${result.version}` : ''}`
+      const message = `Connected to ${result.baseUrl}${result.version ? ` · Jolly LLB ${result.version}` : ''}`
       setLastTest(message)
       notify({ kind: 'success', title: 'Remote gateway reachable', message })
     } catch (err) {
@@ -200,8 +200,8 @@ export function GatewaySettings() {
           {state.envOverride ? <Pill tone="primary">env override</Pill> : null}
         </div>
         <p className="mt-2 max-w-2xl text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
-          Hermes Desktop starts its own local gateway by default. Use a remote gateway when you want this app to control
-          an already-running Hermes backend on another machine or behind a trusted proxy.
+          Jolly LLB Desktop starts its own local gateway by default. Use a remote gateway when you want this app to control
+          an already-running Jolly LLB backend on another machine or behind a trusted proxy.
         </p>
       </div>
 
@@ -221,7 +221,7 @@ export function GatewaySettings() {
       <div className="grid gap-3 sm:grid-cols-2">
         <ModeCard
           active={state.mode === 'local'}
-          description="Start a private Hermes backend on localhost. This is the default and works offline."
+          description="Start a private Jolly LLB backend on localhost. This is the default and works offline."
           disabled={state.envOverride}
           icon={Monitor}
           onSelect={() => setState(current => ({ ...current, mode: 'local' }))}
@@ -229,7 +229,7 @@ export function GatewaySettings() {
         />
         <ModeCard
           active={state.mode === 'remote'}
-          description="Connect this desktop shell to a remote Hermes backend using its session token."
+          description="Connect this desktop shell to a remote Jolly LLB backend using its session token."
           disabled={state.envOverride}
           icon={Globe}
           onSelect={() => setState(current => ({ ...current, mode: 'remote' }))}

@@ -114,7 +114,7 @@ interface SectionSearchEntry {
 
 const NAVIGATION_SEARCH_ENTRIES: readonly NavigationSearchEntry[] = [
   { id: 'nav-new-chat', route: NEW_CHAT_ROUTE, title: 'New session', detail: 'Start a fresh session' },
-  { id: 'nav-settings', route: SETTINGS_ROUTE, title: 'Settings', detail: 'Configure Hermes desktop' },
+  { id: 'nav-settings', route: SETTINGS_ROUTE, title: 'Settings', detail: 'Configure Jolly LLB desktop' },
   { id: 'nav-skills', route: SKILLS_ROUTE, title: 'Skills & Tools', detail: 'Enable skills, toolsets, and providers' },
   {
     id: 'nav-messaging',
@@ -863,7 +863,7 @@ export function CommandCenterView({
                           </span>
                         </div>
                         <div className="mt-1 text-xs text-muted-foreground">
-                          Hermes {status.version} · Active sessions {status.active_sessions}
+                          Jolly LLB {status.version} · Active sessions {status.active_sessions}
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
@@ -871,7 +871,7 @@ export function CommandCenterView({
                           Restart messaging
                         </OverlayActionButton>
                         <OverlayActionButton className="h-7 px-2.5" onClick={() => void runSystemAction('update')}>
-                          Update Hermes
+                          Update Jolly LLB
                         </OverlayActionButton>
                       </div>
                     </div>

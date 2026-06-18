@@ -108,6 +108,16 @@ export function TitlebarControls({
   // Static system tools — always pinned to the screen's right edge.
   const systemTools: TitlebarTool[] = [
     {
+      icon: <Codicon name="dashboard" />,
+      id: 'open-dashboard',
+      label: 'Open dashboard',
+      title: 'Open the Jolly LLB management dashboard in your browser',
+      onSelect: () => {
+        triggerHaptic('open')
+        void window.hermesDesktop.openDashboard().catch(() => {})
+      }
+    },
+    {
       active: hapticsMuted,
       icon: hapticsMuted ? <VolumeX /> : <Volume2 />,
       id: 'haptics',
@@ -195,7 +205,7 @@ function ProfilesMenuButton({ navigate }: { navigate: ReturnType<typeof useNavig
         <DropdownMenuLabel>
           <div className="text-sm font-medium text-foreground">Profiles</div>
           <div className="mt-1 text-xs font-normal leading-4 text-muted-foreground">
-            Advanced Hermes environments for separate personas, config, skills, and SOUL.md.
+            Advanced Jolly LLB environments for separate personas, config, skills, and SOUL.md.
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

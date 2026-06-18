@@ -36,7 +36,7 @@ function readClarifyArgs(args: unknown): ClarifyArgs {
 export const ClarifyTool = (props: ToolCallMessagePartProps) => {
   const isPending = props.result === undefined
 
-  // Once Hermes records an answer, fall back to the standard tool block so
+  // Once Jolly LLB records an answer, fall back to the standard tool block so
   // the past Q/A renders consistently with every other tool in the thread.
   if (!isPending) {
     return <ToolFallback {...props} />
@@ -90,7 +90,7 @@ function ClarifyToolPending({ args }: ToolCallMessagePartProps) {
       }
 
       if (!gateway) {
-        notifyError(new Error('Hermes gateway is not connected'), 'Could not send clarify response')
+        notifyError(new Error('Jolly LLB gateway is not connected'), 'Could not send clarify response')
 
         return
       }
@@ -173,7 +173,7 @@ function ClarifyToolPending({ args }: ToolCallMessagePartProps) {
         </span>
         <div className="grid flex-1 gap-0.5">
           <span className="text-[0.6875rem] font-medium uppercase tracking-wide text-muted-foreground/85">
-            Hermes is asking
+            Jolly LLB is asking
           </span>
           <span className="whitespace-pre-wrap leading-snug text-foreground">
             {question || <em className="text-muted-foreground/70">Loading question…</em>}

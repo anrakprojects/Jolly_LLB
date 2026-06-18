@@ -291,7 +291,7 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
     return (
       <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-background/90 backdrop-blur-md">
         <div className="w-full max-w-xl rounded-xl border bg-card p-8 shadow-xl">
-          <h2 className="text-2xl font-semibold tracking-tight">Hermes needs a one-time install</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Jolly LLB needs a one-time install</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Automated first-launch install isn{'\u2019'}t available on {platformLabel} yet. Open Terminal and
             run the command below, then relaunch this app. Subsequent launches will skip this step.
@@ -363,7 +363,7 @@ export function DesktopInstallOverlay({ enabled = true }: DesktopInstallOverlayP
           <p className="mt-1.5 text-sm text-muted-foreground">
             {failed
               ? 'One of the install steps failed. Check the details below or the desktop log for the full transcript.'
-              : 'This is a one-time setup. The Hermes installer is downloading dependencies and configuring your machine. ' +
+              : 'This is a one-time setup. The Jolly LLB installer is downloading dependencies and configuring your machine. ' +
                 'Subsequent launches will skip this step.'}
           </p>
         </div>

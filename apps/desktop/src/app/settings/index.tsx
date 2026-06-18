@@ -67,7 +67,7 @@ export function SettingsView({ gateway, onClose, onConfigSaved }: SettingsPagePr
   }
 
   const resetConfig = async () => {
-    if (!window.confirm('Reset all settings to Hermes defaults?')) {
+    if (!window.confirm('Reset all settings to Jolly LLB defaults?')) {
       return
     }
 

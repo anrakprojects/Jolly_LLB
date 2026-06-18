@@ -69,7 +69,7 @@ const ERROR_SUMMARIES: { test: (msg: string) => boolean; summarize: (msg: string
   {
     test: msg => /method not allowed/i.test(msg),
     summarize: () =>
-      'The desktop backend rejected that request (405 Method Not Allowed). Try restarting Hermes Desktop.'
+      'The desktop backend rejected that request (405 Method Not Allowed). Try restarting Jolly LLB Desktop.'
   },
   {
     test: msg => /microphone permission/i.test(msg),

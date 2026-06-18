@@ -152,7 +152,7 @@ async function getSessionToken(): Promise<string> {
     _sessionToken = injected;
     return _sessionToken;
   }
-  throw new Error("Session token not available — page must be served by the Hermes dashboard server");
+  throw new Error("Session token not available — page must be served by the Jolly LLB dashboard server");
 }
 
 /**
@@ -478,7 +478,7 @@ export const api = {
       { method: "POST" },
     ),
 
-  // Open the native Hermes Desktop app, optionally resuming a session.
+  // Open the native Jolly LLB Desktop app, optionally resuming a session.
   launchDesktop: (sessionId?: string) =>
     fetchJSON<{ ok: boolean; session_id: string | null }>(
       "/api/desktop/launch",

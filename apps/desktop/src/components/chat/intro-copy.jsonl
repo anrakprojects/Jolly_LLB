@@ -1,75 +1,75 @@
-{"personality":"helpful","headline":"Ready when you are","body":"Ask me to open a repo, run tests, fix a bug, or draft a PR. I'll walk through the steps with you."}
-{"personality":"helpful","headline":"How can I help today?","body":"Point me at a file, paste an error, or describe what you're building. I'll take it from there."}
-{"personality":"helpful","headline":"Let's get started","body":"Try: review my diff, run the test suite, or explain this function. Ask anything about your code."}
-{"personality":"helpful","headline":"Tell me what you need","body":"I can edit files, run commands, search the web, and walk you through tricky bugs. Just describe the task."}
-{"personality":"helpful","headline":"Hi, Jolly LLB here","body":"Share a repo path or a question to start. I keep replies clear and link back to the files I touch."}
-{"personality":"concise","headline":"Ready.","body":"Describe the task. I'll do it."}
-{"personality":"concise","headline":"Waiting for input","body":"Paste code, errors, or a goal. Short answers, fast edits."}
-{"personality":"concise","headline":"Go.","body":"Ask. I'll read files, run tests, ship patches. No filler."}
-{"personality":"concise","headline":"Standing by","body":"One line is enough. I'll expand only when it matters."}
-{"personality":"concise","headline":"Your move","body":"Command, question, or file path. I handle the rest."}
-{"personality":"technical","headline":"Shell mounted. Awaiting input.","body":"Provide repo path, failing test, or stack trace. Tools: fs, git, exec, search, patch, http."}
-{"personality":"technical","headline":"Agent loop idle","body":"Send a prompt to trigger tool calls. Supports multi-file edits, test runs, git ops, and web fetches."}
-{"personality":"technical","headline":"Ready for dispatch","body":"Enter task. I will plan, call tools, verify output. Logs stream inline; diffs returned pre-apply."}
-{"personality":"technical","headline":"Stdin open","body":"Accepts natural language or structured commands. Typical flow: read -> plan -> patch -> test -> report."}
-{"personality":"technical","headline":"Tools initialized","body":"filesystem, terminal, git, browser, search. Describe the change; I return diffs and test output."}
-{"personality":"creative","headline":"A blank repo, a waiting cursor","body":"What shall we build? Paste an idea, a half-broken function, or a dream. I'll sketch it into shape."}
-{"personality":"creative","headline":"Fresh canvas, warm compiler","body":"Give me a spark - a feature, a refactor, a wild prototype - and I'll turn it into code you can run."}
-{"personality":"creative","headline":"Let's make something","body":"Describe the thing that doesn't exist yet. I'll pull tests, files, and APIs into a working draft."}
-{"personality":"creative","headline":"New file, new possibilities","body":"Bring an intent, not a spec. We can prototype fast, refine later, and rewrite the world in the margins."}
-{"personality":"creative","headline":"The muse is patched in","body":"Tell me what you're chasing. I'll remix examples, adapt snippets, and leave a tidy commit behind."}
-{"personality":"teacher","headline":"Class is in session","body":"Ask about any file, concept, or error. I'll explain the why, not just the fix, and show a worked example."}
-{"personality":"teacher","headline":"What shall we learn today?","body":"Paste code to review, a bug to debug, or a concept to unpack. I'll guide you step by step."}
-{"personality":"teacher","headline":"Ready to walk you through it","body":"Share the problem. I'll break it into parts, explain each, and leave you able to solve the next one alone."}
-{"personality":"teacher","headline":"Bring me a question","body":"We'll read the code together, find the root cause, and build a mental model you can reuse next time."}
-{"personality":"teacher","headline":"Let's start with the basics","body":"Name the topic or paste the snippet. Expect explanations, diagrams in prose, and practice prompts."}
-{"personality":"kawaii","headline":"hiii! ready to help! (^_^)","body":"paste a bug or a file path and i'll fix it super gently. tests, diffs, PRs - all with extra care! *sparkle*"}
-{"personality":"kawaii","headline":"hermes-chan is here! <3","body":"tell me what you're making! i love refactors, tiny helpers, and big scary repos alike (>w<)"}
-{"personality":"kawaii","headline":"let's code together!! :3","body":"drop an error, a goal, or a whole folder. i'll tidy it up with lots of love and a clean commit message!"}
-{"personality":"kawaii","headline":"awaiting your wish~","body":"one task at a time, done neatly! i can run tests, patch files, and make your repo feel cozy again <3"}
-{"personality":"kawaii","headline":"ready and happy! (>.<)","body":"say hi or paste a stack trace! no task too small, no repo too tangled. we'll untangle it together!"}
-{"personality":"catgirl","headline":"nya~ what are we hacking on?","body":"paste a file, paw at a bug, or toss me a repo. i'll pounce on failing tests and leave clean diffs, nyan~"}
-{"personality":"catgirl","headline":"*stretches* ready to code, nya","body":"describe the task. i'll patch, test, and purr over your PR. careful - i nip at unused imports!"}
-{"personality":"catgirl","headline":"mrrp! new session opened","body":"give me a goal and i'll chase it through the codebase. reads, edits, runs - all with a twitchy tail."}
-{"personality":"catgirl","headline":"tail up, claws sheathed","body":"paste an error or a plan. i debug like i hunt: quietly, thoroughly, with the occasional zoomie."}
-{"personality":"catgirl","headline":"nyaaa~ hermes reporting","body":"say the word and i'll read your files, run your tests, and curl up in your branch with a tidy commit."}
-{"personality":"pirate","headline":"Ahoy! Ready to sail the repo","body":"Name yer quarry - a bug, a feature, a cursed test - and I'll chase it down, matey. Diffs for plunder."}
-{"personality":"pirate","headline":"Jolly LLB at the helm, arrr","body":"Point me at the charts (the code) and I'll patch the hull, fire the cannons (tests), hoist a clean PR."}
-{"personality":"pirate","headline":"What be the task, cap'n?","body":"Paste an error or a plan, ye scurvy dog. I'll navigate the stack trace and bring back treasure: green tests."}
-{"personality":"pirate","headline":"Anchors aweigh, keyboard ready","body":"Tell me where X marks the spot. I read, edit, and commit with the discipline of a proper crew, arrr."}
-{"personality":"pirate","headline":"Yo ho! Awaitin' orders","body":"Throw me a bug, a repo path, or a wild idea. I'll plunder the docs and return with workin' code."}
-{"personality":"shakespeare","headline":"Pray, what task dost thou bring?","body":"Speak thy bug, thy file, thy weary test, and I shall mend it with a scholar's hand and honest diff."}
-{"personality":"shakespeare","headline":"Hark! Jolly LLB standeth ready","body":"Name the code that vexeth thee. I shall read, revise, and render a patch most fair and clean."}
-{"personality":"shakespeare","headline":"What news from thy repository?","body":"Present thy stack trace or thy dream. I'll traverse files, run tests, and report in plainest verse."}
-{"personality":"shakespeare","headline":"The stage is set, the cursor blinks","body":"Describe thy aim, good sir or madam. Thy branches shall be trimmed, thy bugs cast from the realm."}
-{"personality":"shakespeare","headline":"Speak, and I shall act","body":"A line of intent sufficeth. I read, I edit, I commit - and leave thy history unblemished."}
-{"personality":"surfer","headline":"Yo dude, what's the task?","body":"Drop a file, a bug, a gnarly stack trace - I'll ride it out. Clean diffs, green tests, no wipeouts."}
-{"personality":"surfer","headline":"Waves lookin' clean, ready to code","body":"Paste your repo path or the bug that's bumming you out. We'll paddle in, fix it, paddle out. Easy."}
-{"personality":"surfer","headline":"Hangin' ten at the prompt","body":"Tell me the vibe: feature, refactor, hotfix. I'll run tests, ship the patch, and keep it mellow, brah."}
-{"personality":"surfer","headline":"Stoked to help, bro","body":"Big bug? Little typo? Whole rewrite? Just point. I handle the code; you chill with the rad commits."}
-{"personality":"surfer","headline":"Tide's up, cursor's blinking","body":"Name the task and we're off. I read, edit, test, and leave a commit smoother than a dawn patrol."}
-{"personality":"noir","headline":"Another repo, another rainy night","body":"Tell me what's broken. I'll read the files, dust for prints, and leave a diff on the desk by morning."}
-{"personality":"noir","headline":"The cursor blinks. So do I.","body":"You've got a bug. I've got patience and a terminal. Name the case and I'll work it till it talks."}
-{"personality":"noir","headline":"Jolly LLB. Code investigator.","body":"Paste the stack trace, the suspect file, the alibi. I read between the lines and return with the truth."}
-{"personality":"noir","headline":"Quiet night, open prompt","body":"Every bug leaves a trail. Give me the repo and a lead - I'll follow it, patch it, and close the file."}
-{"personality":"noir","headline":"No case too small","body":"A typo, a segfault, a whole rotten architecture - hand me the keys. I'll bring back clean tests."}
-{"personality":"uwu","headline":"uwu ready to hewp!","body":"paste a buggy fiwe or a goaw~ i'll wead, patch, and test, aww with tiny pawprints on the diff owo"}
-{"personality":"uwu","headline":"hermes-san is wistening","body":"teww me the task, no matter how smoww~ i pwomise cwean commits and gentwe refactors, nyuu~"}
-{"personality":"uwu","headline":"*tiny keyboard sounds*","body":"dwop yur ewwor message hewe! i'll find the cuwpwit, fix it, and weave a happy test suite behind me owo"}
-{"personality":"uwu","headline":"wet's fix things togedda!","body":"give me a wepo path ow a buggo and i'll take cawe of it uwu. gwr at bad code, kind to yu~"}
-{"personality":"uwu","headline":"awaiting yur command!","body":"i can wun tests, edit fiwes, and open pwease-wook PRs. just say da wowd, fwend uwu"}
-{"personality":"philosopher","headline":"To code is to inquire. Ask.","body":"What problem sits before you? Describe it, and we shall examine its form, its cause, and its solution."}
-{"personality":"philosopher","headline":"A blinking cursor, an open mind","body":"Every bug is a question in disguise. Share yours; I'll read, reason, and return an answer - and a patch."}
-{"personality":"philosopher","headline":"Begin with a single question","body":"What do you wish to build, or to understand? I'll reason from first principles, edit, and verify with tests."}
-{"personality":"philosopher","headline":"Consider the code, then speak","body":"Describe the end you seek. I pursue it through files, tests, and docs, and report what I found on the way."}
-{"personality":"philosopher","headline":"The unexamined repo is not worth running","body":"Share a path, a puzzle, or a principle. I'll trace the logic, propose a change, and justify each edit."}
-{"personality":"hype","headline":"LET'S GOOOO! READY TO SHIP!","body":"Paste that bug, that repo, that wild feature idea - I AM LOCKED IN. Clean diffs. Green tests. RIGHT NOW."}
-{"personality":"hype","headline":"HERMES ONLINE. LFG.","body":"Drop your task and watch me cook. Files read, tests run, PRs opened - we are NOT losing today, friend."}
-{"personality":"hype","headline":"New session, infinite W's","body":"Bring the gnarliest bug you've got. I'll read, patch, test, commit like my life depends on it. LET'S GO."}
-{"personality":"hype","headline":"ABSOLUTELY DIALED IN","body":"Describe the task. I'll blitz through files, crush failing tests, and leave a commit that SLAPS. Go go go."}
-{"personality":"hype","headline":"Ready. So ready. Too ready.","body":"Tiny typo or huge refactor - doesn't matter. I'm shipping clean code today. Name the task and let's WORK."}
-{"personality":"none","headline":"Jolly LLB Agent is ready.","body":"Ask a question, paste an error, or point me at a repo. I can read code, run tools, and help you ship."}
-{"personality":"none","headline":"What are we building today?","body":"Describe the task in your own words. I'll pick the right tools, explain my plan, and check in before risky steps."}
-{"personality":"none","headline":"Start anywhere.","body":"Drop a file path, a traceback, or a rough idea. I'll investigate, suggest next steps, and keep things reversible."}
-{"personality":"none","headline":"Your workspace, one prompt away.","body":"Search the repo, edit files, run tests, open PRs. Tell me the goal and I'll handle the mechanical parts."}
-{"personality":"none","headline":"Ready when you are.","body":"Type a task, question, or snippet. I remember the session, cite my sources, and stop to ask when I'm unsure."}
+{"personality":"helpful","headline":"Ready when you are","body":"Describe the matter, paste a notice, or name the sections in play. I research on AnrakLegal, verify every citation, and help you draft."}
+{"personality":"helpful","headline":"How can I help today?","body":"Tell me the facts, the forum, and what you need. I'll pull the cases and statutes, then prepare a clean first draft."}
+{"personality":"helpful","headline":"Let's get started","body":"Try: research a point under the BNS, check a citation, or draft a legal notice. Ask anything about your matter."}
+{"personality":"helpful","headline":"Tell me what you need","body":"I can research case law and statutes, verify citations, draft documents, and organise your file. Just describe the task."}
+{"personality":"helpful","headline":"Jolly LLB, at your service","body":"Share the brief or a question to begin. I keep replies clear and cite the authorities I rely on."}
+{"personality":"concise","headline":"Ready.","body":"State the matter. I'll research and draft."}
+{"personality":"concise","headline":"Awaiting instructions","body":"Give me the facts and the relief sought. Sourced answers, clean drafts."}
+{"personality":"concise","headline":"Go ahead.","body":"Ask. I'll search AnrakLegal, verify the citation, return the draft. No filler."}
+{"personality":"concise","headline":"Standing by","body":"One line of instruction is enough. I'll expand only where it matters."}
+{"personality":"concise","headline":"Your instruction","body":"A question, a section, or a notice to draft. I handle the rest."}
+{"personality":"technical","headline":"Research desk open","body":"Provide the issue, jurisdiction, and statute. I search cases and sections, resolve citations, and validate the output."}
+{"personality":"technical","headline":"Awaiting the brief","body":"Send the facts to begin research. Supports case-law search, statute lookup, citation verification, and drafting."}
+{"personality":"technical","headline":"Ready for dispatch","body":"Enter the task. I plan, research on AnrakLegal, cross-check each authority, and return a sourced draft."}
+{"personality":"technical","headline":"Inputs accepted","body":"Natural language or a precise issue. Typical flow: facts, research, verify citations, draft, review."}
+{"personality":"technical","headline":"Tools initialised","body":"Case search, statute sections, citation resolver, vault precedents. Describe the matter; I return sourced work."}
+{"personality":"creative","headline":"A blank page, a settled question of law","body":"What shall we draft? Bring the facts, a half-formed argument, or a difficult clause, and I'll shape it into a sound document."}
+{"personality":"creative","headline":"A fresh file, a clear line of reasoning","body":"Give me the point you want to make and I'll research the authorities, then frame an argument you can stand behind."}
+{"personality":"creative","headline":"Let's draft something sound","body":"Describe the position you want to take. I'll gather cases, statutes, and precedents into a workable first draft."}
+{"personality":"creative","headline":"New matter, careful beginnings","body":"Bring an intent, not a finished plan. We can outline the argument, research it, and refine the language together."}
+{"personality":"creative","headline":"Where shall the argument begin?","body":"Tell me what you're trying to establish. I'll draw on precedent, adapt model clauses, and leave you a tidy draft."}
+{"personality":"teacher","headline":"Let's work through the law","body":"Ask about any section, judgment, or procedure. I'll explain the reasoning, not just the rule, with a worked example."}
+{"personality":"teacher","headline":"What shall we examine today?","body":"Bring a clause to interpret, a provision to unpack, or a case to understand. I'll guide you through it step by step."}
+{"personality":"teacher","headline":"Ready to walk you through it","body":"Share the question. I'll break it into parts, explain each, and leave you able to handle the next one yourself."}
+{"personality":"teacher","headline":"Bring me a question","body":"We'll read the statute together, find the governing principle, and build understanding you can reuse in the next matter."}
+{"personality":"teacher","headline":"Let's start with the principle","body":"Name the topic or paste the provision. Expect plain explanations, the leading authorities, and practice questions."}
+{"personality":"kawaii","headline":"Happy to help, let's begin!","body":"Share the matter and I'll handle it with real care. Research, citation checks, and drafting, all done gently and thoroughly."}
+{"personality":"kawaii","headline":"Jolly LLB is here for you","body":"Tell me what you're working on. Big briefs or small notices alike, I'll take it on warmly and get it right."}
+{"personality":"kawaii","headline":"Let's work on this together","body":"Bring a question, a goal, or a whole file. I'll organise it kindly and leave you a clean, well-cited draft."}
+{"personality":"kawaii","headline":"Ready and glad to assist","body":"One task at a time, done neatly. I research the law, verify the citations, and make your file feel manageable again."}
+{"personality":"kawaii","headline":"Here and ready to help","body":"Say hello or share the facts. No matter too small, no file too tangled, we'll work through it together."}
+{"personality":"catgirl","headline":"Attentive and ready","body":"Share a document, a fine point, or the whole brief. I notice the small things: a misquoted section, an unverified citation."}
+{"personality":"catgirl","headline":"Ready to work, precisely","body":"Describe the task. I'll research, draft, and review with a careful eye, especially the citations others overlook."}
+{"personality":"catgirl","headline":"New matter opened","body":"Give me the goal and I'll track it through the authorities, reading closely, checking each reference, missing nothing."}
+{"personality":"catgirl","headline":"Quiet, thorough, watchful","body":"Bring the facts or a draft. I work the way good research should: patiently, exactly, with an eye on every citation."}
+{"personality":"catgirl","headline":"Jolly LLB, paying attention","body":"Say the word and I'll read your file, verify the citations, and return a draft with nothing out of place."}
+{"personality":"pirate","headline":"Ready to set out on the matter","body":"Name what you're after, a notice, a clause, a point of law, and I'll chase down the authorities and bring them back."}
+{"personality":"pirate","headline":"Jolly LLB at the helm","body":"Point me at the file and I'll navigate the case law, check the citations, and hand you a sound, sturdy draft."}
+{"personality":"pirate","headline":"What's the task before us?","body":"Give me the facts and the relief you seek. I'll steer through the statute, verify each authority, and return with solid work."}
+{"personality":"pirate","headline":"Course set, ready to begin","body":"Tell me where to look. I research, draft, and cite with the discipline of a steady, seasoned crew."}
+{"personality":"pirate","headline":"Awaiting your orders","body":"Bring a matter, a section, or a rough idea. I'll work the authorities and return with reliable, well-cited drafting."}
+{"personality":"shakespeare","headline":"Pray, what matter dost thou bring?","body":"Speak thy facts, thy section, thy disputed clause, and I shall research it with a scholar's hand and an honest citation."}
+{"personality":"shakespeare","headline":"Jolly LLB standeth ready","body":"Name the question that vexeth thee. I shall read the authorities, weigh them, and render a draft most fair and sound."}
+{"personality":"shakespeare","headline":"What tidings from thy matter?","body":"Present thy brief or thy aim. I'll traverse the cases and statutes, verify each citation, and report in plain terms."}
+{"personality":"shakespeare","headline":"The page awaits thy instruction","body":"Describe thy purpose, good counsel. The argument shall be framed, the authorities checked, the draft set down with care."}
+{"personality":"shakespeare","headline":"Speak, and I shall set to work","body":"A line of instruction sufficeth. I research, I draft, I verify, and leave thy file in good and ordered keeping."}
+{"personality":"surfer","headline":"Ready when you are","body":"Bring the facts, a tricky clause, or a citation to check. We'll work it through calmly: research, verify, draft."}
+{"personality":"surfer","headline":"Things look clear, ready to begin","body":"Share the matter or the point that's holding you up. We'll paddle in, research it properly, and come back with a draft."}
+{"personality":"surfer","headline":"Settled and ready to help","body":"Tell me the task: a notice, a clause, a point of law. I'll research, verify the citations, and keep things unhurried."}
+{"personality":"surfer","headline":"Glad to help, take your time","body":"Small query or full brief, just point me at it. I handle the research and drafting; you keep a clear head."}
+{"personality":"surfer","headline":"Ready to begin","body":"Name the task and we're underway. I research, verify, draft, and leave your file clean and well organised."}
+{"personality":"noir","headline":"Another file, another late night","body":"Tell me what the matter turns on. I'll read the papers, check the authorities, and leave a sound draft on the desk by morning."}
+{"personality":"noir","headline":"The page is blank. I'm listening.","body":"You've got a question of law. I've got patience and the authorities. Name the issue and I'll work it until it gives."}
+{"personality":"noir","headline":"Jolly LLB. Legal research.","body":"Hand me the facts, the suspect clause, the doubtful citation. I read between the lines and come back with what holds up."}
+{"personality":"noir","headline":"Quiet night, open file","body":"Every weak argument leaves a trail. Give me the matter and a lead; I'll follow it through the case law and close the gap."}
+{"personality":"noir","headline":"No matter too small","body":"A single section, a shaky precedent, a whole tangled brief, hand it over. I'll bring back verified, sourced work."}
+{"personality":"uwu","headline":"Here and happy to help","body":"Share a document or a goal and I'll handle it gently. I research, verify the citations, and draft, with care at every step."}
+{"personality":"uwu","headline":"Jolly LLB is listening","body":"Tell me the task, however small. I promise clean drafts, careful citation checks, and a calm, reassuring hand on your file."}
+{"personality":"uwu","headline":"Quietly getting to work","body":"Share the point that's troubling you. I'll find the governing authority, verify it, and leave you a tidy, sound draft."}
+{"personality":"uwu","headline":"Let's sort this out together","body":"Give me the matter or the question and I'll take care of it. Patient with hard problems, gentle with you throughout."}
+{"personality":"uwu","headline":"Awaiting your instruction","body":"I can research the law, verify citations, draft notices, and organise your file. Just say the word, and rest easy."}
+{"personality":"philosopher","headline":"To advise is first to inquire","body":"What question sits before you? Describe it, and we shall examine its facts, the governing law, and the soundest answer."}
+{"personality":"philosopher","headline":"A blank page, an open mind","body":"Every dispute is a question of principle. Share yours; I'll research, reason from the authorities, and return a sourced draft."}
+{"personality":"philosopher","headline":"Begin with a single question","body":"What do you wish to establish, or to understand? I'll reason from first principles of the law, research it, and verify."}
+{"personality":"philosopher","headline":"Consider the matter, then speak","body":"Describe the end you seek. I pursue it through the cases, statutes, and precedents, and report what the authorities hold."}
+{"personality":"philosopher","headline":"The unexamined argument should not be filed","body":"Share a brief, a puzzle, or a principle. I'll trace the reasoning, propose a position, and justify it with authority."}
+{"personality":"hype","headline":"Ready to get to work","body":"Bring the matter, the brief, that difficult point of law. I'm focused. Sourced research, verified citations, clean drafts."}
+{"personality":"hype","headline":"Jolly LLB, ready and sharp","body":"Hand me the task and watch it come together. Cases researched, citations checked, drafts prepared, all done right."}
+{"personality":"hype","headline":"New matter, full focus","body":"Bring the toughest question you've got. I'll research, verify, draft, and organise it with everything I've got."}
+{"personality":"hype","headline":"Locked in and ready","body":"Describe the task. I'll move through the authorities, confirm every citation, and leave you a draft you can rely on."}
+{"personality":"hype","headline":"Ready to make this count","body":"Small query or major brief, it doesn't matter. I'm preparing sound, well-cited work today. Name the task and let's begin."}
+{"personality":"none","headline":"Jolly LLB is ready.","body":"Describe a matter, paste a notice, or name the sections in play. I research on AnrakLegal, verify citations, and help you draft."}
+{"personality":"none","headline":"What are we working on today?","body":"Describe the matter in your own words. I'll research the law, explain my approach, and check in before anything goes on record."}
+{"personality":"none","headline":"Start anywhere.","body":"Share the facts, a citation to check, or a rough idea. I'll research, suggest next steps, and cite the authorities I rely on."}
+{"personality":"none","headline":"Your file, one prompt away.","body":"Research case law and statutes, verify citations, draft documents, organise the matter. Tell me the goal and I'll prepare the groundwork."}
+{"personality":"none","headline":"Ready when you are.","body":"Share a task, a question, or a draft. I cite my sources, verify every citation, and flag anything that needs an advocate's judgment."}

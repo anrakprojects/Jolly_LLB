@@ -295,11 +295,6 @@ export function ToolsetConfigPanel({ toolset, onConfiguredChange }: ToolsetConfi
             {isActive && (
               <div className="grid gap-2 bg-muted/20 p-3">
                 {provider.tag && <p className="text-[0.72rem] text-muted-foreground">{provider.tag}</p>}
-                {provider.requires_nous_auth && (
-                  <p className="text-[0.72rem] text-muted-foreground">
-                    Included with a Nous subscription — sign in to Nous Portal to activate.
-                  </p>
-                )}
                 {provider.env_vars.length === 0 ? (
                   <p className="text-[0.72rem] text-muted-foreground">No API key required.</p>
                 ) : (

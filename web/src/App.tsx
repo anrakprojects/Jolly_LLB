@@ -40,12 +40,10 @@ import {
   RotateCw,
   Settings,
   Shield,
-  ShieldCheck,
   Sparkles,
   Star,
   Terminal,
   Users,
-  Webhook,
   Wrench,
   X,
   Zap,
@@ -90,7 +88,6 @@ import type { Translations } from "@/i18n/types";
 import { PluginPage, PluginSlot, usePlugins } from "@/plugins";
 import type { PluginManifest } from "@/plugins";
 import { useTheme } from "@/themes";
-import { isDashboardEmbeddedChatEnabled } from "@/lib/dashboard-flags";
 import { api } from "@/lib/api";
 import type { StatusResponse } from "@/lib/api";
 
@@ -105,13 +102,6 @@ function UnknownRouteFallback({ pluginsLoading }: { pluginsLoading: boolean }) {
   }
   return <Navigate to="/sessions" replace />;
 }
-
-const CHAT_NAV_ITEM: NavItem = {
-  path: "/chat",
-  labelKey: "chat",
-  label: "Chat",
-  icon: MessageSquare,
-};
 
 /**
  * Built-in routes except /chat.  Chat is rendered persistently (outside
@@ -150,29 +140,24 @@ function ChatRouteSink() {
   return null;
 }
 
+// Nav reframed for the AnrakLegal product. Dev-flavoured pages (Plugins,
+// Webhooks, Pairing) are removed from the sidebar — their routes still exist
+// and are reachable by URL, they're just not surfaced to legal users.
 const BUILTIN_NAV_REST: NavItem[] = [
-  {
-    path: "/sessions",
-    labelKey: "sessions",
-    label: "Sessions",
-    icon: MessageSquare,
-  },
+  { path: "/sessions", label: "Conversations", icon: MessageSquare },
   {
     path: "/analytics",
     labelKey: "analytics",
     label: "Analytics",
     icon: BarChart3,
   },
-  { path: "/cron", label: "Automate", icon: Clock },
-  { path: "/skills", labelKey: "skills", label: "Skills", icon: Package },
-  { path: "/plugins", labelKey: "plugins", label: "Plugins", icon: Puzzle },
-  { path: "/mcp", label: "MCP", icon: Plug },
+  { path: "/cron", label: "Schedules", icon: Clock },
+  { path: "/skills", label: "Playbooks", icon: Package },
+  { path: "/mcp", label: "Connectors", icon: Plug },
   { path: "/channels", label: "Channels", icon: Radio },
-  { path: "/webhooks", label: "Webhooks", icon: Webhook },
-  { path: "/pairing", label: "Pairing", icon: ShieldCheck },
-  { path: "/profiles", labelKey: "profiles", label: "Profiles", icon: Users },
-  { path: "/config", labelKey: "config", label: "Config", icon: Settings },
-  { path: "/env", labelKey: "keys", label: "Keys", icon: KeyRound },
+  { path: "/profiles", label: "Workspaces", icon: Users },
+  { path: "/config", label: "Settings", icon: Settings },
+  { path: "/env", label: "API Keys", icon: KeyRound },
   { path: "/system", label: "System", icon: Wrench },
 ];
 
@@ -326,7 +311,7 @@ export default function App() {
   const { pathname } = useLocation();
   const { manifests, loading: pluginsLoading } = usePlugins();
   const { theme } = useTheme();
-  const { toast, showToast } = useToast();
+  const { toast } = useToast();
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
@@ -354,7 +339,11 @@ export default function App() {
   const isDocsRoute = pathname === "/docs" || pathname === "/docs/";
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
   const isChatRoute = normalizedPath === "/chat";
-  const embeddedChat = isDashboardEmbeddedChatEnabled();
+  // No embedded chat in the management dashboard. The in-browser /chat host is
+  // the Nous/Jolly LLB PTY terminal and must never surface here; chatting is the
+  // desktop app's job. Forcing this false drops the /chat route and the
+  // persistent terminal host entirely.
+  const embeddedChat = false;
 
   // `dashboard.show_token_analytics` gates the Analytics nav item.  The
   // page itself remains reachable by URL (it renders an explanation when
@@ -403,24 +392,14 @@ export default function App() {
     [embeddedChat],
   );
 
-  // Clicking "Chat" opens a fresh chat in the native desktop app rather than
-  // the embedded terminal. launchDesktop() with no session id starts a new chat.
-  const handleOpenDesktopChat = useCallback(() => {
-    showToast("Opening a new chat in the desktop app…", "success");
-    void api
-      .launchDesktop()
-      .catch((e) =>
-        showToast(`Couldn't open the desktop app: ${e}`, "error"),
-      );
-  }, [showToast]);
-
   const builtinNav = useMemo(() => {
-    const chatItem: NavItem = { ...CHAT_NAV_ITEM, onSelect: handleOpenDesktopChat };
-    const base = [chatItem, ...BUILTIN_NAV_REST];
+    // No chat/assistant tab in the management dashboard — chat is the desktop
+    // app's job.
+    const base = [...BUILTIN_NAV_REST];
     return showTokenAnalytics
       ? base
       : base.filter((n) => n.path !== "/analytics");
-  }, [handleOpenDesktopChat, showTokenAnalytics]);
+  }, [showTokenAnalytics]);
 
   const sidebarNav = useMemo(
     () => partitionSidebarNav(builtinNav, manifests),

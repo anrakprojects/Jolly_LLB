@@ -501,7 +501,7 @@ export function LocalFilePreview({ reloadKey, target }: { reloadKey: number; tar
         body={
           binary
             ? `Previewing ${target.label} may show unreadable text.`
-            : `${target.label} is ${formatBytes(size)}. Hermes will only show the first 512 KB.`
+            : `${target.label} is ${formatBytes(size)}. Jolly LLB will only show the first 512 KB.`
         }
         primaryAction={{ label: 'Preview anyway', onClick: () => setForcePreview(true) }}
         title={binary ? 'This looks like a binary file' : 'This file is large'}

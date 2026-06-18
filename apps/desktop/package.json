@@ -1,10 +1,10 @@
 {
   "name": "hermes",
-  "productName": "Hermes",
+  "productName": "Jolly LLB",
   "private": true,
   "version": "0.15.1",
   "description": "Native desktop shell for Jolly LLB.",
-  "author": "Nous Research",
+  "author": "AnrakLegal",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -15,7 +15,7 @@
     "profile:main": "wait-on http://127.0.0.1:5174 && cross-env XCURSOR_SIZE=24 HERMES_DESKTOP_DEV_SERVER=http://127.0.0.1:5174 electron --inspect=9229 .",
     "profile:main:cpu": "wait-on http://127.0.0.1:5174 && cross-env XCURSOR_SIZE=24 NODE_OPTIONS=--cpu-prof HERMES_DESKTOP_DEV_SERVER=http://127.0.0.1:5174 electron .",
     "start": "npm run build && electron .",
-    "build": "node scripts/assert-root-install.cjs && node scripts/write-build-stamp.cjs && node scripts/stage-native-deps.cjs && tsc -b && vite build",
+    "build": "node scripts/assert-root-install.cjs && node scripts/write-build-stamp.cjs && node scripts/stage-native-deps.cjs && node scripts/stage-updater.cjs && tsc -b && vite build",
     "builder": "cross-env NODE_OPTIONS=--max-old-space-size=16384 electron-builder",
     "pack": "npm run build && npm run builder -- --dir",
     "dist": "npm run build && npm run builder",
@@ -39,7 +39,9 @@
     "fmt": "prettier --write 'src/**/*.{ts,tsx}' 'electron/**/*.{js,cjs}' 'vite.config.ts'",
     "fix": "npm run lint:fix && npm run fmt",
     "test:ui": "vitest run --environment jsdom",
-    "preview": "node scripts/assert-root-install.cjs && vite preview --host 127.0.0.1 --port 4174"
+    "preview": "node scripts/assert-root-install.cjs && vite preview --host 127.0.0.1 --port 4174",
+    "publish:azure": "bash scripts/publish-azure.sh release",
+    "release:mac": "npm run dist:mac && npm run publish:azure"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.12.28",
@@ -92,7 +94,8 @@
     "unified": "^11.0.5",
     "unist-util-visit-parents": "^6.0.2",
     "vfile": "^6.0.3",
-    "web-haptics": "^0.0.6"
+    "web-haptics": "^0.0.6",
+    "electron-updater": "6.8.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
@@ -125,10 +128,10 @@
   },
   "build": {
     "electronVersion": "40.9.3",
-    "appId": "com.nousresearch.hermes",
-    "productName": "Hermes",
-    "executableName": "Hermes",
-    "artifactName": "Hermes-${version}-${os}-${arch}.${ext}",
+    "appId": "legal.anrak.jollyllb",
+    "productName": "Jolly LLB",
+    "executableName": "JollyLLB",
+    "artifactName": "JollyLLB-${version}-${os}-${arch}.${ext}",
     "icon": "assets/icon",
     "directories": {
       "output": "release"
@@ -154,6 +157,13 @@
       {
         "from": "assets/icon.ico",
         "to": "icon.ico"
+      },
+      {
+        "from": "build/updater-stage",
+        "to": "updater-deps/node_modules",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "asar": true,
@@ -163,15 +173,15 @@
       "**/prebuilds/**"
     ],
     "mac": {
-      "category": "public.app-category.developer-tools",
+      "category": "public.app-category.productivity",
       "entitlements": "electron/entitlements.mac.plist",
       "entitlementsInherit": "electron/entitlements.mac.inherit.plist",
       "extendInfo": {
-        "CFBundleDisplayName": "Hermes",
-        "CFBundleExecutable": "Hermes",
-        "CFBundleName": "Hermes",
-        "NSAudioCaptureUsageDescription": "Hermes uses audio capture for voice conversations.",
-        "NSMicrophoneUsageDescription": "Hermes uses the microphone for voice input and voice conversations."
+        "CFBundleDisplayName": "Jolly LLB",
+        "CFBundleExecutable": "JollyLLB",
+        "CFBundleName": "Jolly LLB",
+        "NSAudioCaptureUsageDescription": "Jolly LLB uses audio capture for voice conversations.",
+        "NSMicrophoneUsageDescription": "Jolly LLB uses the microphone for voice input and voice conversations."
       },
       "gatekeeperAssess": false,
       "hardenedRuntime": true,
@@ -181,7 +191,7 @@
       ]
     },
     "dmg": {
-      "title": "Install Hermes",
+      "title": "Install Jolly LLB",
       "backgroundColor": "#f5f5f7",
       "iconSize": 96,
       "window": {
@@ -203,7 +213,7 @@
       ]
     },
     "win": {
-      "legalTrademarks": "Hermes",
+      "legalTrademarks": "Jolly LLB",
       "target": [
         "nsis",
         "msi"
@@ -211,8 +221,8 @@
       "signAndEditExecutable": false
     },
     "linux": {
-      "category": "Development",
-      "maintainer": "Nous Research <support@nousresearch.com>",
+      "category": "Office",
+      "maintainer": "AnrakLegal <support@anrak.legal>",
       "synopsis": "Native desktop shell for Jolly LLB.",
       "target": [
         "AppImage",
@@ -224,9 +234,16 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "perMachine": false,
-      "shortcutName": "Hermes",
-      "uninstallDisplayName": "Hermes",
+      "shortcutName": "Jolly LLB",
+      "uninstallDisplayName": "Jolly LLB",
       "warningsAsErrors": false
-    }
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://REPLACE-ME.blob.core.windows.net/jolly-updates/",
+        "channel": "latest"
+      }
+    ]
   }
 }

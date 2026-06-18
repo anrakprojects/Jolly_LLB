@@ -69,7 +69,7 @@ export function BootFailureOverlay() {
             <AlertTriangle className="size-5" />
           </div>
           <div>
-            <h2 className="text-[0.9375rem] font-semibold tracking-tight">Hermes couldn't start</h2>
+            <h2 className="text-[0.9375rem] font-semibold tracking-tight">Jolly LLB couldn't start</h2>
             <p className="mt-1 text-[0.8125rem] leading-5 text-(--ui-text-tertiary)">
               The background gateway didn't come up. Try one of the recovery steps below — nothing here deletes your
               chats or settings.

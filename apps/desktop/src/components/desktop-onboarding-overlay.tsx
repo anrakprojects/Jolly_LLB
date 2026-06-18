@@ -96,34 +96,37 @@ const API_KEY_OPTIONS: ApiKeyOption[] = [
     name: 'Local / custom endpoint',
     short: 'self-hosted',
     envKey: 'OPENAI_BASE_URL',
-    description: 'Point Hermes at a local or self-hosted OpenAI-compatible endpoint (vLLM, llama.cpp, Ollama, etc).',
-    docsUrl: 'https://github.com/NousResearch/hermes-agent#bring-your-own-endpoint',
+    description: 'Point Jolly LLB at a local or self-hosted OpenAI-compatible endpoint (vLLM, llama.cpp, Ollama, etc).',
+    docsUrl: '',
     placeholder: 'http://127.0.0.1:8000/v1'
   }
 ]
 
 const PROVIDER_DISPLAY: Record<string, { order: number; title: string }> = {
-  nous: { order: 0, title: 'Nous Portal' },
-  anthropic: { order: 1, title: 'Anthropic Claude' },
-  'openai-codex': { order: 2, title: 'OpenAI Codex / ChatGPT' },
-  'minimax-oauth': { order: 3, title: 'MiniMax' },
-  'claude-code': { order: 4, title: 'Claude Code' },
-  'qwen-oauth': { order: 5, title: 'Qwen Code' }
+  anthropic: { order: 1, title: 'Claude' },
+  'openai-codex': { order: 2, title: 'ChatGPT' }
 }
 
 const assetPath = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
 
 const FLOW_SUBTITLES: Record<OAuthProvider['flow'], string> = {
   pkce: 'Opens your browser to sign in, then continues here',
-  device_code: 'Opens a verification page in your browser — Hermes connects automatically',
+  device_code: 'Opens a verification page in your browser — Jolly LLB connects automatically',
   external: 'Sign in once in your terminal, then come back to chat'
 }
 
 const providerTitle = (p: OAuthProvider) => PROVIDER_DISPLAY[p.id]?.title ?? p.name
 const orderOf = (p: OAuthProvider) => PROVIDER_DISPLAY[p.id]?.order ?? 99
 
+// Only Claude and ChatGPT are offered. Users sign in with their existing Claude
+// or ChatGPT subscription (OAuth) for unlimited usage — no Nous, no other
+// providers, no API keys, no paywall.
+const ALLOWED_PROVIDER_IDS = new Set(["anthropic", "openai-codex"])
+
 const sortProviders = (providers: OAuthProvider[]) =>
-  [...providers].sort((a, b) => orderOf(a) - orderOf(b) || a.name.localeCompare(b.name))
+  [...providers]
+    .filter((p) => ALLOWED_PROVIDER_IDS.has(p.id))
+    .sort((a, b) => orderOf(a) - orderOf(b) || a.name.localeCompare(b.name))
 
 export function DesktopOnboardingOverlay({ enabled, onCompleted, requestGateway }: DesktopOnboardingOverlayProps) {
   const onboarding = useStore($desktopOnboarding)
@@ -204,8 +207,8 @@ function Preparing({ boot }: { boot: DesktopBootState }) {
     <div className="grid gap-3" role="status">
       <p className="text-sm text-muted-foreground">
         {installing
-          ? 'Hermes is finishing install. This usually takes under a minute on first run.'
-          : 'Starting Hermes…'}
+          ? 'Jolly LLB is finishing install. This usually takes under a minute on first run.'
+          : 'Starting Jolly LLB…'}
       </p>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div
@@ -243,8 +246,9 @@ function Header() {
   )
 }
 
-const FEATURED_ID = 'nous'
-const FEATURED_PITCH = 'One subscription, 300+ frontier models — the recommended way to run Hermes'
+// No featured provider — show OpenAI/Claude/etc. directly (no Nous Portal hero).
+const FEATURED_ID = ''
+const FEATURED_PITCH = 'One subscription, 300+ frontier models — the recommended way to run Jolly LLB'
 const SHOW_ALL_KEY = 'hermes-onboarding-show-all-v1'
 
 const readShowAll = () => {
@@ -295,7 +299,6 @@ export function Picker({ ctx }: { ctx: OnboardingContext }) {
           {rest.map(p => (
             <ProviderRow key={p.id} onSelect={select} provider={p} />
           ))}
-          <KeyProviderRow onClick={() => setOnboardingMode('apikey')} />
         </>
       ) : null}
       {collapsible ? (
@@ -308,15 +311,6 @@ export function Picker({ ctx }: { ctx: OnboardingContext }) {
           <ChevronDown className={cn('size-3.5 transition', showAll && 'rotate-180')} />
         </button>
       ) : null}
-      <div className="flex justify-end pt-1">
-        <button
-          className="text-xs font-medium text-muted-foreground hover:text-foreground"
-          onClick={() => setOnboardingMode('apikey')}
-          type="button"
-        >
-          I have an API key
-        </button>
-      </div>
     </div>
   )
 }
@@ -365,22 +359,6 @@ function ConnectedTag() {
       <Check className="size-3" />
       Connected
     </span>
-  )
-}
-
-function KeyProviderRow({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-background/60 p-3 text-left transition hover:border-primary/40 hover:bg-accent/40"
-      onClick={onClick}
-      type="button"
-    >
-      <div className="min-w-0">
-        <span className="text-sm font-semibold">OpenRouter</span>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">One key, hundreds of models — a solid default</p>
-      </div>
-      <ChevronRight className="size-4 text-muted-foreground transition group-hover:text-foreground" />
-    </button>
   )
 }
 
@@ -545,7 +523,7 @@ function FlowPanel({ ctx, flow }: { ctx: OnboardingContext; flow: OnboardingFlow
       <Step title={`Sign in with ${title}`}>
         <ol className="list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
           <li>We opened {title} in your browser.</li>
-          <li>Authorize Hermes there.</li>
+          <li>Authorize Jolly LLB there.</li>
           <li>Copy the authorization code and paste it below.</li>
         </ol>
         <Input

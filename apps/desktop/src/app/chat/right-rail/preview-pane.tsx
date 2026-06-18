@@ -102,7 +102,7 @@ function PreviewLoadError({
         onRestartServer
           ? {
               disabled: restarting,
-              label: restarting ? 'Hermes is restarting...' : 'Ask Hermes to restart the server',
+              label: restarting ? 'Jolly LLB is restarting...' : 'Ask Jolly LLB to restart the server',
               onClick: onRestartServer
             }
           : undefined
@@ -228,7 +228,7 @@ export function PreviewPane({
 
     // Auto-open the preview console so the user can see progress events
     // streaming back from the background agent. Without this, clicking
-    // "Ask Hermes to restart the server" looked like it did nothing —
+    // "Ask Jolly LLB to restart the server" looked like it did nothing —
     // the work was happening, but in a collapsed pane.
     consoleState.setOpen(true)
 
@@ -238,13 +238,13 @@ export function PreviewPane({
 
       appendConsoleEntry({
         level: 1,
-        message: `Hermes is looking for a preview server to restart (${taskId})`
+        message: `Jolly LLB is looking for a preview server to restart (${taskId})`
       })
 
       notify({
         kind: 'info',
         title: 'Restarting preview server',
-        message: 'Hermes is working in the background. Watch the preview console for progress.',
+        message: 'Jolly LLB is working in the background. Watch the preview console for progress.',
         durationMs: 4000
       })
     } catch (error) {
@@ -342,7 +342,7 @@ export function PreviewPane({
         previewServerRestart.status === 'running'
           ? previewServerRestart.message
           : previewServerRestart.status === 'complete'
-            ? `Hermes finished restarting the preview server${
+            ? `Jolly LLB finished restarting the preview server${
                 previewServerRestart.message ? `: ${previewServerRestart.message}` : ''
               }`
             : `Server restart failed: ${previewServerRestart.message || 'unknown error'}`
@@ -360,7 +360,7 @@ export function PreviewPane({
       notify({
         kind: 'warning',
         title: 'Preview restart failed',
-        message: previewServerRestart.message?.slice(0, 200) || 'Hermes could not restart the server.',
+        message: previewServerRestart.message?.slice(0, 200) || 'Jolly LLB could not restart the server.',
         durationMs: 6000
       })
     }
@@ -376,7 +376,7 @@ export function PreviewPane({
     const timer = window.setTimeout(() => {
       failPreviewServerRestart(
         taskId,
-        'Hermes is still working, but no restart result has arrived yet. The server command may be running in the foreground.'
+        'Jolly LLB is still working, but no restart result has arrived yet. The server command may be running in the foreground.'
       )
     }, SERVER_RESTART_TIMEOUT_MS)
 

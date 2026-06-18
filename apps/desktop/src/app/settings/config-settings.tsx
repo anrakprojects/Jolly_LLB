@@ -317,7 +317,7 @@ export function ConfigSettings({
   }
 
   if (!config || !schema) {
-    return <LoadingState label="Loading Hermes configuration..." />
+    return <LoadingState label="Loading Jolly LLB configuration..." />
   }
 
   return (

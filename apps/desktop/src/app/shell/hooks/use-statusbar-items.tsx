@@ -140,7 +140,7 @@ export function useStatusbarItems({
     const tooltip = [
       applying ? updateApply.message || 'Update in progress' : null,
       !applying && behind > 0 && `${behind} commit${behind === 1 ? '' : 's'} behind ${updateStatus?.branch ?? '…'}`,
-      appVersion && `Hermes Desktop v${appVersion}`,
+      appVersion && `Jolly LLB Desktop v${appVersion}`,
       sha && `commit ${sha}`,
       updateStatus?.branch && `branch ${updateStatus.branch}`
     ]
@@ -186,7 +186,7 @@ export function useStatusbarItems({
         label: 'Gateway',
         menuClassName: 'w-72',
         menuContent: gatewayMenuContent,
-        title: inferenceStatus?.reason || 'Hermes inference gateway status',
+        title: inferenceStatus?.reason || 'Jolly LLB inference gateway status',
         variant: 'menu'
       },
       {

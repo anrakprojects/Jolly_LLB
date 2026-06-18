@@ -44,7 +44,7 @@ export function UrlDialog({
           </span>
           <div className="grid gap-0.5 text-left">
             <DialogTitle>Attach a URL</DialogTitle>
-            <DialogDescription>Hermes will fetch the page and include it as context for this turn.</DialogDescription>
+            <DialogDescription>Jolly LLB will fetch the page and include it as context for this turn.</DialogDescription>
           </div>
         </DialogHeader>
         <form

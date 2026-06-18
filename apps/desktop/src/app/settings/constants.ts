@@ -25,7 +25,8 @@ export const EMPTY_SELECT_VALUE = '__hermes_empty__'
 export const CONTROL_TEXT = 'text-[0.8125rem]'
 
 export const PROVIDER_GROUPS: ProviderPrefix[] = [
-  { prefix: 'NOUS_', name: 'Nous Portal', priority: 0 },
+  // Nous Portal intentionally not offered — users bring OpenAI/Claude (OAuth),
+  // OpenRouter, or a direct LLM endpoint.
   { prefix: 'ANTHROPIC_', name: 'Anthropic', priority: 1 },
   { prefix: 'DASHSCOPE_', name: 'DashScope (Qwen)', priority: 2 },
   { prefix: 'HERMES_QWEN_', name: 'DashScope (Qwen)', priority: 2 },
@@ -155,15 +156,15 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = {
   model_context_length: "Leave at 0 to use the selected model's detected context window.",
   fallback_providers: 'Backup provider:model entries to try if the default model fails.',
   'display.personality': 'Default assistant style for new sessions.',
-  timezone: 'Used when Hermes needs local time context. Blank uses the system timezone.',
+  timezone: 'Used when Jolly LLB needs local time context. Blank uses the system timezone.',
   'display.show_reasoning': 'Show reasoning sections when the backend provides them.',
   'agent.image_input_mode': 'Controls how image attachments are sent to the model.',
   'terminal.cwd': 'Default project folder for tool and terminal work.',
   'code_execution.mode': 'How strictly code execution is scoped to the current project.',
   'terminal.persistent_shell': 'Keep shell state between commands when the backend supports it.',
   'terminal.env_passthrough': 'Environment variables to pass into tool execution.',
-  file_read_max_chars: 'Maximum characters Hermes can read from one file request.',
-  'approvals.mode': 'How Hermes handles commands that need explicit approval.',
+  file_read_max_chars: 'Maximum characters Jolly LLB can read from one file request.',
+  'approvals.mode': 'How Jolly LLB handles commands that need explicit approval.',
   'approvals.timeout': 'How long approval prompts wait before timing out.',
   'security.redact_secrets': 'Hide detected secrets from model-visible content when possible.',
   'checkpoints.enabled': 'Create rollback snapshots before file edits.',
@@ -174,7 +175,7 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = {
   'voice.auto_tts': 'Automatically speak assistant responses.',
   'stt.enabled': 'Enable local or provider-backed speech transcription.',
   'stt.elevenlabs.language_code': 'Optional ISO-639-3 language code. Blank lets ElevenLabs auto-detect.',
-  'agent.max_turns': 'Upper bound for tool-calling turns before Hermes stops a run.'
+  'agent.max_turns': 'Upper bound for tool-calling turns before Jolly LLB stops a run.'
 }
 
 // Curated desktop config surface: only fields a user might tune from the app.
@@ -312,7 +313,7 @@ export const MODE_OPTIONS: ModeOption[] = [
 ]
 
 export const SEARCH_PLACEHOLDER: Record<'about' | 'config' | 'gateway' | 'keys' | 'mcp' | 'sessions', string> = {
-  about: 'About Hermes Desktop',
+  about: 'About Jolly LLB Desktop',
   config: 'Search settings...',
   gateway: 'Gateway connection...',
   keys: 'Search API keys...',

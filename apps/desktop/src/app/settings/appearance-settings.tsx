@@ -72,7 +72,7 @@ export function AppearanceSettings() {
             <div>
               <div className="text-sm font-medium">Color Mode</div>
               <div className="mt-1 text-xs text-muted-foreground">
-                Pick a fixed mode or let Hermes follow your system setting.
+                Pick a fixed mode or let Jolly LLB follow your system setting.
               </div>
             </div>
             <Pill>{prettyName(mode)}</Pill>

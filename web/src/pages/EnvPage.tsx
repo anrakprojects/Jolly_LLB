@@ -44,26 +44,12 @@ import { PluginSlot } from "@/plugins";
 
 /** Map env-var key prefixes to a human-friendly provider name + ordering. */
 const PROVIDER_GROUPS: { prefix: string; name: string; priority: number }[] = [
-  // Nous Portal first
-  { prefix: "NOUS_", name: "Nous Portal", priority: 0 },
-  // Then alphabetical by display name
-  { prefix: "ANTHROPIC_", name: "Anthropic", priority: 1 },
-  { prefix: "DASHSCOPE_", name: "DashScope (Qwen)", priority: 2 },
-  { prefix: "HERMES_QWEN_", name: "DashScope (Qwen)", priority: 2 },
-  { prefix: "DEEPSEEK_", name: "DeepSeek", priority: 3 },
-  { prefix: "GOOGLE_", name: "Gemini", priority: 4 },
-  { prefix: "GEMINI_", name: "Gemini", priority: 4 },
-  { prefix: "GLM_", name: "GLM / Z.AI", priority: 5 },
-  { prefix: "ZAI_", name: "GLM / Z.AI", priority: 5 },
-  { prefix: "Z_AI_", name: "GLM / Z.AI", priority: 5 },
-  { prefix: "HF_", name: "Hugging Face", priority: 6 },
-  { prefix: "KIMI_", name: "Kimi / Moonshot", priority: 7 },
-  { prefix: "MINIMAX_CN_", name: "MiniMax (China)", priority: 9 },
-  { prefix: "MINIMAX_", name: "MiniMax", priority: 8 },
-  { prefix: "OPENCODE_GO_", name: "OpenCode Go", priority: 10 },
-  { prefix: "OPENCODE_ZEN_", name: "OpenCode Zen", priority: 11 },
-  { prefix: "OPENROUTER_", name: "OpenRouter", priority: 12 },
-  { prefix: "XIAOMI_", name: "Xiaomi MiMo", priority: 13 },
+  // Only Claude and ChatGPT are offered product-wide. Users normally sign in via
+  // OAuth (their Claude / ChatGPT subscription); these API-key groups are kept
+  // only for the two supported brands. Nous, OpenRouter, Gemini, MiniMax, Qwen,
+  // DeepSeek, etc. are intentionally not offered.
+  { prefix: "ANTHROPIC_", name: "Anthropic (Claude)", priority: 1 },
+  { prefix: "OPENAI_", name: "OpenAI (ChatGPT)", priority: 2 },
 ];
 
 function getProviderGroup(key: string): string {

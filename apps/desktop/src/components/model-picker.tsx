@@ -64,7 +64,13 @@ export function ModelPickerDialog({
     enabled: open
   })
 
-  const providers = modelOptions.data?.providers ?? []
+  // Lock the picker to Claude (anthropic) + ChatGPT (openai-codex) only. Users
+  // sign in with their own subscription for unlimited usage — no Nous, no
+  // OpenRouter, no Gemini, no other providers anywhere in the product.
+  const ALLOWED_PROVIDER_SLUGS = new Set(['anthropic', 'openai-codex'])
+  const providers = (modelOptions.data?.providers ?? []).filter((p) =>
+    ALLOWED_PROVIDER_SLUGS.has(p.slug)
+  )
   const optionsModel = String(modelOptions.data?.model ?? currentModel ?? '')
   const optionsProvider = String(modelOptions.data?.provider ?? currentProvider ?? '')
   const loading = modelOptions.isPending && !modelOptions.data
@@ -240,16 +246,10 @@ function ModelResults({
                   value={`${provider.slug}:${model}`}
                 >
                   <span className="min-w-0 flex-1 truncate">{model}</span>
-                  {locked && <span className="shrink-0 text-[0.62rem] uppercase tracking-wide opacity-80">Pro</span>}
                   <ModelPrice isCurrent={isCurrent} price={price} />
                 </CommandItem>
               )
             })}
-            {unavailable.size > 0 && (
-              <div className="px-6 pb-2 pt-1 text-[0.62rem] leading-relaxed text-muted-foreground">
-                Pro models need a paid Nous subscription.
-              </div>
-            )}
           </CommandGroup>
         )
       })}

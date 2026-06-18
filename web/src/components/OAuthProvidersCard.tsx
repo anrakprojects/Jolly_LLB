@@ -65,7 +65,16 @@ export function OAuthProvidersCard({ onError, onSuccess }: Props) {
     setLoading(true);
     api
       .getOAuthProviders()
-      .then((resp) => setProviders(resp.providers))
+      // Only Claude (anthropic) and ChatGPT (openai-codex) are offered — users
+      // sign in with their existing subscription for unlimited usage. No Nous,
+      // no other providers.
+      .then((resp) =>
+        setProviders(
+          resp.providers.filter(
+            (p) => p.id === "anthropic" || p.id === "openai-codex",
+          ),
+        ),
+      )
       .catch((e) => onErrorRef.current?.(`Failed to load providers: ${e}`))
       .finally(() => setLoading(false));
   }, []);

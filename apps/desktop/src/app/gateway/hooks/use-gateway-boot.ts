@@ -92,13 +92,13 @@ export function useGatewayBoot({
 
     const offExit = desktop.onBackendExit(() => {
       if ($desktopBoot.get().running || $desktopBoot.get().visible) {
-        failDesktopBoot('Hermes background process exited during startup.')
+        failDesktopBoot('Jolly LLB background process exited during startup.')
       }
 
       notify({
         kind: 'error',
         title: 'Backend stopped',
-        message: 'Hermes background process exited.',
+        message: 'Jolly LLB background process exited.',
         durationMs: 0
       })
     })
@@ -125,7 +125,7 @@ export function useGatewayBoot({
 
         setDesktopBootStep({
           phase: 'renderer.config',
-          message: 'Loading Hermes settings',
+          message: 'Loading Jolly LLB settings',
           progress: 97
         })
         await callbacksRef.current.refreshHermesConfig()

@@ -85,7 +85,12 @@ function downloadInstallScript(commit, destPath) {
   // is immutable (unlike a branch ref), so we don't need integrity
   // verification beyond "did the file we wrote pass a syntax probe."
   const scriptName = installScriptName()
-  const url = `https://raw.githubusercontent.com/NousResearch/hermes-agent/${commit}/scripts/${scriptName}`
+  // Own the pipeline: fetch from the AnrakLegal fork at the exact commit this
+  // .dmg was stamped with (write-build-stamp.cjs -> install-stamp.json). The
+  // repo is public, so the SHA URL resolves on any machine; a SHA is immutable
+  // so we don't need integrity verification beyond the syntax probe. Fresh
+  // installs clone OUR runtime (Jolly LLB / AnrakLegal), never upstream Nous.
+  const url = `https://raw.githubusercontent.com/anrakprojects/Jolly_LLB/${commit}/scripts/${scriptName}`
   return new Promise((resolve, reject) => {
     fs.mkdirSync(path.dirname(destPath), { recursive: true })
     const tmpPath = destPath + '.tmp'

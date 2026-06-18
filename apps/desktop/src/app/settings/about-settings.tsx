@@ -15,7 +15,7 @@ import {
 
 import { ListRow, SectionHeading, SettingsContent } from './primitives'
 
-const RELEASE_NOTES_URL = 'https://github.com/NousResearch/hermes-agent/releases'
+const RELEASE_NOTES_URL = 'https://anrak.legal'
 
 function relativeTime(ms: number | undefined) {
   if (!ms) {
@@ -84,7 +84,7 @@ export function AboutSettings() {
           <Sparkles className="size-8" />
         </span>
         <div>
-          <h2 className="text-lg font-semibold tracking-tight">Hermes Desktop</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Jolly LLB Desktop</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             {version?.appVersion ? `Version ${version.appVersion}` : 'Version unavailable'}
           </p>
@@ -157,7 +157,7 @@ export function AboutSettings() {
         </div>
 
         <ListRow
-          description="Hermes checks for updates automatically in the background and lets you know when one is ready."
+          description="Jolly LLB checks for updates automatically in the background and lets you know when one is ready."
           hint={`Branch ${status?.branch ?? 'unknown'} · Commit ${status?.currentSha?.slice(0, 7) ?? 'unknown'}`}
           title="Automatic updates"
         />

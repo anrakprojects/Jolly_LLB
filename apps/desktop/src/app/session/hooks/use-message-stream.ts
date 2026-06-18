@@ -541,7 +541,7 @@ export function useMessageStream({
 
       if (document.hidden && sessionId === activeSessionIdRef.current) {
         void window.hermesDesktop?.notify({
-          title: 'Hermes finished',
+          title: 'Jolly LLB finished',
           body: text.slice(0, 140) || 'The response is ready.'
         })
       }
@@ -555,7 +555,7 @@ export function useMessageStream({
         const streamId = state.streamId ?? `assistant-error-${Date.now()}`
         const groupId = state.pendingBranchGroup ?? undefined
         const prev = state.messages
-        const error = errorMessage.trim() || 'Hermes reported an error'
+        const error = errorMessage.trim() || 'Jolly LLB reported an error'
 
         const nextMessages = prev.some(m => m.id === streamId)
           ? prev.map(message =>
@@ -812,7 +812,7 @@ export function useMessageStream({
           })
         }
       } else if (event.type === 'error') {
-        const errorMessage = payload?.message || 'Hermes reported an error'
+        const errorMessage = payload?.message || 'Jolly LLB reported an error'
         const looksLikeProviderSetup = isProviderSetupErrorMessage(errorMessage)
 
         if (looksLikeProviderSetup) {
@@ -820,7 +820,7 @@ export function useMessageStream({
         } else if (isActiveEvent) {
           notify({
             kind: 'error',
-            title: 'Hermes error',
+            title: 'Jolly LLB error',
             message: errorMessage
           })
         }
