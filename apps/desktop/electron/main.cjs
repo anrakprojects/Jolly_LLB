@@ -1538,6 +1538,50 @@ function resolveHermesCwd() {
   return app.getPath('home')
 }
 
+// macOS GUI apps launched from Finder/launchd inherit a minimal PATH
+// (/usr/bin:/bin:/usr/sbin:/sbin) that lacks node/npm and the user's tools — so
+// the runtime's dashboard/PTY gateway (which shells out to `node`) and the
+// web-UI build (`npm`) silently fail on a non-developer machine. Build a rich
+// PATH for the backend: the BUNDLED node first (always present, so a lawyer's
+// Mac with no toolchain still works), then the user's login-shell PATH (so a
+// bring-your-own developer's own node/CLIs are honored too), then common dirs.
+let _cachedBackendPath = null
+function bundledNodeBinDir() {
+  const base = IS_PACKAGED ? process.resourcesPath : path.join(APP_ROOT, 'build')
+  return path.join(base, 'bundled-node', 'bin')
+}
+function resolveLoginShellPath() {
+  if (IS_WINDOWS) return ''
+  try {
+    const shell = process.env.SHELL || '/bin/zsh'
+    const out = execFileSync(shell, ['-lic', 'printf %s "$PATH"'], {
+      encoding: 'utf8',
+      timeout: 4000,
+      stdio: ['ignore', 'pipe', 'ignore']
+    })
+    return String(out || '').trim()
+  } catch {
+    return ''
+  }
+}
+function buildBackendPath() {
+  if (_cachedBackendPath) return _cachedBackendPath
+  const home = app.getPath('home')
+  const candidates = [
+    bundledNodeBinDir(),
+    ...resolveLoginShellPath().split(path.delimiter),
+    path.join(home, '.local', 'bin'),
+    '/opt/homebrew/bin',
+    '/usr/local/bin',
+    ...(process.env.PATH || '').split(path.delimiter)
+  ]
+  const seen = new Set()
+  _cachedBackendPath = candidates
+    .filter(p => p && !seen.has(p) && seen.add(p))
+    .join(path.delimiter)
+  return _cachedBackendPath
+}
+
 function createPythonBackend(root, label, dashboardArgs, options = {}) {
   const python = findPythonForRoot(root)
   if (!python) return null
@@ -1548,7 +1592,8 @@ function createPythonBackend(root, label, dashboardArgs, options = {}) {
     command: python,
     args: ['-m', 'hermes_cli.main', ...dashboardArgs],
     env: {
-      PYTHONPATH: [root, process.env.PYTHONPATH].filter(Boolean).join(path.delimiter)
+      PYTHONPATH: [root, process.env.PYTHONPATH].filter(Boolean).join(path.delimiter),
+      PATH: buildBackendPath()
     },
     root,
     bootstrap: Boolean(options.bootstrap),
@@ -1569,7 +1614,8 @@ function createActiveBackend(dashboardArgs) {
     command: fileExists(venvPython) ? venvPython : findSystemPython(),
     args: ['-m', 'hermes_cli.main', ...dashboardArgs],
     env: {
-      PYTHONPATH: [ACTIVE_HERMES_ROOT, process.env.PYTHONPATH].filter(Boolean).join(path.delimiter)
+      PYTHONPATH: [ACTIVE_HERMES_ROOT, process.env.PYTHONPATH].filter(Boolean).join(path.delimiter),
+      PATH: buildBackendPath()
     },
     root: ACTIVE_HERMES_ROOT,
     bootstrap: true,

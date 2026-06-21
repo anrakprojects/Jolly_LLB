@@ -151,6 +151,10 @@
         "to": "install-stamp.json"
       },
       {
+        "from": "build/bundled-node",
+        "to": "bundled-node"
+      },
+      {
         "from": "build/native-deps",
         "to": "native-deps"
       },
