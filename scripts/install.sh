@@ -772,6 +772,14 @@ attempt_install_git() {
 }
 
 check_git() {
+    # Self-contained bundled-source install copies the runtime (no clone), so
+    # git is not needed at all. A fresh (non-developer) Mac has no git and no
+    # brew to install it — requiring git here would dead-end the install.
+    if [ -n "${LOCAL_SOURCE:-}" ]; then
+        log_success "Bundled-source install — git not required"
+        return 0
+    fi
+
     log_info "Checking Git..."
 
     # On fresh macOS /usr/bin/git is a stub that exits non-zero until CLT is installed.
