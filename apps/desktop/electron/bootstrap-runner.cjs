@@ -352,8 +352,16 @@ function buildPinArgs(installStamp) {
   return args
 }
 
+// Self-contained bundle: when the desktop ships the runtime inside the .app,
+// runBootstrap sets this so install.sh copies the bundled source (no git clone,
+// no network). Set once per bootstrap; read by buildPosixPinArgs below.
+let _localSource = ''
+
 function buildPosixPinArgs({ installStamp, activeRoot, hermesHome }) {
   const args = ['--dir', activeRoot, '--hermes-home', hermesHome]
+  if (_localSource) {
+    args.push('--local-source', _localSource)
+  }
   if (installStamp && installStamp.branch) {
     args.push('--branch', installStamp.branch)
   }
@@ -480,12 +488,15 @@ async function runBootstrap(opts) {
     installStamp,
     activeRoot,
     sourceRepoRoot,
+    localSource, // self-contained bundle: bundled runtime dir → install.sh copies it
     hermesHome,
     logRoot,
     onEvent,
     abortSignal,
     writeMarker // callback to write the bootstrap-complete marker; main.cjs provides
   } = opts
+
+  _localSource = localSource || ''
 
   const runLog = openRunLog(logRoot || path.join(hermesHome, 'logs'))
 

@@ -73,6 +73,11 @@ SKIP_BROWSER=false
 NO_SKILLS=false
 BRANCH="main"
 INSTALL_COMMIT=""
+# LOCAL_SOURCE: when set (--local-source DIR or HERMES_LOCAL_SOURCE), install
+# from a bundled copy of the runtime instead of cloning — no git, no network.
+# Used by the self-contained desktop bundle so non-developer machines (no git)
+# work. Mirrors install.ps1's $LocalSource.
+LOCAL_SOURCE="${HERMES_LOCAL_SOURCE:-}"
 ENSURE_DEPS=""
 POSTINSTALL_MODE=false
 MANIFEST_MODE=false
@@ -115,6 +120,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --commit|-Commit)
             INSTALL_COMMIT="$2"
+            shift 2
+            ;;
+        --local-source|-LocalSource)
+            LOCAL_SOURCE="$2"
             shift 2
             ;;
         --manifest|-Manifest)
@@ -1191,6 +1200,30 @@ show_manual_install_hint() {
 
 clone_repo() {
     log_info "Installing to $INSTALL_DIR..."
+
+    # Self-contained / bundled-source install: copy the runtime that ships
+    # inside the .app instead of cloning from GitHub. No git, no network — this
+    # is what makes a non-developer (lawyer) Mac work. Only kicks in when
+    # --local-source is set AND the target isn't already a git checkout.
+    if [ -n "${LOCAL_SOURCE:-}" ] && [ ! -d "$INSTALL_DIR/.git" ]; then
+        if [ -d "$LOCAL_SOURCE" ] && [ -f "$LOCAL_SOURCE/pyproject.toml" ]; then
+            log_info "Installing from bundled source (no network clone): $LOCAL_SOURCE"
+            mkdir -p "$INSTALL_DIR"
+            if command -v rsync >/dev/null 2>&1; then
+                rsync -a --delete --exclude '.git' --exclude 'venv' --exclude '.venv' \
+                    "$LOCAL_SOURCE"/ "$INSTALL_DIR"/
+            else
+                # cp fallback: copy contents (including dotfiles), skip venv after.
+                cp -R "$LOCAL_SOURCE"/. "$INSTALL_DIR"/ 2>/dev/null || true
+                rm -rf "$INSTALL_DIR/.git" "$INSTALL_DIR/venv" "$INSTALL_DIR/.venv" 2>/dev/null || true
+            fi
+            cd "$INSTALL_DIR"
+            log_success "Installed from bundled source"
+            return 0
+        else
+            log_warn "Bundled source not usable at '$LOCAL_SOURCE' — falling back to clone"
+        fi
+    fi
 
     if [ -d "$INSTALL_DIR" ]; then
         if [ -d "$INSTALL_DIR/.git" ]; then

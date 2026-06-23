@@ -155,6 +155,10 @@
         "to": "bundled-node"
       },
       {
+        "from": "build/bundled-runtime",
+        "to": "bundled-runtime"
+      },
+      {
         "from": "build/native-deps",
         "to": "native-deps"
       },

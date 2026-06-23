@@ -174,6 +174,14 @@ const HERMES_HOME = resolveHermesHome()
 // install.ps1 / install.sh use, so a desktop-only user and a CLI-only user end
 // up with identical layouts and can share one install.
 const ACTIVE_HERMES_ROOT = path.join(HERMES_HOME, 'hermes-agent')
+// Self-contained bundle: the runtime ships inside the .app at
+// Resources/bundled-runtime (extraResources). When present, the bootstrap
+// installs from it (copy — no git clone, no network), so a non-developer Mac
+// without git works. null in dev / when not bundled.
+const BUNDLED_RUNTIME =
+  IS_PACKAGED && process.resourcesPath
+    ? path.join(process.resourcesPath, 'bundled-runtime')
+    : null
 // VENV_ROOT — venv lives inside the repo, exactly like install.ps1 does it.
 const VENV_ROOT = path.join(ACTIVE_HERMES_ROOT, 'venv')
 // BOOTSTRAP_COMPLETE_MARKER — written by the first-launch bootstrap runner
@@ -1791,10 +1799,18 @@ async function ensureRuntime(backend) {
       })
     } catch {}
 
+    const bundledRuntimeReady =
+      BUNDLED_RUNTIME &&
+      fileExists(path.join(BUNDLED_RUNTIME, 'scripts', 'install.sh')) &&
+      fileExists(path.join(BUNDLED_RUNTIME, 'pyproject.toml'))
     const bootstrapResult = await runBootstrap({
       installStamp: backend.installStamp,
       activeRoot: backend.activeRoot,
-      sourceRepoRoot: SOURCE_REPO_ROOT,
+      // Self-contained bundle takes precedence: use the bundled install.sh +
+      // copy the bundled runtime (no git/network). Falls back to dev source or
+      // GitHub download when not bundled.
+      sourceRepoRoot: bundledRuntimeReady ? BUNDLED_RUNTIME : SOURCE_REPO_ROOT,
+      localSource: bundledRuntimeReady ? BUNDLED_RUNTIME : undefined,
       hermesHome: HERMES_HOME,
       logRoot: path.join(HERMES_HOME, 'logs'),
       onEvent: ev => {
