@@ -665,20 +665,31 @@ class TestWebServerEndpoints:
         assert any(field["key"] == "TELEGRAM_BOT_TOKEN" and field["required"] for field in telegram["env_vars"])
 
     def test_messaging_catalog_covers_gateway_platforms(self):
-        """Catalog is derived from the Platform enum, so every built-in shows up."""
-        from gateway.config import Platform
+        """Catalog is derived from the Platform enum, so every built-in shows up.
 
-        resp = self.client.get("/api/messaging/platforms")
-        platforms = {entry["id"] for entry in resp.json()["platforms"]}
+        Tests the catalog builder directly rather than the
+        ``/api/messaging/platforms`` endpoint: this deployment filters the
+        endpoint down to ``_VISIBLE_CHANNELS`` (Telegram + WhatsApp) for the
+        dashboard, but the underlying catalog must still cover every platform.
+        """
+        from gateway.config import Platform
+        from hermes_cli.web_server import _messaging_platform_catalog
+
+        platforms = {entry["id"] for entry in _messaging_platform_catalog()}
 
         for member in Platform.__members__.values():
             if member.value == "local":
                 continue
-            assert member.value in platforms, f"Missing gateway platform {member.value} from /api/messaging/platforms"
+            assert member.value in platforms, f"Missing gateway platform {member.value} from catalog"
 
     def test_messaging_catalog_includes_plugin_platforms(self, monkeypatch):
-        """Plugin-registered adapters appear in the catalog without per-platform code."""
+        """Plugin-registered adapters appear in the catalog without per-platform code.
+
+        Asserts against the catalog builder rather than the filtered endpoint
+        (see :meth:`test_messaging_catalog_covers_gateway_platforms`).
+        """
         from gateway.platform_registry import PlatformEntry, platform_registry
+        from hermes_cli.web_server import _messaging_platform_catalog
 
         entry = PlatformEntry(
             name="ircfake",
@@ -691,11 +702,11 @@ class TestWebServerEndpoints:
         )
         platform_registry.register(entry)
         try:
-            resp = self.client.get("/api/messaging/platforms")
-            ids = {row["id"]: row for row in resp.json()["platforms"]}
+            ids = {row["id"]: row for row in _messaging_platform_catalog()}
             assert "ircfake" in ids
             assert ids["ircfake"]["name"] == "IRC (test)"
-            assert any(field["key"] == "IRC_SERVER" and field["required"] for field in ids["ircfake"]["env_vars"])
+            assert "IRC_SERVER" in ids["ircfake"]["env_vars"]
+            assert "IRC_SERVER" in ids["ircfake"]["required_env"]
         finally:
             platform_registry.unregister("ircfake")
 
