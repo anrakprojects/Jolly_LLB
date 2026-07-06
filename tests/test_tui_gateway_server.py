@@ -1775,6 +1775,47 @@ def test_setup_runtime_check_rejects_relogin_required_oauth_store(monkeypatch):
     assert "consumed" in resp["result"]["error"]
 
 
+def test_setup_runtime_check_pool_login_beats_stale_singleton_flag(monkeypatch):
+    # A fresh dashboard device-code login persists to the credential pool.
+    # When resolution succeeds from that pool entry, a stale relogin_required
+    # flag on the (dead) singleton must NOT reject the login that just
+    # succeeded.
+    import contextlib
+
+    monkeypatch.setattr("hermes_cli.main._has_any_provider_configured", lambda: True)
+    monkeypatch.setattr(
+        "hermes_cli.runtime_provider.resolve_runtime_provider",
+        lambda requested=None: {
+            "provider": "openai-codex",
+            "api_key": "sk-fresh-pool-token",
+            "source": "manual:dashboard_device_code",
+        },
+    )
+    monkeypatch.setattr(
+        "hermes_cli.auth._auth_store_lock", lambda *a, **k: contextlib.nullcontext()
+    )
+    monkeypatch.setattr(
+        "hermes_cli.auth._load_auth_store",
+        lambda: {
+            "providers": {
+                "openai-codex": {
+                    "tokens": {"id_token": "corpse"},
+                    "last_auth_error": {
+                        "code": "refresh_token_reused",
+                        "message": "Codex refresh token was already consumed by another client.",
+                        "relogin_required": True,
+                    },
+                }
+            }
+        },
+    )
+
+    resp = server.handle_request({"id": "1", "method": "setup.runtime_check", "params": {}})
+
+    assert resp["result"]["ok"] is True
+    assert resp["result"]["provider"] == "openai-codex"
+
+
 def test_setup_runtime_check_passes_healthy_oauth_store(monkeypatch):
     import contextlib
 

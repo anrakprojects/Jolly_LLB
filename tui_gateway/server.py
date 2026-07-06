@@ -5402,7 +5402,15 @@ def _(rid, params: dict) -> dict:
         # token consumed by another client of the same OAuth app (providers
         # rotate refresh tokens). Presence checks pass but the first real call
         # 401s, so honor the store's own relogin_required flag before
-        # declaring readiness.
+        # declaring readiness. ONLY when the resolution actually came from the
+        # singleton store — a pool/dashboard credential (source "manual:*" or
+        # "credential_pool") is an independent login, and judging it by the
+        # singleton's stale corpse rejects a sign-in that just succeeded.
+        resolved_source = str(runtime.get("source") or "")
+        singleton_sourced = not (
+            resolved_source.startswith("manual:")
+            or resolved_source == "credential_pool"
+        )
         try:
             from hermes_cli.auth import _auth_store_lock, _load_auth_store
 
@@ -5410,7 +5418,7 @@ def _(rid, params: dict) -> dict:
                 auth_store = _load_auth_store()
             provider_state = (auth_store.get("providers") or {}).get(provider) or {}
             auth_error = provider_state.get("last_auth_error") or {}
-            if auth_error.get("relogin_required"):
+            if singleton_sourced and auth_error.get("relogin_required"):
                 display = {"anthropic": "Claude", "openai-codex": "ChatGPT"}.get(
                     provider, provider
                 )

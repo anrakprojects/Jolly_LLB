@@ -3825,6 +3825,22 @@ def _codex_full_login_worker(session_id: str) -> None:
             base_url=base_url,
         )
         pool.add_entry(entry)
+        # ALSO heal the singleton store (providers.openai-codex). The chat
+        # path resolves the singleton first, and health checks (relogin
+        # gating, the desktop auto-provider) judge it too — a pool-only save
+        # leaves a previously-dead singleton flagged relogin_required
+        # forever, so a successful fresh sign-in still reads as "sign in
+        # again".
+        try:
+            from hermes_cli.auth import _save_codex_tokens
+            _save_codex_tokens({
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "id_token": tokens.get("id_token", ""),
+                "account_id": tokens.get("account_id", ""),
+            })
+        except Exception as save_err:
+            _log.warning("codex device-code: singleton save failed (pool entry kept): %s", save_err)
         with _oauth_sessions_lock:
             sess["status"] = "approved"
         _log.info("oauth/device: openai-codex login completed (session=%s)", session_id)

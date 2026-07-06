@@ -147,24 +147,42 @@ def codex_cli_login():
 
 
 def hermes_codex_state():
-    """Health of Hermes' OWN Codex token store — the one the runtime uses.
+    """Health of Hermes' OWN Codex auth — the stores the runtime resolves.
 
     Returns (status, died_at): status is "ok" (usable tokens, no relogin flag),
     "dead" (tokens missing/stripped or relogin_required), or "absent" (never
     authenticated). died_at is the ISO timestamp of the recorded auth failure,
-    when there is one.
+    when there is one. Checks the singleton (providers.openai-codex) first,
+    then the credential pool — dashboard sign-ins persist there, and the
+    runtime resolves pool entries when the singleton has nothing usable, so a
+    live pool entry means ChatGPT works even with a dead singleton copy.
     """
-    state = ((_read_json(AUTH_PATH) or {}).get("providers") or {}).get("openai-codex")
+    auth = _read_json(AUTH_PATH) or {}
+    state = (auth.get("providers") or {}).get("openai-codex")
     if not isinstance(state, dict):
-        return "absent", None
-    error = state.get("last_auth_error") or {}
-    died_at = error.get("at")
-    tokens = state.get("tokens") or {}
-    if not (tokens.get("access_token") and tokens.get("refresh_token")):
-        return "dead", died_at
-    if error.get("relogin_required"):
-        return "dead", died_at
-    return "ok", died_at
+        singleton = "absent"
+        died_at = None
+    else:
+        error = state.get("last_auth_error") or {}
+        died_at = error.get("at")
+        tokens = state.get("tokens") or {}
+        if not (tokens.get("access_token") and tokens.get("refresh_token")):
+            singleton = "dead"
+        elif error.get("relogin_required"):
+            singleton = "dead"
+        else:
+            singleton = "ok"
+    if singleton == "ok":
+        return "ok", died_at
+    for entry in (auth.get("credential_pool") or {}).get("openai-codex") or []:
+        if (
+            isinstance(entry, dict)
+            and entry.get("access_token")
+            and entry.get("refresh_token")
+            and entry.get("last_status") != "dead"
+        ):
+            return "ok", died_at
+    return singleton, died_at
 
 
 def codex_usable():
