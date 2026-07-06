@@ -573,6 +573,21 @@ def classify_api_error(
             should_compress=True,
         )
 
+    # Anthropic subscription quota exhausted — HTTP 400 invalid_request_error
+    # "You're out of extra usage. Add more at claude.ai/settings/usage".
+    # Semantically billing, not a malformed request: retrying this provider
+    # cannot succeed, and without this pattern it falls through to
+    # format_error. The fallback chain (model downgrade or the other
+    # provider) is the recovery path.
+    if status_code == 400 and "out of extra usage" in error_msg:
+        return _result(
+            FailoverReason.billing,
+            retryable=False,
+            should_compress=False,
+            should_rotate_credential=True,
+            should_fallback=True,
+        )
+
     # Anthropic OAuth subscription rejects the 1M-context beta header.
     # Observed error body: "The long context beta is not yet available for
     # this subscription." Returned as HTTP 400 from native Anthropic when

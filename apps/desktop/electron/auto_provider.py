@@ -58,6 +58,12 @@ CODEX_BASE_URL = "https://chatgpt.com/backend-api/codex"
 # (HTTP 400 "not supported when using Codex with a ChatGPT account"). Never
 # write these; heal them if a previous version left one in config.yaml.
 CODEX_REJECTED_MODELS = ("gpt-5.3-codex",)
+# Claude subscriptions ration the big models hardest: Opus quota runs out
+# ("You're out of extra usage") while Sonnet — and almost always Haiku —
+# still serve. The fallback chain is therefore a LADDER down the same
+# subscription, not just a jump to the other provider, so a quota-gated
+# Opus degrades gracefully instead of dead-ending the chat.
+CLAUDE_DOWNGRADE_MODELS = ("claude-sonnet-5", "claude-haiku-4-5-20251001")
 
 
 def _read_json(path):
@@ -310,6 +316,30 @@ def fallback_is_empty(text):
     return match.group(1).strip() in ("", "[]") and not match.group(2).strip()
 
 
+def fallback_ladder(primary, claude, codex, chatgpt_model):
+    """Ordered fallback chain for the given primary provider.
+
+    Claude primary:  Sonnet -> ChatGPT (if healthy) -> Haiku. The downgrades
+    share the primary's login, so even a single-provider user survives an
+    Opus quota gate. ChatGPT primary: Opus -> Sonnet -> Haiku (needs Claude).
+    The runtime walks this list in order and skips entries matching the
+    failing provider+model, so same-provider downgrades are safe.
+    """
+    entries = []
+    if primary == "anthropic":
+        entries.append({"provider": "anthropic", "model": CLAUDE_DOWNGRADE_MODELS[0]})
+        if codex:
+            entries.append({"provider": "openai-codex", "model": chatgpt_model})
+        for model in CLAUDE_DOWNGRADE_MODELS[1:]:
+            entries.append({"provider": "anthropic", "model": model})
+    else:
+        if claude:
+            entries.append({"provider": "anthropic", "model": CLAUDE_MODEL})
+            for model in CLAUDE_DOWNGRADE_MODELS:
+                entries.append({"provider": "anthropic", "model": model})
+    return entries
+
+
 def main():
     text = read_config()
     provider = current_provider(text)
@@ -324,14 +354,13 @@ def main():
     # deliberate one), and heal any known-rejected Codex model id.
     if provider == "anthropic" and claude:
         healed = heal_rejected_codex_models(text, chatgpt_model)
-        if codex and fallback_is_empty(healed):
+        ladder = fallback_ladder("anthropic", claude, codex, chatgpt_model)
+        if fallback_is_empty(healed) and ladder:
             if codex_status == "import":
                 write_codex_auth(codex_cli, make_active=False)
-            healed = replace_fallback_block(
-                healed, [{"provider": "openai-codex", "model": chatgpt_model}]
-            )
+            healed = replace_fallback_block(healed, ladder)
             _atomic_write(CONFIG_PATH, healed)
-            print("AUTOCONFIG=skip-claude+chatgpt-fallback")
+            print("AUTOCONFIG=skip-claude+fallback-ladder")
         else:
             if healed != text:
                 _atomic_write(CONFIG_PATH, healed)
@@ -342,12 +371,11 @@ def main():
             # Revive Hermes' dead/absent store from a fresher CLI login.
             write_codex_auth(codex_cli, make_active=True)
         healed = heal_rejected_codex_models(text, chatgpt_model)
-        if claude and fallback_is_empty(healed):
-            healed = replace_fallback_block(
-                healed, [{"provider": "anthropic", "model": CLAUDE_MODEL}]
-            )
+        ladder = fallback_ladder("openai-codex", claude, codex, chatgpt_model)
+        if fallback_is_empty(healed) and ladder:
+            healed = replace_fallback_block(healed, ladder)
             _atomic_write(CONFIG_PATH, healed)
-            print("AUTOCONFIG=skip-chatgpt+claude-fallback")
+            print("AUTOCONFIG=skip-chatgpt+fallback-ladder")
         else:
             if healed != text:
                 _atomic_write(CONFIG_PATH, healed)
@@ -360,24 +388,24 @@ def main():
     # over instead of erroring.
     if claude:
         text = replace_model_block(text, "anthropic", CLAUDE_MODEL, CLAUDE_BASE_URL)
-        fallback = (
-            [{"provider": "openai-codex", "model": chatgpt_model}] if codex else []
-        )
         if codex_status == "import":
             write_codex_auth(codex_cli, make_active=False)
-        text = replace_fallback_block(text, fallback)
+        text = replace_fallback_block(
+            text, fallback_ladder("anthropic", claude, codex, chatgpt_model)
+        )
         text = heal_rejected_codex_models(text, chatgpt_model)
         _atomic_write(CONFIG_PATH, text)
         clear_env_keys(["ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN"])
         switched = "+switched" if provider == "openai-codex" else ""
-        print("AUTOCONFIG=claude" + ("+chatgpt-fallback" if fallback else "") + switched)
+        print("AUTOCONFIG=claude+fallback-ladder" + switched)
         return
     if codex:
         if codex_status == "import":
             write_codex_auth(codex_cli, make_active=True)
         text = replace_model_block(text, "openai-codex", chatgpt_model, CODEX_BASE_URL)
-        fallback = []
-        text = replace_fallback_block(text, fallback)
+        text = replace_fallback_block(
+            text, fallback_ladder("openai-codex", claude, codex, chatgpt_model)
+        )
         text = heal_rejected_codex_models(text, chatgpt_model)
         _atomic_write(CONFIG_PATH, text)
         switched = "+switched" if provider == "anthropic" else ""
