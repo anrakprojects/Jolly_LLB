@@ -17,7 +17,7 @@ import {
   Sparkles,
   Terminal
 } from '@/lib/icons'
-import { isProviderSetupErrorMessage } from '@/lib/provider-setup-errors'
+import { describeProviderReauth, isProviderSetupErrorMessage } from '@/lib/provider-setup-errors'
 import { cn } from '@/lib/utils'
 import { $desktopBoot, type DesktopBootState } from '@/store/boot'
 import {
@@ -159,7 +159,12 @@ export function DesktopOnboardingOverlay({ enabled, onCompleted, requestGateway 
 
   const { flow } = onboarding
   const rawReason = onboarding.reason?.trim() || null
-  const reason = rawReason && !isProviderSetupErrorMessage(rawReason) ? rawReason : null
+  // A dead sign-in gets a friendly banner (the user needs to know WHY the
+  // sign-in screen reappeared); other setup-flavored errors stay hidden — the
+  // picker itself is the explanation. Anything else shows verbatim.
+  const reason =
+    describeProviderReauth(rawReason) ??
+    (rawReason && !isProviderSetupErrorMessage(rawReason) ? rawReason : null)
   // In manual mode the app is already configured, so the flow is "ready"
   // immediately — no runtime gate needed. Otherwise wait for the readiness
   // check (configured === false) before showing the picker.

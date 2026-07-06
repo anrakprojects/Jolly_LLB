@@ -6,24 +6,40 @@ backend starts. Detects whichever of the two supported logins already exists on
 the machine and points the runtime at it, so a first-time user never sees a
 setup screen:
 
-  * Claude Code  -> ~/.claude/.credentials.json   -> provider "anthropic"
-                    (the Anthropic adapter reads that file directly and refreshes
-                     it via platform.claude.com, so we only point config at it and
-                     make sure no stale ANTHROPIC_* key shadows it)
-  * ChatGPT/Codex-> ~/.codex/auth.json            -> provider "openai-codex"
-                    (same OAuth client as the Codex CLI, so we copy its tokens
-                     into ~/.hermes/auth.json and Hermes refreshes them itself)
+  * Claude Code  -> macOS Keychain ("Claude Code-credentials") or
+                    ~/.claude/.credentials.json          -> provider "anthropic"
+                    (the Anthropic adapter reads the same sources directly and
+                     refreshes via platform.claude.com, so we only point config
+                     at it and make sure no stale ANTHROPIC_* key shadows it)
+  * ChatGPT/Codex-> ~/.codex/auth.json                   -> provider "openai-codex"
+                    (same OAuth client as the Codex CLI; we copy its tokens into
+                     ~/.hermes/auth.json ONCE as a bootstrap and Hermes refreshes
+                     them itself from then on)
 
-Preference order: Claude first, then ChatGPT. Fully idempotent and best-effort —
-if the runtime is already on a supported provider that still has a local login,
-or if neither login exists, or if anything goes wrong, the existing config is
-left untouched and the launch is never blocked.
+Health, not presence: "logged in" is judged against the store the runtime
+actually uses. For ChatGPT that is Hermes' OWN token store (~/.hermes/auth.json)
+— OpenAI rotates refresh tokens, so a copy of the CLI's token dies the moment
+either side refreshes, and the CLI file staying on disk proves nothing. A dead
+Hermes store is only revived from the CLI file when that file changed AFTER the
+death (the user re-ran `codex` login); otherwise we would just replay the same
+consumed refresh token.
+
+Preference order: Claude first, then ChatGPT. When the configured primary is
+dead and the other login is healthy, the primary is switched so the app keeps
+working. Fully idempotent and best-effort — if anything goes wrong, the existing
+config is left untouched and the launch is never blocked.
+
+Cross-platform: the Keychain probe is macOS-only; Windows and Linux use the
+credential files (both CLIs keep the same paths under %USERPROFILE% / $HOME).
 """
 
+import datetime
 import json
 import os
 import re
+import subprocess
 import sys
+import time
 
 HOME = os.path.expanduser("~")
 HERMES_HOME = os.environ.get("HERMES_HOME") or os.path.join(HOME, ".hermes")
@@ -32,14 +48,16 @@ AUTH_PATH = os.path.join(HERMES_HOME, "auth.json")
 ENV_PATH = os.path.join(HERMES_HOME, ".env")
 CLAUDE_CREDS = os.path.join(HOME, ".claude", ".credentials.json")
 CODEX_CREDS = os.path.join(HOME, ".codex", "auth.json")
+CODEX_CONFIG = os.path.join(HOME, ".codex", "config.toml")
 
-# Model defaults. claude-opus-4-8 is the current Anthropic default; gpt-5.3-codex
-# is Hermes' own Codex fallback (hermes_cli/cli.py). The user can change either
-# from the in-app picker afterward.
 CLAUDE_MODEL = "claude-opus-4-8"
 CLAUDE_BASE_URL = "https://api.anthropic.com"
-CODEX_MODEL = "gpt-5.3-codex"
+CODEX_MODEL_DEFAULT = "gpt-5.5"
 CODEX_BASE_URL = "https://chatgpt.com/backend-api/codex"
+# Models the ChatGPT/Codex backend rejects for ChatGPT-subscription accounts
+# (HTTP 400 "not supported when using Codex with a ChatGPT account"). Never
+# write these; heal them if a previous version left one in config.yaml.
+CODEX_REJECTED_MODELS = ("gpt-5.3-codex",)
 
 
 def _read_json(path):
@@ -50,21 +68,126 @@ def _read_json(path):
         return None
 
 
-def claude_login():
-    """Return the claudeAiOauth blob if Claude Code is logged in, else None."""
-    blob = (_read_json(CLAUDE_CREDS) or {}).get("claudeAiOauth") or {}
-    if blob.get("accessToken") or blob.get("refreshToken"):
-        return blob
+def codex_model():
+    """The user's own Codex CLI model (~/.codex/config.toml) when it is usable
+    for a ChatGPT account, else the known-good default."""
+    try:
+        with open(CODEX_CONFIG, "r", encoding="utf-8") as handle:
+            text = handle.read()
+        match = re.search(r'^model\s*=\s*"([^"\n]+)"', text, re.MULTILINE)
+        if match:
+            model = match.group(1).strip()
+            if model and model not in CODEX_REJECTED_MODELS:
+                return model
+    except Exception:
+        pass
+    return CODEX_MODEL_DEFAULT
+
+
+def _claude_keychain():
+    """Claude Code >= 2.1.114 on macOS stores credentials in the Keychain, not
+    the file — same probe the runtime's anthropic adapter uses."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        result = subprocess.run(
+            ["security", "find-generic-password",
+             "-s", "Claude Code-credentials", "-w"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            return None
+        blob = (json.loads(result.stdout.strip() or "{}")).get("claudeAiOauth") or {}
+        if blob.get("accessToken") or blob.get("refreshToken"):
+            return blob
+    except Exception:
+        return None
     return None
 
 
-def codex_login():
-    """Return the ~/.codex/auth.json contents if ChatGPT/Codex is logged in."""
+def claude_login():
+    """Return the claudeAiOauth blob if a usable Claude Code login exists.
+
+    Keychain first (macOS), then the JSON file (Windows/Linux and older macOS
+    installs) — the same order the runtime resolves at call time, so detection
+    matches what the runtime can actually use. An expired access token with no
+    refresh token is treated as logged out.
+    """
+    blob = _claude_keychain()
+    if blob:
+        return blob
+    blob = (_read_json(CLAUDE_CREDS) or {}).get("claudeAiOauth") or {}
+    if not (blob.get("accessToken") or blob.get("refreshToken")):
+        return None
+    expires_at = blob.get("expiresAt") or 0
+    try:
+        expired = bool(expires_at) and int(expires_at) <= int(time.time() * 1000)
+    except Exception:
+        expired = False
+    if expired and not blob.get("refreshToken"):
+        return None
+    return blob
+
+
+def codex_cli_login():
+    """Return the ~/.codex/auth.json contents if the Codex CLI has tokens."""
     data = _read_json(CODEX_CREDS) or {}
     tokens = data.get("tokens") or {}
     if tokens.get("access_token") and tokens.get("refresh_token"):
         return data
     return None
+
+
+def hermes_codex_state():
+    """Health of Hermes' OWN Codex token store — the one the runtime uses.
+
+    Returns (status, died_at): status is "ok" (usable tokens, no relogin flag),
+    "dead" (tokens missing/stripped or relogin_required), or "absent" (never
+    authenticated). died_at is the ISO timestamp of the recorded auth failure,
+    when there is one.
+    """
+    state = ((_read_json(AUTH_PATH) or {}).get("providers") or {}).get("openai-codex")
+    if not isinstance(state, dict):
+        return "absent", None
+    error = state.get("last_auth_error") or {}
+    died_at = error.get("at")
+    tokens = state.get("tokens") or {}
+    if not (tokens.get("access_token") and tokens.get("refresh_token")):
+        return "dead", died_at
+    if error.get("relogin_required"):
+        return "dead", died_at
+    return "ok", died_at
+
+
+def codex_usable():
+    """Resolve ChatGPT auth against the store the runtime reads.
+
+    Returns (status, cli_data):
+      "ok"     — Hermes' store is healthy; nothing to import.
+      "import" — Hermes' store is absent/dead but the CLI file can seed it
+                 (first run, or the user re-ran `codex` login after the death).
+      "none"   — no usable ChatGPT auth anywhere.
+    """
+    status, died_at = hermes_codex_state()
+    if status == "ok":
+        return "ok", None
+    cli = codex_cli_login()
+    if not cli:
+        return "none", None
+    if died_at:
+        # Only revive from a CLI file written AFTER Hermes' copy died —
+        # re-importing an older file replays the already-consumed refresh token.
+        try:
+            died = datetime.datetime.fromisoformat(
+                str(died_at).replace("Z", "+00:00")
+            ).timestamp()
+            if os.path.getmtime(CODEX_CREDS) <= died:
+                return "none", None
+        except Exception:
+            return "none", None
+    return "import", cli
 
 
 def read_config():
@@ -129,6 +252,14 @@ def replace_fallback_block(text, entries):
     return text + sep + block
 
 
+def heal_rejected_codex_models(text, model):
+    """Swap any known-rejected Codex model id left by earlier versions for the
+    resolved one, wherever it appears (model block or fallback entries)."""
+    for bad in CODEX_REJECTED_MODELS:
+        text = text.replace(bad, model)
+    return text
+
+
 def clear_env_keys(keys):
     """Drop ANTHROPIC_API_KEY / ANTHROPIC_TOKEN so the adapter falls back to the
     live Claude Code credential store instead of a stale shadow key."""
@@ -149,9 +280,12 @@ def clear_env_keys(keys):
     _atomic_write(ENV_PATH, "\n".join(kept) + ("\n" if kept else ""))
 
 
-def write_codex_auth(codex):
+def write_codex_auth(codex, make_active):
     """Copy the Codex CLI tokens into Hermes' auth store (same OAuth client, so
-    Hermes can refresh them independently)."""
+    Hermes refreshes them independently from then on). Replacing the provider
+    entry also clears any recorded last_auth_error. active_provider is only
+    flipped when ChatGPT becomes the primary — importing tokens for fallback
+    use must not steal the active slot."""
     auth = _read_json(AUTH_PATH) or {}
     providers = auth.get("providers")
     if not isinstance(providers, dict):
@@ -161,7 +295,8 @@ def write_codex_auth(codex):
         "tokens": codex.get("tokens"),
         "last_refresh": codex.get("last_refresh"),
     }
-    auth["active_provider"] = "openai-codex"
+    if make_active:
+        auth["active_provider"] = "openai-codex"
     _atomic_write(AUTH_PATH, json.dumps(auth, indent=2))
 
 
@@ -179,59 +314,83 @@ def main():
     text = read_config()
     provider = current_provider(text)
     claude = claude_login()
-    codex = codex_login()
+    codex_status, codex_cli = codex_usable()
+    codex = codex_status != "none"
+    chatgpt_model = codex_model()
 
-    # Idempotent: already on a supported provider that still has a local login —
-    # don't touch the primary. But still wire the cross-provider fallback if the
-    # other login exists and no fallback is configured yet (never clobber a
-    # deliberate one), so existing installs gain spill-over resilience too.
+    # Idempotent: already on a supported provider whose auth is HEALTHY — don't
+    # touch the primary. Still wire the cross-provider fallback if the other
+    # login exists and no fallback is configured yet (never clobber a
+    # deliberate one), and heal any known-rejected Codex model id.
     if provider == "anthropic" and claude:
-        if codex and fallback_is_empty(text):
-            text = replace_fallback_block(
-                text, [{"provider": "openai-codex", "model": CODEX_MODEL}]
+        healed = heal_rejected_codex_models(text, chatgpt_model)
+        if codex and fallback_is_empty(healed):
+            if codex_status == "import":
+                write_codex_auth(codex_cli, make_active=False)
+            healed = replace_fallback_block(
+                healed, [{"provider": "openai-codex", "model": chatgpt_model}]
             )
-            _atomic_write(CONFIG_PATH, text)
+            _atomic_write(CONFIG_PATH, healed)
             print("AUTOCONFIG=skip-claude+chatgpt-fallback")
         else:
+            if healed != text:
+                _atomic_write(CONFIG_PATH, healed)
             print("AUTOCONFIG=skip-claude")
         return
     if provider == "openai-codex" and codex:
-        if claude and fallback_is_empty(text):
-            text = replace_fallback_block(
-                text, [{"provider": "anthropic", "model": CLAUDE_MODEL}]
+        if codex_status == "import":
+            # Revive Hermes' dead/absent store from a fresher CLI login.
+            write_codex_auth(codex_cli, make_active=True)
+        healed = heal_rejected_codex_models(text, chatgpt_model)
+        if claude and fallback_is_empty(healed):
+            healed = replace_fallback_block(
+                healed, [{"provider": "anthropic", "model": CLAUDE_MODEL}]
             )
-            _atomic_write(CONFIG_PATH, text)
+            _atomic_write(CONFIG_PATH, healed)
             print("AUTOCONFIG=skip-chatgpt+claude-fallback")
         else:
+            if healed != text:
+                _atomic_write(CONFIG_PATH, healed)
             print("AUTOCONFIG=skip-chatgpt")
         return
 
-    # Prefer Claude, then ChatGPT. (Anything else — openrouter, nous, unset — is
-    # migrated to a supported login when one is available.) Whichever is primary,
-    # the OTHER login (if present) is wired as an automatic fallback so a
-    # quota-exhausted subscription transparently spills over instead of erroring.
+    # The configured primary is dead or unsupported. Prefer Claude, then
+    # ChatGPT. Whichever is primary, the OTHER login (if healthy) is wired as an
+    # automatic fallback so a quota-exhausted subscription transparently spills
+    # over instead of erroring.
     if claude:
         text = replace_model_block(text, "anthropic", CLAUDE_MODEL, CLAUDE_BASE_URL)
         fallback = (
-            [{"provider": "openai-codex", "model": CODEX_MODEL}] if codex else []
+            [{"provider": "openai-codex", "model": chatgpt_model}] if codex else []
         )
+        if codex_status == "import":
+            write_codex_auth(codex_cli, make_active=False)
         text = replace_fallback_block(text, fallback)
+        text = heal_rejected_codex_models(text, chatgpt_model)
         _atomic_write(CONFIG_PATH, text)
         clear_env_keys(["ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN"])
-        print("AUTOCONFIG=claude" + ("+chatgpt-fallback" if fallback else ""))
+        switched = "+switched" if provider == "openai-codex" else ""
+        print("AUTOCONFIG=claude" + ("+chatgpt-fallback" if fallback else "") + switched)
         return
     if codex:
-        write_codex_auth(codex)
-        text = replace_model_block(text, "openai-codex", CODEX_MODEL, CODEX_BASE_URL)
-        fallback = (
-            [{"provider": "anthropic", "model": CLAUDE_MODEL}] if claude else []
-        )
+        if codex_status == "import":
+            write_codex_auth(codex_cli, make_active=True)
+        text = replace_model_block(text, "openai-codex", chatgpt_model, CODEX_BASE_URL)
+        fallback = []
         text = replace_fallback_block(text, fallback)
+        text = heal_rejected_codex_models(text, chatgpt_model)
         _atomic_write(CONFIG_PATH, text)
-        print("AUTOCONFIG=chatgpt" + ("+claude-fallback" if fallback else ""))
+        switched = "+switched" if provider == "anthropic" else ""
+        print("AUTOCONFIG=chatgpt" + switched)
         return
 
-    print("AUTOCONFIG=none")
+    # Neither login is usable. If a supported provider is configured, its auth
+    # has died — the runtime's setup.runtime_check will report it and the shell
+    # surfaces the sign-in screen; we just name the state for the logs.
+    if provider in ("anthropic", "openai-codex"):
+        print("AUTOCONFIG=relogin-required")
+    else:
+        print("AUTOCONFIG=none")
 
 
 if __name__ == "__main__":
@@ -239,4 +398,3 @@ if __name__ == "__main__":
         main()
     except Exception as exc:  # never block the launch
         print("AUTOCONFIG=error " + repr(exc))
-    sys.exit(0)

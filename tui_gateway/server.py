@@ -5398,6 +5398,39 @@ def _(rid, params: dict) -> dict:
                 },
             )
 
+        # OAuth stores can hold tokens that are already dead — e.g. a refresh
+        # token consumed by another client of the same OAuth app (providers
+        # rotate refresh tokens). Presence checks pass but the first real call
+        # 401s, so honor the store's own relogin_required flag before
+        # declaring readiness.
+        try:
+            from hermes_cli.auth import _auth_store_lock, _load_auth_store
+
+            with _auth_store_lock():
+                auth_store = _load_auth_store()
+            provider_state = (auth_store.get("providers") or {}).get(provider) or {}
+            auth_error = provider_state.get("last_auth_error") or {}
+            if auth_error.get("relogin_required"):
+                display = {"anthropic": "Claude", "openai-codex": "ChatGPT"}.get(
+                    provider, provider
+                )
+                return _ok(
+                    rid,
+                    {
+                        "ok": False,
+                        "provider": provider,
+                        "model": runtime.get("model"),
+                        "source": runtime.get("source"),
+                        "relogin_required": True,
+                        "error": str(
+                            auth_error.get("message")
+                            or f"Your {display} sign-in has expired. Sign in again to continue."
+                        ),
+                    },
+                )
+        except Exception:
+            pass
+
         return _ok(
             rid,
             {
