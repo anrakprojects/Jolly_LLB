@@ -103,8 +103,9 @@ const API_KEY_OPTIONS: ApiKeyOption[] = [
 ]
 
 const PROVIDER_DISPLAY: Record<string, { order: number; title: string }> = {
-  anthropic: { order: 1, title: 'Claude' },
-  'openai-codex': { order: 2, title: 'ChatGPT' }
+  'openai-codex': { order: 1, title: 'ChatGPT' },
+  'google-gemini-cli': { order: 2, title: 'Google Gemini' },
+  anthropic: { order: 3, title: 'Claude' }
 }
 
 const assetPath = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
@@ -118,10 +119,10 @@ const FLOW_SUBTITLES: Record<OAuthProvider['flow'], string> = {
 const providerTitle = (p: OAuthProvider) => PROVIDER_DISPLAY[p.id]?.title ?? p.name
 const orderOf = (p: OAuthProvider) => PROVIDER_DISPLAY[p.id]?.order ?? 99
 
-// Only Claude and ChatGPT are offered. Users sign in with their existing Claude
-// or ChatGPT subscription (OAuth) for unlimited usage — no Nous, no other
-// providers, no API keys, no paywall.
-const ALLOWED_PROVIDER_IDS = new Set(["anthropic", "openai-codex"])
+// Only ChatGPT, Google Gemini, and Claude are offered. Users sign in with an
+// existing subscription/account (OAuth) — no Nous, no other providers, no API
+// keys, no paywall.
+const ALLOWED_PROVIDER_IDS = new Set(["openai-codex", "google-gemini-cli", "anthropic"])
 
 const sortProviders = (providers: OAuthProvider[]) =>
   [...providers]
@@ -576,7 +577,9 @@ function FlowPanel({ ctx, flow }: { ctx: OnboardingContext; flow: OnboardingFlow
   return (
     <Step title={`Sign in with ${title}`}>
       <p className="text-sm text-muted-foreground">We opened {title} in your browser. Enter this code there:</p>
-      <CodeBlock copied={flow.copied} large onCopy={() => void copyDeviceCode()} text={flow.start.user_code} />
+      {flow.start.user_code ? (
+        <CodeBlock copied={flow.copied} large onCopy={() => void copyDeviceCode()} text={flow.start.user_code} />
+      ) : null}
       <FlowFooter left={<DocsLink href={flow.start.verification_url}>Re-open verification page</DocsLink>}>
         <span className="flex items-center gap-2 text-xs text-muted-foreground">
           <Loader2 className="size-3 animate-spin" />

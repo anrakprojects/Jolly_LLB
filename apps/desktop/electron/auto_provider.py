@@ -24,7 +24,7 @@ Hermes store is only revived from the CLI file when that file changed AFTER the
 death (the user re-ran `codex` login); otherwise we would just replay the same
 consumed refresh token.
 
-Preference order: Claude first, then ChatGPT. When the configured primary is
+Preference order: ChatGPT first, then Google Gemini, then Claude. When the configured primary is
 dead and the other login is healthy, the primary is switched so the app keeps
 working. Fully idempotent and best-effort — if anything goes wrong, the existing
 config is left untouched and the launch is never blocked.
@@ -58,6 +58,19 @@ CODEX_BASE_URL = "https://chatgpt.com/backend-api/codex"
 # (HTTP 400 "not supported when using Codex with a ChatGPT account"). Never
 # write these; heal them if a previous version left one in config.yaml.
 CODEX_REJECTED_MODELS = ("gpt-5.3-codex",)
+GEMINI_MODEL = "gemini-2.5-pro"
+GEMINI_MODEL_DOWNGRADE = "gemini-2.5-flash"
+# Marker base_url the runtime maps to the Google Cloud Code Assist backend.
+GEMINI_BASE_URL = "cloudcode-pa://google"
+GEMINI_CREDS = os.path.join(HERMES_HOME, "auth", "google_oauth.json")
+# Google OAuth client for the runtime's Google sign-in. The runtime normally
+# scrapes one from a local gemini-cli install, which a lawyer's machine won't
+# have — so the shell (auto-provider.cjs) reads the client from a build-time
+# sidecar (electron/gemini-oauth-client.json, git-ignored: GitHub push
+# protection rejects the literal, even though installed-app client secrets
+# are public by design) and passes it via these env vars.
+GEMINI_CLIENT_ID = os.environ.get("JOLLY_GEMINI_CLIENT_ID", "")
+GEMINI_CLIENT_SECRET = os.environ.get("JOLLY_GEMINI_CLIENT_SECRET", "")
 # Claude subscriptions ration the big models hardest: Opus quota runs out
 # ("You're out of extra usage") while Sonnet — and almost always Haiku —
 # still serve. The fallback chain is therefore a LADDER down the same
@@ -144,6 +157,34 @@ def codex_cli_login():
     if tokens.get("access_token") and tokens.get("refresh_token"):
         return data
     return None
+
+
+def gemini_login():
+    """True if Hermes' own Google OAuth store has a usable login (written by
+    the in-app Google sign-in or `hermes auth add google-gemini-cli`)."""
+    data = _read_json(GEMINI_CREDS) or {}
+    return bool(data.get("access_token") or data.get("refresh_token"))
+
+
+def ensure_env_keys(pairs):
+    """Append KEY=value lines to ~/.hermes/.env for keys not already set."""
+    try:
+        with open(ENV_PATH, "r", encoding="utf-8") as handle:
+            text = handle.read()
+    except Exception:
+        text = ""
+    lines = text.splitlines()
+    missing = []
+    for key, value in pairs:
+        present = any(
+            l.lstrip().startswith(key + "=") or l.lstrip().startswith("export " + key + "=")
+            for l in lines
+        )
+        if not present:
+            missing.append(key + "=" + value)
+    if missing:
+        sep = "" if (not text or text.endswith("\n")) else "\n"
+        _atomic_write(ENV_PATH, text + sep + "\n".join(missing) + "\n")
 
 
 def hermes_codex_state():
@@ -334,23 +375,35 @@ def fallback_is_empty(text):
     return match.group(1).strip() in ("", "[]") and not match.group(2).strip()
 
 
-def fallback_ladder(primary, claude, codex, chatgpt_model):
+def fallback_ladder(primary, claude, gemini, codex, chatgpt_model):
     """Ordered fallback chain for the given primary provider.
 
-    Claude primary:  Sonnet -> ChatGPT (if healthy) -> Haiku. The downgrades
-    share the primary's login, so even a single-provider user survives an
-    Opus quota gate. ChatGPT primary: Opus -> Sonnet -> Haiku (needs Claude).
-    The runtime walks this list in order and skips entries matching the
-    failing provider+model, so same-provider downgrades are safe.
+    Every healthy OTHER login joins the chain, plus same-subscription model
+    downgrades (Claude subscriptions gate Opus before Sonnet/Haiku; Gemini
+    has a flash tier) — so a quota-gated primary degrades gracefully instead
+    of dead-ending the chat. The runtime walks the list in order and skips
+    entries matching the failing provider+model.
     """
     entries = []
     if primary == "anthropic":
         entries.append({"provider": "anthropic", "model": CLAUDE_DOWNGRADE_MODELS[0]})
         if codex:
             entries.append({"provider": "openai-codex", "model": chatgpt_model})
+        if gemini:
+            entries.append({"provider": "google-gemini-cli", "model": GEMINI_MODEL})
         for model in CLAUDE_DOWNGRADE_MODELS[1:]:
             entries.append({"provider": "anthropic", "model": model})
-    else:
+    elif primary == "google-gemini-cli":
+        if codex:
+            entries.append({"provider": "openai-codex", "model": chatgpt_model})
+        entries.append({"provider": "google-gemini-cli", "model": GEMINI_MODEL_DOWNGRADE})
+        if claude:
+            entries.append({"provider": "anthropic", "model": CLAUDE_MODEL})
+            for model in CLAUDE_DOWNGRADE_MODELS:
+                entries.append({"provider": "anthropic", "model": model})
+    else:  # openai-codex primary
+        if gemini:
+            entries.append({"provider": "google-gemini-cli", "model": GEMINI_MODEL})
         if claude:
             entries.append({"provider": "anthropic", "model": CLAUDE_MODEL})
             for model in CLAUDE_DOWNGRADE_MODELS:
@@ -359,81 +412,98 @@ def fallback_ladder(primary, claude, codex, chatgpt_model):
 
 
 def main():
+    # Make sure the runtime's Google sign-in has an OAuth client on machines
+    # without a local gemini-cli to scrape one from (i.e. every lawyer's).
+    ensure_env_keys([
+        (key, value)
+        for key, value in (
+            ("HERMES_GEMINI_CLIENT_ID", GEMINI_CLIENT_ID),
+            ("HERMES_GEMINI_CLIENT_SECRET", GEMINI_CLIENT_SECRET),
+        )
+        if value
+    ])
+
     text = read_config()
     provider = current_provider(text)
     claude = claude_login()
+    gemini = gemini_login()
     codex_status, codex_cli = codex_usable()
     codex = codex_status != "none"
     chatgpt_model = codex_model()
 
-    # Idempotent: already on a supported provider whose auth is HEALTHY — don't
-    # touch the primary. Still wire the cross-provider fallback if the other
-    # login exists and no fallback is configured yet (never clobber a
-    # deliberate one), and heal any known-rejected Codex model id.
-    if provider == "anthropic" and claude:
+    def wire_skip(primary, token):
+        """Idempotent path: keep the healthy primary; heal rejected model ids
+        and wire the fallback ladder if none is configured yet (never clobber
+        a deliberate one)."""
         healed = heal_rejected_codex_models(text, chatgpt_model)
-        ladder = fallback_ladder("anthropic", claude, codex, chatgpt_model)
+        ladder = fallback_ladder(primary, claude, gemini, codex, chatgpt_model)
         if fallback_is_empty(healed) and ladder:
             if codex_status == "import":
-                write_codex_auth(codex_cli, make_active=False)
+                write_codex_auth(codex_cli, make_active=(primary == "openai-codex"))
             healed = replace_fallback_block(healed, ladder)
             _atomic_write(CONFIG_PATH, healed)
-            print("AUTOCONFIG=skip-claude+fallback-ladder")
+            print("AUTOCONFIG=" + token + "+fallback-ladder")
         else:
             if healed != text:
                 _atomic_write(CONFIG_PATH, healed)
-            print("AUTOCONFIG=skip-claude")
-        return
+            print("AUTOCONFIG=" + token)
+
+    # Idempotent: already on a supported provider whose auth is HEALTHY.
     if provider == "openai-codex" and codex:
         if codex_status == "import":
             # Revive Hermes' dead/absent store from a fresher CLI login.
             write_codex_auth(codex_cli, make_active=True)
-        healed = heal_rejected_codex_models(text, chatgpt_model)
-        ladder = fallback_ladder("openai-codex", claude, codex, chatgpt_model)
-        if fallback_is_empty(healed) and ladder:
-            healed = replace_fallback_block(healed, ladder)
-            _atomic_write(CONFIG_PATH, healed)
-            print("AUTOCONFIG=skip-chatgpt+fallback-ladder")
-        else:
-            if healed != text:
-                _atomic_write(CONFIG_PATH, healed)
-            print("AUTOCONFIG=skip-chatgpt")
+        wire_skip("openai-codex", "skip-chatgpt")
+        return
+    if provider == "google-gemini-cli" and gemini:
+        wire_skip("google-gemini-cli", "skip-gemini")
+        return
+    if provider == "anthropic" and claude:
+        wire_skip("anthropic", "skip-claude")
         return
 
-    # The configured primary is dead or unsupported. Prefer Claude, then
-    # ChatGPT. Whichever is primary, the OTHER login (if healthy) is wired as an
-    # automatic fallback so a quota-exhausted subscription transparently spills
-    # over instead of erroring.
-    if claude:
-        text = replace_model_block(text, "anthropic", CLAUDE_MODEL, CLAUDE_BASE_URL)
-        if codex_status == "import":
-            write_codex_auth(codex_cli, make_active=False)
-        text = replace_fallback_block(
-            text, fallback_ladder("anthropic", claude, codex, chatgpt_model)
-        )
-        text = heal_rejected_codex_models(text, chatgpt_model)
-        _atomic_write(CONFIG_PATH, text)
-        clear_env_keys(["ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN"])
-        switched = "+switched" if provider == "openai-codex" else ""
-        print("AUTOCONFIG=claude+fallback-ladder" + switched)
-        return
+    # The configured primary is dead or unsupported. Preference order:
+    # ChatGPT, then Google Gemini, then Claude. Every other healthy login is
+    # wired into the fallback ladder so a quota-exhausted primary spills over
+    # instead of erroring.
     if codex:
         if codex_status == "import":
             write_codex_auth(codex_cli, make_active=True)
         text = replace_model_block(text, "openai-codex", chatgpt_model, CODEX_BASE_URL)
         text = replace_fallback_block(
-            text, fallback_ladder("openai-codex", claude, codex, chatgpt_model)
+            text, fallback_ladder("openai-codex", claude, gemini, codex, chatgpt_model)
         )
         text = heal_rejected_codex_models(text, chatgpt_model)
         _atomic_write(CONFIG_PATH, text)
-        switched = "+switched" if provider == "anthropic" else ""
+        switched = "+switched" if provider in ("anthropic", "google-gemini-cli") else ""
         print("AUTOCONFIG=chatgpt" + switched)
         return
+    if gemini:
+        text = replace_model_block(text, "google-gemini-cli", GEMINI_MODEL, GEMINI_BASE_URL)
+        text = replace_fallback_block(
+            text, fallback_ladder("google-gemini-cli", claude, gemini, codex, chatgpt_model)
+        )
+        text = heal_rejected_codex_models(text, chatgpt_model)
+        _atomic_write(CONFIG_PATH, text)
+        switched = "+switched" if provider in ("anthropic", "openai-codex") else ""
+        print("AUTOCONFIG=gemini" + switched)
+        return
+    if claude:
+        text = replace_model_block(text, "anthropic", CLAUDE_MODEL, CLAUDE_BASE_URL)
+        text = replace_fallback_block(
+            text, fallback_ladder("anthropic", claude, gemini, codex, chatgpt_model)
+        )
+        text = heal_rejected_codex_models(text, chatgpt_model)
+        _atomic_write(CONFIG_PATH, text)
+        clear_env_keys(["ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN"])
+        switched = "+switched" if provider in ("openai-codex", "google-gemini-cli") else ""
+        print("AUTOCONFIG=claude+fallback-ladder" + switched)
+        return
 
-    # Neither login is usable. If a supported provider is configured, its auth
-    # has died — the runtime's setup.runtime_check will report it and the shell
+    # No login is usable. If a supported provider is configured, its auth has
+    # died — the runtime's setup.runtime_check will report it and the shell
     # surfaces the sign-in screen; we just name the state for the logs.
-    if provider in ("anthropic", "openai-codex"):
+    if provider in ("anthropic", "openai-codex", "google-gemini-cli"):
         print("AUTOCONFIG=relogin-required")
     else:
         print("AUTOCONFIG=none")

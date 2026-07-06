@@ -2986,6 +2986,17 @@ _OAUTH_PROVIDER_CATALOG: tuple[Dict[str, Any], ...] = (
         "status_fn": None,  # dispatched via auth.get_codex_auth_status
     },
     {
+        "id": "google-gemini-cli",
+        "name": "Google Gemini",
+        # Loopback-PKCE Google sign-in surfaced with device-code UX: the UI
+        # opens verification_url and polls; the loopback callback completes
+        # the flow server-side, so there is no user_code to display.
+        "flow": "device_code",
+        "cli_command": "hermes auth add google-gemini-cli",
+        "docs_url": "https://gemini.google.com",
+        "status_fn": None,  # dispatched via auth.get_gemini_oauth_auth_status
+    },
+    {
         "id": "qwen-oauth",
         "name": "Qwen (via Qwen CLI)",
         "flow": "external",
@@ -3038,6 +3049,16 @@ def _resolve_provider_status(provider_id: str, status_fn) -> Dict[str, Any]:
                 "expires_at": None,
                 "has_refresh_token": False,
                 "last_refresh": raw.get("last_refresh"),
+            }
+        if provider_id == "google-gemini-cli":
+            raw = hauth.get_gemini_oauth_auth_status()
+            return {
+                "logged_in": bool(raw.get("logged_in")),
+                "source": "google_oauth",
+                "source_label": raw.get("email") or "Google",
+                "token_preview": None,
+                "expires_at": raw.get("expires_at"),
+                "has_refresh_token": bool(raw.get("has_refresh_token", True)),
             }
         if provider_id == "qwen-oauth":
             raw = hauth.get_qwen_auth_status()
@@ -3473,6 +3494,68 @@ async def _start_device_code_flow(provider_id: str) -> Dict[str, Any]:
             "verification_url": s["verification_url"],
             "expires_in": int(s.get("expires_in") or 900),
             "poll_interval": int(s.get("interval") or 5),
+        }
+
+    if provider_id == "google-gemini-cli":
+        # Google sign-in: loopback PKCE run in a worker (agent.google_oauth
+        # binds a 127.0.0.1 callback server and completes the flow itself).
+        # Rendered with device-code UX minus the user code — the UI opens
+        # verification_url and polls the session until the callback lands.
+        sid, sess_ref = _new_oauth_session("google-gemini-cli", "device_code")
+
+        def _gemini_login_worker(session_id: str = sid) -> None:
+            try:
+                from agent.google_oauth import start_oauth_flow
+
+                def _emit(url: str) -> None:
+                    with _oauth_sessions_lock:
+                        s2 = _oauth_sessions.get(session_id)
+                        if s2 is not None:
+                            s2["verification_url"] = url
+
+                start_oauth_flow(
+                    force_relogin=True,
+                    open_browser=False,
+                    on_auth_url=_emit,
+                    callback_wait_seconds=600,
+                )
+                with _oauth_sessions_lock:
+                    s2 = _oauth_sessions.get(session_id)
+                    if s2 is not None:
+                        s2["status"] = "approved"
+                _log.info("oauth/loopback: google-gemini-cli login completed (session=%s)", session_id)
+            except Exception as e:
+                _log.warning("gemini login worker failed (session=%s): %s", session_id, e)
+                with _oauth_sessions_lock:
+                    s2 = _oauth_sessions.get(session_id)
+                    if s2 is not None:
+                        s2["status"] = "error"
+                        s2["error_message"] = str(e)
+
+        threading.Thread(
+            target=_gemini_login_worker, daemon=True,
+            name=f"oauth-gemini-{sid[:6]}",
+        ).start()
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            with _oauth_sessions_lock:
+                s3 = _oauth_sessions.get(sid)
+            if s3 and (s3.get("verification_url") or s3["status"] != "pending"):
+                break
+            await asyncio.sleep(0.1)
+        with _oauth_sessions_lock:
+            s3 = _oauth_sessions.get(sid, {})
+        if s3.get("status") == "error":
+            raise HTTPException(status_code=500, detail=s3.get("error_message") or "Google sign-in failed to start")
+        if not s3.get("verification_url"):
+            raise HTTPException(status_code=504, detail="Google sign-in timed out before returning an authorization URL")
+        return {
+            "session_id": sid,
+            "flow": "device_code",
+            "user_code": "",
+            "verification_url": s3["verification_url"],
+            "expires_in": 600,
+            "poll_interval": 3,
         }
 
     if provider_id == "minimax-oauth":

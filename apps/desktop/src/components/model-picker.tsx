@@ -67,7 +67,7 @@ export function ModelPickerDialog({
   // Lock the picker to Claude (anthropic) + ChatGPT (openai-codex) only. Users
   // sign in with their own subscription for unlimited usage — no Nous, no
   // OpenRouter, no Gemini, no other providers anywhere in the product.
-  const ALLOWED_PROVIDER_SLUGS = new Set(['anthropic', 'openai-codex'])
+  const ALLOWED_PROVIDER_SLUGS = new Set(['anthropic', 'openai-codex', 'google-gemini-cli'])
   const providers = (modelOptions.data?.providers ?? []).filter((p) =>
     ALLOWED_PROVIDER_SLUGS.has(p.slug)
   )

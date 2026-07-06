@@ -61,8 +61,11 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
+# Own-the-pipeline: the catalog is fetched from OUR fork, so adding a newly
+# released model for every install is a one-line JSON edit pushed to main —
+# no app release, no upstream dependency. Users see it within ttl_hours.
 DEFAULT_CATALOG_URL = (
-    "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json"
+    "https://raw.githubusercontent.com/anrakprojects/Jolly_LLB/main/website/static/api/model-catalog.json"
 )
 # Fallback fetch chain. The Docusaurus site is served through Vercel, which
 # occasionally returns HTTP 403 + x-vercel-mitigated: challenge for non-
@@ -72,7 +75,7 @@ DEFAULT_CATALOG_URL = (
 # so we fall through to it whenever the primary URL fails.
 DEFAULT_CATALOG_FALLBACK_URLS: tuple[str, ...] = (
     "https://raw.githubusercontent.com/NousResearch/hermes-agent/main/website/static/api/model-catalog.json",
-)
+)  # upstream kept as a reachability fallback only — ours is authoritative
 DEFAULT_TTL_HOURS = 1
 DEFAULT_FETCH_TIMEOUT = 8.0
 SUPPORTED_SCHEMA_VERSION = 1

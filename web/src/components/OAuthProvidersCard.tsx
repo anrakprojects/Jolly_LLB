@@ -71,7 +71,7 @@ export function OAuthProvidersCard({ onError, onSuccess }: Props) {
       .then((resp) =>
         setProviders(
           resp.providers.filter(
-            (p) => p.id === "anthropic" || p.id === "openai-codex",
+            (p) => p.id === "anthropic" || p.id === "openai-codex" || p.id === "google-gemini-cli",
           ),
         ),
       )

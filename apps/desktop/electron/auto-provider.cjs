@@ -48,8 +48,23 @@ function autoConfigureProvider({ hermesHome, venvPython, log } = {}) {
       return null
     }
 
+    // Google OAuth client for the runtime's Gemini sign-in — staged at build
+    // time as a git-ignored sidecar (GitHub push protection rejects the
+    // literal in-repo; the values are the public gemini-cli installed-app
+    // client). Missing sidecar just means the Google option needs a local
+    // gemini-cli — never a launch failure.
+    let geminiClient = {}
+    try {
+      geminiClient = JSON.parse(fs.readFileSync(path.join(__dirname, 'gemini-oauth-client.json'), 'utf8'))
+    } catch { /* optional */ }
+
     const out = execFileSync(venvPython, [target], {
-      env: { ...process.env, HERMES_HOME: hermesHome },
+      env: {
+        ...process.env,
+        HERMES_HOME: hermesHome,
+        JOLLY_GEMINI_CLIENT_ID: String(geminiClient.client_id || ''),
+        JOLLY_GEMINI_CLIENT_SECRET: String(geminiClient.client_secret || '')
+      },
       encoding: 'utf8',
       timeout: 15000,
       stdio: ['ignore', 'pipe', 'pipe']

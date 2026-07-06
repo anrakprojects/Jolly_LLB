@@ -838,6 +838,7 @@ def start_oauth_flow(
     open_browser: bool = True,
     callback_wait_seconds: float = CALLBACK_WAIT_SECONDS,
     project_id: str = "",
+    on_auth_url=None,
 ) -> GoogleCredentials:
     """Run the interactive browser OAuth flow and persist credentials.
 
@@ -886,6 +887,14 @@ def start_oauth_flow(
         "prompt": "consent",
     }
     auth_url = AUTH_ENDPOINT + "?" + urllib.parse.urlencode(params) + "#hermes"
+
+    # Hand the URL to a UI host (e.g. the dashboard OAuth flow) running this
+    # blocking helper in a worker thread, so it can open the browser itself.
+    if on_auth_url is not None:
+        try:
+            on_auth_url(auth_url)
+        except Exception as exc:
+            logger.debug("on_auth_url callback failed: %s", exc)
 
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
