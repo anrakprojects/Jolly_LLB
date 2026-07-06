@@ -70,6 +70,25 @@ function writeIfAbsent(bundledName, destPath, note) {
 }
 
 /**
+ * The runtime seeds ~/.hermes/SOUL.md with a commented-out placeholder
+ * template ("This file defines the agent's personality..."). On machines
+ * where the runtime booted before this provisioner ever ran (installs that
+ * predate it, dev machines), that placeholder blocks the only-if-absent
+ * write forever — and the app runs with NO paralegal identity. A SOUL whose
+ * content is nothing but headings and HTML comments carries no user intent,
+ * so it is safe to replace; any file with real content is left alone.
+ *
+ * @param {string} content
+ */
+function soulIsPristinePlaceholder(content) {
+  const stripped = String(content)
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/^#.*$/gm, '')
+    .trim()
+  return stripped.length === 0
+}
+
+/**
  * Merge the AnrakLegal MCP server entry into config.yaml via the runtime venv's
  * Python + PyYAML (safe round-trip — see "why Python" in config_merge_logic).
  * Best-effort: returns the helper's LEGALCONFIG token, or null. Never throws.
@@ -160,8 +179,19 @@ function provisionLegalIdentity({ hermesHome, venvPython, log } = {}) {
     }
 
     // 1. SOUL.md — overrides the runtime's default_soul.py when present. Only
-    //    written if absent, so a user who edits their SOUL keeps it.
-    result.soul = writeIfAbsent('legal-soul.md', path.join(hermesHome, 'SOUL.md'), note)
+    //    written if absent, so a user who edits their SOUL keeps it. A
+    //    pristine runtime placeholder (comments/headings only) counts as
+    //    absent — see soulIsPristinePlaceholder.
+    const soulPath = path.join(hermesHome, 'SOUL.md')
+    try {
+      if (fs.existsSync(soulPath) && soulIsPristinePlaceholder(fs.readFileSync(soulPath, 'utf8'))) {
+        fs.rmSync(soulPath)
+        note('[legal-provisioner] replaced pristine placeholder SOUL.md')
+      }
+    } catch (err) {
+      note(`[legal-provisioner] SOUL placeholder check failed (ignored): ${err && err.message ? err.message : err}`)
+    }
+    result.soul = writeIfAbsent('legal-soul.md', soulPath, note)
 
     // 2. The paralegal skill. Only written if absent.
     result.skill = writeIfAbsent(
