@@ -1733,6 +1733,80 @@ def test_setup_runtime_check_rejects_implicit_bedrock_when_unconfigured(monkeypa
     assert resp["result"]["provider"] == "bedrock"
 
 
+def test_setup_runtime_check_rejects_relogin_required_oauth_store(monkeypatch):
+    # Tokens can be present but already dead — e.g. a Codex refresh token
+    # consumed by another client (rotation). The auth store records
+    # relogin_required; runtime_check must report not-ready so the UI can
+    # surface sign-in instead of letting the first prompt 401.
+    import contextlib
+
+    monkeypatch.setattr("hermes_cli.main._has_any_provider_configured", lambda: True)
+    monkeypatch.setattr(
+        "hermes_cli.runtime_provider.resolve_runtime_provider",
+        lambda requested=None: {
+            "provider": "openai-codex",
+            "api_key": "sk-present-but-dead-token",
+            "source": "hermes-auth-store",
+        },
+    )
+    monkeypatch.setattr(
+        "hermes_cli.auth._auth_store_lock", lambda *a, **k: contextlib.nullcontext()
+    )
+    monkeypatch.setattr(
+        "hermes_cli.auth._load_auth_store",
+        lambda: {
+            "providers": {
+                "openai-codex": {
+                    "tokens": {"access_token": "x", "refresh_token": "y"},
+                    "last_auth_error": {
+                        "code": "refresh_token_reused",
+                        "message": "Codex refresh token was already consumed by another client.",
+                        "relogin_required": True,
+                    },
+                }
+            }
+        },
+    )
+
+    resp = server.handle_request({"id": "1", "method": "setup.runtime_check", "params": {}})
+
+    assert resp["result"]["ok"] is False
+    assert resp["result"]["relogin_required"] is True
+    assert "consumed" in resp["result"]["error"]
+
+
+def test_setup_runtime_check_passes_healthy_oauth_store(monkeypatch):
+    import contextlib
+
+    monkeypatch.setattr("hermes_cli.main._has_any_provider_configured", lambda: True)
+    monkeypatch.setattr(
+        "hermes_cli.runtime_provider.resolve_runtime_provider",
+        lambda requested=None: {
+            "provider": "openai-codex",
+            "api_key": "sk-live-token",
+            "source": "hermes-auth-store",
+        },
+    )
+    monkeypatch.setattr(
+        "hermes_cli.auth._auth_store_lock", lambda *a, **k: contextlib.nullcontext()
+    )
+    monkeypatch.setattr(
+        "hermes_cli.auth._load_auth_store",
+        lambda: {
+            "providers": {
+                "openai-codex": {
+                    "tokens": {"access_token": "x", "refresh_token": "y"},
+                }
+            }
+        },
+    )
+
+    resp = server.handle_request({"id": "1", "method": "setup.runtime_check", "params": {}})
+
+    assert resp["result"]["ok"] is True
+    assert resp["result"]["provider"] == "openai-codex"
+
+
 def test_complete_slash_drops_removed_provider_alias():
     # `/provider` was folded into a single `/model` command, so autocomplete
     # must no longer offer the dead alias...
