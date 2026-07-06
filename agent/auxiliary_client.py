@@ -2060,8 +2060,17 @@ def _try_anthropic(explicit_api_key: str = None) -> Tuple[Optional[Any], Optiona
     pool_present, entry = _select_pool_entry("anthropic")
     if pool_present:
         if entry is None:
-            return None, None
-        token = explicit_api_key or _pool_runtime_api_key(entry)
+            # The pool exists but has nothing usable right now — e.g. its
+            # single claude_code entry sits in an exhausted cooldown after a
+            # per-model quota 400 ("out of extra usage" on Opus). Quota gates
+            # are per-MODEL while pool exhaustion is per-CREDENTIAL, so a
+            # Sonnet/Haiku fallback on the same subscription can still serve.
+            # Fall through to the adapter's own resolution (macOS Keychain,
+            # ~/.claude credentials file, env) instead of failing — mirrors
+            # the singleton<->pool bridging done for openai-codex (#32992).
+            token = explicit_api_key or resolve_anthropic_token()
+        else:
+            token = explicit_api_key or _pool_runtime_api_key(entry)
     else:
         entry = None
         token = explicit_api_key or resolve_anthropic_token()
