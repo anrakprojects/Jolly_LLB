@@ -77,8 +77,26 @@ function fromLocalGit() {
   }
 }
 
+// Last-resort resolver for the self-contained desktop installer. install.ps1's
+// desktop stage sets HERMES_SELFCONTAINED_BUILD=1 when building from bundled
+// source on the end user's machine. That tree is a fresh `git init` which
+// should carry an initial commit (so fromLocalGit() normally wins) -- but if
+// commit creation was unavailable (no git identity, locked-down host, a hook
+// that refused), we still emit a valid stamp rather than aborting the whole
+// install. Gated on the env flag so a normal CI / local dev build keeps
+// failing loudly when it's genuinely misconfigured.
+function fromSelfContained() {
+  if (process.env.HERMES_SELFCONTAINED_BUILD !== "1") return null
+  return {
+    commit: "0".repeat(40), // sentinel: passes the 40-hex shape check
+    branch: process.env.GITHUB_REF_NAME || null,
+    dirty: false,
+    source: "self-contained"
+  }
+}
+
 function main() {
-  const stamp = fromCI() || fromLocalGit()
+  const stamp = fromCI() || fromLocalGit() || fromSelfContained()
   if (!stamp || !stamp.commit) {
     console.error(
       "[write-build-stamp] ERROR: could not determine git commit.\n" +
