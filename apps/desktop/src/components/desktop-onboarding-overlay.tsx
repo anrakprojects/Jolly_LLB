@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ModelPickerDialog } from '@/components/model-picker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { getGlobalModelOptions } from '@/hermes'
+import { getGlobalModelOptions, getMcpConnectorStatus, pollOAuthSession, startMcpConnectorOAuth } from '@/hermes'
 import {
   Check,
   ChevronDown,
@@ -149,12 +149,84 @@ export function DesktopOnboardingOverlay({ enabled, onCompleted, requestGateway 
     }
   }, [ctx, enabled, onboarding.requested])
 
+  // ── AnrakLegal connector step ────────────────────────────────────────
+  // After the model provider is ready, offer the one-time AnrakLegal
+  // sign-in that unlocks the legal tools. The runtime cannot self-initiate
+  // this OAuth from its non-interactive backend, so the boot flow is the
+  // interactive moment. Skippable (reappears next launch until connected).
+  const [anrak, setAnrak] = useState<{ message?: string; step: 'connecting' | 'done' | 'error' | 'offer' | 'unknown' }>({
+    step: 'unknown'
+  })
+  const anrakChecked = useRef(false)
+  const anrakPoll = useRef<null | number>(null)
+
+  useEffect(() => {
+    if (!enabled || onboarding.configured !== true || onboarding.manual || anrakChecked.current) {
+      return
+    }
+    anrakChecked.current = true
+    void getMcpConnectorStatus(ANRAK_SERVER)
+      .then(st => {
+        const needsConnect = st.present && (st.auth || '').toLowerCase() === 'oauth' && !st.authenticated
+        setAnrak({ step: needsConnect ? 'offer' : 'done' })
+      })
+      .catch(() => setAnrak({ step: 'done' })) // never block boot on this check
+  }, [enabled, onboarding.configured, onboarding.manual])
+
+  useEffect(
+    () => () => {
+      if (anrakPoll.current !== null) {
+        window.clearInterval(anrakPoll.current)
+      }
+    },
+    []
+  )
+
+  const connectAnrak = async () => {
+    setAnrak({ step: 'connecting' })
+    try {
+      const start = await startMcpConnectorOAuth(ANRAK_SERVER)
+      if (start.flow !== 'device_code') {
+        throw new Error('unexpected sign-in flow')
+      }
+      await window.hermesDesktop?.openExternal(start.verification_url)
+      anrakPoll.current = window.setInterval(() => {
+        void pollOAuthSession(`mcp:${ANRAK_SERVER}`, start.session_id)
+          .then(({ error_message, status }) => {
+            if (status === 'approved') {
+              if (anrakPoll.current !== null) window.clearInterval(anrakPoll.current)
+              setAnrak({ step: 'done' })
+              ctxRef.current.onCompleted?.()
+            } else if (status !== 'pending') {
+              if (anrakPoll.current !== null) window.clearInterval(anrakPoll.current)
+              setAnrak({ step: 'error', message: error_message || `Sign-in ${status}.` })
+            }
+          })
+          .catch(() => {
+            /* transient poll failure — keep polling */
+          })
+      }, (start.poll_interval || 3) * 1000)
+    } catch (error) {
+      setAnrak({ step: 'error', message: error instanceof Error ? error.message : String(error) })
+    }
+  }
+
   // Mount from frame 1 so we replace the boot overlay seamlessly. The
   // configured field stays null until the runtime check resolves; only then
   // do we know whether to dismiss (true) or surface the picker (false).
   // EXCEPTION: manual mode (user opened the selector from a working app to
   // add/switch a provider) shows the overlay regardless of configured state.
   if (onboarding.configured === true && !onboarding.manual) {
+    if (anrak.step === 'offer' || anrak.step === 'connecting' || anrak.step === 'error') {
+      return (
+        <AnrakConnectScreen
+          message={anrak.message}
+          onConnect={() => void connectAnrak()}
+          onSkip={() => setAnrak({ step: 'done' })}
+          step={anrak.step}
+        />
+      )
+    }
     return null
   }
 
@@ -200,6 +272,67 @@ function ReasonNotice({ reason }: { reason: string }) {
   return (
     <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
       {reason}
+    </div>
+  )
+}
+
+const ANRAK_SERVER = 'Anrak Legal'
+
+function AnrakConnectScreen({
+  message,
+  onConnect,
+  onSkip,
+  step
+}: {
+  message?: string
+  onConnect: () => void
+  onSkip: () => void
+  step: 'connecting' | 'error' | 'offer'
+}) {
+  return (
+    <div className="fixed inset-0 z-1300 flex items-center justify-center bg-(--ui-chat-surface-background) p-6">
+      <div className="w-full max-w-[45rem] overflow-hidden rounded-xl border border-(--ui-stroke-secondary) bg-(--ui-chat-bubble-background) shadow-sm">
+        <div className="border-b border-(--ui-stroke-tertiary) bg-(--ui-chat-bubble-background) px-5 py-4">
+          <div className="flex items-start gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-(--ui-bg-tertiary) text-(--ui-text-tertiary)">
+              <KeyRound className="size-5" />
+            </div>
+            <div>
+              <h2 className="text-[0.9375rem] font-semibold tracking-tight">Connect your AnrakLegal account</h2>
+              <p className="mt-1 max-w-xl text-[0.8125rem] leading-5 text-(--ui-text-tertiary)">
+                This unlocks legal research, case files, drafting, and the rest of your paralegal tools. One-time
+                sign-in — your work stays tied to your firm.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-3 p-5">
+          {step === 'error' && message ? (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {message}
+            </div>
+          ) : null}
+          {step === 'connecting' ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Waiting for you to finish signing in — a browser window has opened…
+            </div>
+          ) : null}
+          <div className="flex items-center justify-between gap-3">
+            <button
+              className="text-xs font-medium text-muted-foreground transition hover:text-foreground"
+              onClick={onSkip}
+              type="button"
+            >
+              Skip for now
+            </button>
+            <Button disabled={step === 'connecting'} onClick={onConnect}>
+              {step === 'error' ? 'Try again' : 'Sign in to AnrakLegal'}
+              <ExternalLink className="ml-1.5 size-3.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -726,6 +726,7 @@ def build_oauth_auth(
     server_name: str,
     server_url: str,
     oauth_config: dict | None = None,
+    redirect_handler=None,
 ) -> "OAuthClientProvider | None":
     """Build an ``httpx.Auth``-compatible OAuth handler for an MCP server.
 
@@ -770,7 +771,10 @@ def build_oauth_auth(
         server_url=server_url,
         client_metadata=client_metadata,
         storage=storage,
-        redirect_handler=_redirect_handler,
+        # A UI host (e.g. the dashboard's connector sign-in) passes its own
+        # handler to capture/open the authorization URL; default keeps the
+        # stderr + webbrowser behavior for CLI use.
+        redirect_handler=redirect_handler or _redirect_handler,
         callback_handler=_wait_for_callback,
         timeout=float(cfg.get("timeout", 300)),
     )

@@ -284,6 +284,28 @@ export function listOAuthProviders(): Promise<OAuthProvidersResponse> {
   })
 }
 
+export interface McpConnectorStatus {
+  present: boolean
+  enabled?: boolean
+  auth?: string
+  authenticated?: boolean
+  url?: string
+}
+
+export function getMcpConnectorStatus(serverName: string): Promise<McpConnectorStatus> {
+  return window.hermesDesktop.api<McpConnectorStatus>({
+    path: `/api/mcp/oauth/${encodeURIComponent(serverName)}/status`
+  })
+}
+
+export function startMcpConnectorOAuth(serverName: string): Promise<OAuthStartResponse> {
+  return window.hermesDesktop.api<OAuthStartResponse>({
+    path: `/api/mcp/oauth/${encodeURIComponent(serverName)}/start`,
+    method: 'POST',
+    body: {}
+  })
+}
+
 export function startOAuthLogin(providerId: string): Promise<OAuthStartResponse> {
   return window.hermesDesktop.api<OAuthStartResponse>({
     path: `/api/providers/oauth/${encodeURIComponent(providerId)}/start`,

@@ -4675,6 +4675,159 @@ async def set_mcp_server_enabled(name: str, body: MCPEnabledToggle):
     return {"ok": True, "name": name, "enabled": bool(body.enabled)}
 
 
+@app.get("/api/mcp/oauth/{server_name}/status")
+async def mcp_connector_oauth_status(server_name: str, request: Request):
+    """Auth state of an OAuth MCP connector (e.g. "Anrak Legal").
+
+    Lets the desktop onboarding decide whether to show the connector
+    sign-in step: present + auth=oauth + not authenticated -> show it.
+    """
+    _require_token(request)
+    cfg = load_config()
+    servers = cfg.get("mcp_servers")
+    entry = servers.get(server_name) if isinstance(servers, dict) else None
+    if not isinstance(entry, dict):
+        return {"present": False}
+    authenticated = False
+    try:
+        from tools.mcp_oauth import HermesTokenStorage
+        authenticated = HermesTokenStorage(server_name).has_cached_tokens()
+    except Exception:
+        pass
+    return {
+        "present": True,
+        "enabled": bool(entry.get("enabled", True)),
+        "auth": str(entry.get("auth") or ""),
+        "authenticated": authenticated,
+        "url": str(entry.get("url") or ""),
+    }
+
+
+@app.post("/api/mcp/oauth/{server_name}/start")
+async def mcp_connector_oauth_start(server_name: str, request: Request):
+    """Begin the OAuth sign-in for an MCP connector, desktop-UI driven.
+
+    The runtime deliberately skips MCP OAuth in non-interactive sessions
+    (no TTY to guide the user), so an enabled-but-unauthenticated
+    connector never self-initiates — this endpoint is the interactive
+    path. It runs the SDK flow in a worker: DCR + PKCE against the
+    connector's discovery metadata, loopback callback on 127.0.0.1, token
+    cached in HermesTokenStorage. Response mirrors the provider
+    device-code shape so the UI can reuse its open-URL + poll machinery
+    (poll via /api/providers/oauth/mcp:{server_name}/poll/{session_id}).
+    On success the connector is enabled in config so the next session
+    registers its tools.
+    """
+    _require_token(request)
+    cfg = load_config()
+    servers = cfg.get("mcp_servers")
+    entry = servers.get(server_name) if isinstance(servers, dict) else None
+    if not isinstance(entry, dict) or not entry.get("url"):
+        raise HTTPException(status_code=404, detail=f"MCP server '{server_name}' not found")
+    if str(entry.get("auth") or "").lower() != "oauth":
+        raise HTTPException(status_code=400, detail=f"MCP server '{server_name}' does not use OAuth")
+    server_url = str(entry["url"])
+    oauth_cfg = entry.get("oauth") if isinstance(entry.get("oauth"), dict) else {}
+
+    _gc_oauth_sessions()
+    sid, sess = _new_oauth_session(f"mcp:{server_name}", "device_code")
+
+    def _mcp_oauth_worker(session_id: str = sid) -> None:
+        import asyncio as _aio
+
+        async def _run() -> None:
+            from tools.mcp_oauth import build_oauth_auth
+
+            async def _capture_url(authorization_url: str) -> None:
+                with _oauth_sessions_lock:
+                    s2 = _oauth_sessions.get(session_id)
+                    if s2 is not None:
+                        s2["verification_url"] = authorization_url
+
+            auth = build_oauth_auth(
+                server_name, server_url, oauth_cfg, redirect_handler=_capture_url
+            )
+            if auth is None:
+                raise RuntimeError("MCP SDK OAuth support unavailable")
+            import httpx
+            init_payload = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2025-03-26",
+                    "capabilities": {},
+                    "clientInfo": {"name": "jolly-llb-desktop", "version": "1.0"},
+                },
+            }
+            async with httpx.AsyncClient(
+                auth=auth, timeout=httpx.Timeout(330.0), follow_redirects=True
+            ) as client:
+                resp = await client.post(
+                    server_url,
+                    json=init_payload,
+                    headers={
+                        "content-type": "application/json",
+                        "accept": "application/json, text/event-stream",
+                    },
+                )
+                if resp.status_code == 401:
+                    raise RuntimeError(
+                        "authorization did not complete (server still returns 401)"
+                    )
+
+        try:
+            _aio.run(_run())
+            # Signed in — make sure the connector is enabled so the next
+            # session registers its tools.
+            try:
+                cfg2 = load_config()
+                servers2 = cfg2.get("mcp_servers")
+                if isinstance(servers2, dict) and isinstance(servers2.get(server_name), dict):
+                    if not servers2[server_name].get("enabled", True):
+                        servers2[server_name]["enabled"] = True
+                        save_config(cfg2)
+            except Exception:
+                _log.warning("mcp oauth: could not auto-enable '%s'", server_name)
+            with _oauth_sessions_lock:
+                s2 = _oauth_sessions.get(session_id)
+                if s2 is not None:
+                    s2["status"] = "approved"
+            _log.info("mcp/oauth: '%s' connector sign-in completed (session=%s)", server_name, session_id)
+        except Exception as e:
+            _log.warning("mcp oauth worker failed (server=%s session=%s): %s", server_name, session_id, e)
+            with _oauth_sessions_lock:
+                s2 = _oauth_sessions.get(session_id)
+                if s2 is not None:
+                    s2["status"] = "error"
+                    s2["error_message"] = str(e)
+
+    threading.Thread(
+        target=_mcp_oauth_worker, daemon=True, name=f"oauth-mcp-{sid[:6]}"
+    ).start()
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        with _oauth_sessions_lock:
+            s3 = _oauth_sessions.get(sid)
+        if s3 and (s3.get("verification_url") or s3["status"] != "pending"):
+            break
+        await asyncio.sleep(0.1)
+    with _oauth_sessions_lock:
+        s3 = _oauth_sessions.get(sid, {})
+    if s3.get("status") == "error":
+        raise HTTPException(status_code=500, detail=s3.get("error_message") or "connector sign-in failed to start")
+    if not s3.get("verification_url"):
+        raise HTTPException(status_code=504, detail="connector sign-in timed out before returning an authorization URL")
+    return {
+        "session_id": sid,
+        "flow": "device_code",
+        "user_code": "",
+        "verification_url": s3["verification_url"],
+        "expires_in": 300,
+        "poll_interval": 3,
+    }
+
+
 @app.get("/api/mcp/catalog")
 async def list_mcp_catalog():
     """Browse the Nous-approved MCP catalog (the optional-mcps/ manifests).
