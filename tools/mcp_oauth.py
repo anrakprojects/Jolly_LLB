@@ -640,7 +640,32 @@ def remove_oauth_tokens(server_name: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _configure_callback_port(cfg: dict) -> int:
+def _stable_callback_port(server_name: str) -> int:
+    """Deterministic per-server callback port (42100-42899).
+
+    OAuth servers validate redirect_uri against the values registered at
+    DCR time. A random port per process means every new process invalidates
+    the previous registration — the authorize endpoint then rejects with
+    invalid_redirect_uri. A stable port keeps the cached registration valid
+    across runs.
+    """
+    import hashlib
+
+    digest = hashlib.sha256(server_name.encode("utf-8")).hexdigest()
+    return 42100 + int(digest[:8], 16) % 800
+
+
+def _port_is_available(port: int) -> bool:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("127.0.0.1", port))
+        return True
+    except OSError:
+        return False
+
+
+def _configure_callback_port(cfg: dict, server_name: str = "") -> int:
     """Pick or validate the OAuth callback port.
 
     Stores the resolved port into ``cfg['_resolved_port']`` so sibling
@@ -655,6 +680,13 @@ def _configure_callback_port(cfg: dict) -> int:
     """
     global _oauth_port
     requested = int(cfg.get("redirect_port", 0))
+    if requested == 0 and server_name:
+        # Prefer the server's stable port so redirect_uri survives restarts;
+        # fall back to a random free port if it's taken (the stale-
+        # registration check below then forces a fresh DCR).
+        candidate = _stable_callback_port(server_name)
+        if _port_is_available(candidate):
+            requested = candidate
     port = _find_free_port() if requested == 0 else requested
     cfg["_resolved_port"] = port
     _oauth_port = port  # legacy consumer: _wait_for_callback reads this
@@ -696,7 +728,29 @@ def _maybe_preregister_client(
     cfg: dict,
     client_metadata: "OAuthClientMetadata",
 ) -> None:
-    """If cfg has a pre-registered client_id, persist it to storage."""
+    """If cfg has a pre-registered client_id, persist it to storage.
+
+    Also drops a cached DCR registration whose redirect_uris no longer
+    include the current callback URL: the SDK reuses stored client info
+    verbatim, so a registration made by a previous process on a different
+    port makes the authorize endpoint fail with invalid_redirect_uri.
+    Removing it forces a fresh DCR with the current port.
+    """
+    try:
+        info = _read_json(storage._client_info_path())
+        if isinstance(info, dict):
+            registered = {str(u).rstrip("/") for u in (info.get("redirect_uris") or [])}
+            current = {str(u).rstrip("/") for u in (client_metadata.redirect_uris or [])}
+            if current and registered and not (current & registered):
+                storage._client_info_path().unlink(missing_ok=True)
+                logger.info(
+                    "MCP OAuth '%s': cached client registration was for a "
+                    "different callback port — re-registering.",
+                    storage._server_name,
+                )
+    except Exception:
+        logger.debug("stale client registration check failed", exc_info=True)
+
     client_id = cfg.get("client_id")
     if not client_id:
         return
@@ -763,7 +817,7 @@ def build_oauth_auth(
             server_name,
         )
 
-    _configure_callback_port(cfg)
+    _configure_callback_port(cfg, server_name=server_name)
     client_metadata = _build_client_metadata(cfg)
     _maybe_preregister_client(storage, cfg, client_metadata)
 
