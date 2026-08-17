@@ -1,0 +1,15 @@
+☐ Booting unreliable; Hermes runtime doesn't auto-update — bootstrap-runner.cjs, scripts/install.ps1, electron/main.cjs (install-stamp), backend-probes.cjs, src/store/updates.ts
+
+☐ Unable to release OTA updates; users must reinstall — electron/auto-updater.cjs, apps/desktop/docs/AUTO_UPDATE.md, package.json publish, src/app/updates-overlay.tsx
+
+☐ Install security warnings every reinstall — code-sign + notarize (entitlements.mac.plist, package.json), reduce reinstalls via items above
+
+☐ Bundle computer_use by default; wire ANRAK Conductor without leaking API key — toolsets.py, install.ps1 dep_ensure, plugins/model-providers/, electron/hardening.cjs + legal-provisioner.cjs (token pattern)
+
+☐ OAuth into ChatGPT Codex / Claude reliably — electron/auto_provider.py, auto-provider.cjs, desktop-onboarding-overlay.tsx, store/onboarding.ts
+
+✔ Product name Jolly LLB → Jolly Anrak @done(26-08-17 10:38)
+
+☐ Curate legal-only default skills; let users add their own — legal-provisioner.cjs, hermes_cli/config.py (skills.disabled), src/app/skills/index.tsx, agent/skill_utils.py
+
+☐ Legal-centric system prompt (swarms, long docs) — agent/prompt_builder.py, electron/legal-soul.md, electron/legal-skill.md, tools/delegate_tool.py
