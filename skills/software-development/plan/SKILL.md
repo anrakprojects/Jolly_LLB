@@ -2,7 +2,7 @@
 name: plan
 description: "Plan mode: write markdown plan to .hermes/plans/, no exec."
 version: 1.0.0
-author: Jolly LLB
+author: Jolly Anrak
 license: MIT
 platforms: [linux, macos, windows]
 metadata:

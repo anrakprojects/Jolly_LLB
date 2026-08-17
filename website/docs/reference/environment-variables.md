@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: "Environment Variables"
-description: "Complete reference of all environment variables used by Jolly LLB"
+description: "Complete reference of all environment variables used by Jolly Anrak"
 ---
 
 # Environment Variables Reference

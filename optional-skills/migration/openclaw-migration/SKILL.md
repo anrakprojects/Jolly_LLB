@@ -1,8 +1,8 @@
 ---
 name: openclaw-migration
-description: Migrate a user's OpenClaw customization footprint into Jolly LLB. Imports Hermes-compatible memories, SOUL.md, command allowlists, user skills, and selected workspace assets from ~/.openclaw, then reports exactly what could not be migrated and why.
+description: Migrate a user's OpenClaw customization footprint into Jolly Anrak. Imports Hermes-compatible memories, SOUL.md, command allowlists, user skills, and selected workspace assets from ~/.openclaw, then reports exactly what could not be migrated and why.
 version: 1.0.0
-author: Jolly LLB (Nous Research)
+author: Jolly Anrak (Nous Research)
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
@@ -13,7 +13,7 @@ metadata:
 
 # OpenClaw -> Hermes Migration
 
-Use this skill when a user wants to move their OpenClaw setup into Jolly LLB with minimal manual cleanup.
+Use this skill when a user wants to move their OpenClaw setup into Jolly Anrak with minimal manual cleanup.
 
 ## CLI Command
 

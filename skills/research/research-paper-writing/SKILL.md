@@ -2114,9 +2114,9 @@ The main pipeline above targets empirical ML papers. Other paper types require d
 
 ---
 
-## Jolly LLB Integration
+## Jolly Anrak Integration
 
-This skill is designed for the Jolly LLB. It uses Hermes tools, delegation, scheduling, and memory for the full research lifecycle.
+This skill is designed for the Jolly Anrak. It uses Hermes tools, delegation, scheduling, and memory for the full research lifecycle.
 
 ### Related Skills
 

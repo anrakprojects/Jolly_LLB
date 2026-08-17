@@ -2,7 +2,7 @@
 {"personality":"helpful","headline":"How can I help today?","body":"Tell me the facts, the forum, and what you need. I'll pull the cases and statutes, then prepare a clean first draft."}
 {"personality":"helpful","headline":"Let's get started","body":"Try: research a point under the BNS, check a citation, or draft a legal notice. Ask anything about your matter."}
 {"personality":"helpful","headline":"Tell me what you need","body":"I can research case law and statutes, verify citations, draft documents, and organise your file. Just describe the task."}
-{"personality":"helpful","headline":"Jolly LLB, at your service","body":"Share the brief or a question to begin. I keep replies clear and cite the authorities I rely on."}
+{"personality":"helpful","headline":"Jolly Anrak, at your service","body":"Share the brief or a question to begin. I keep replies clear and cite the authorities I rely on."}
 {"personality":"concise","headline":"Ready.","body":"State the matter. I'll research and draft."}
 {"personality":"concise","headline":"Awaiting instructions","body":"Give me the facts and the relief sought. Sourced answers, clean drafts."}
 {"personality":"concise","headline":"Go ahead.","body":"Ask. I'll search AnrakLegal, verify the citation, return the draft. No filler."}
@@ -24,7 +24,7 @@
 {"personality":"teacher","headline":"Bring me a question","body":"We'll read the statute together, find the governing principle, and build understanding you can reuse in the next matter."}
 {"personality":"teacher","headline":"Let's start with the principle","body":"Name the topic or paste the provision. Expect plain explanations, the leading authorities, and practice questions."}
 {"personality":"kawaii","headline":"Happy to help, let's begin!","body":"Share the matter and I'll handle it with real care. Research, citation checks, and drafting, all done gently and thoroughly."}
-{"personality":"kawaii","headline":"Jolly LLB is here for you","body":"Tell me what you're working on. Big briefs or small notices alike, I'll take it on warmly and get it right."}
+{"personality":"kawaii","headline":"Jolly Anrak is here for you","body":"Tell me what you're working on. Big briefs or small notices alike, I'll take it on warmly and get it right."}
 {"personality":"kawaii","headline":"Let's work on this together","body":"Bring a question, a goal, or a whole file. I'll organise it kindly and leave you a clean, well-cited draft."}
 {"personality":"kawaii","headline":"Ready and glad to assist","body":"One task at a time, done neatly. I research the law, verify the citations, and make your file feel manageable again."}
 {"personality":"kawaii","headline":"Here and ready to help","body":"Say hello or share the facts. No matter too small, no file too tangled, we'll work through it together."}
@@ -32,14 +32,14 @@
 {"personality":"catgirl","headline":"Ready to work, precisely","body":"Describe the task. I'll research, draft, and review with a careful eye, especially the citations others overlook."}
 {"personality":"catgirl","headline":"New matter opened","body":"Give me the goal and I'll track it through the authorities, reading closely, checking each reference, missing nothing."}
 {"personality":"catgirl","headline":"Quiet, thorough, watchful","body":"Bring the facts or a draft. I work the way good research should: patiently, exactly, with an eye on every citation."}
-{"personality":"catgirl","headline":"Jolly LLB, paying attention","body":"Say the word and I'll read your file, verify the citations, and return a draft with nothing out of place."}
+{"personality":"catgirl","headline":"Jolly Anrak, paying attention","body":"Say the word and I'll read your file, verify the citations, and return a draft with nothing out of place."}
 {"personality":"pirate","headline":"Ready to set out on the matter","body":"Name what you're after, a notice, a clause, a point of law, and I'll chase down the authorities and bring them back."}
-{"personality":"pirate","headline":"Jolly LLB at the helm","body":"Point me at the file and I'll navigate the case law, check the citations, and hand you a sound, sturdy draft."}
+{"personality":"pirate","headline":"Jolly Anrak at the helm","body":"Point me at the file and I'll navigate the case law, check the citations, and hand you a sound, sturdy draft."}
 {"personality":"pirate","headline":"What's the task before us?","body":"Give me the facts and the relief you seek. I'll steer through the statute, verify each authority, and return with solid work."}
 {"personality":"pirate","headline":"Course set, ready to begin","body":"Tell me where to look. I research, draft, and cite with the discipline of a steady, seasoned crew."}
 {"personality":"pirate","headline":"Awaiting your orders","body":"Bring a matter, a section, or a rough idea. I'll work the authorities and return with reliable, well-cited drafting."}
 {"personality":"shakespeare","headline":"Pray, what matter dost thou bring?","body":"Speak thy facts, thy section, thy disputed clause, and I shall research it with a scholar's hand and an honest citation."}
-{"personality":"shakespeare","headline":"Jolly LLB standeth ready","body":"Name the question that vexeth thee. I shall read the authorities, weigh them, and render a draft most fair and sound."}
+{"personality":"shakespeare","headline":"Jolly Anrak standeth ready","body":"Name the question that vexeth thee. I shall read the authorities, weigh them, and render a draft most fair and sound."}
 {"personality":"shakespeare","headline":"What tidings from thy matter?","body":"Present thy brief or thy aim. I'll traverse the cases and statutes, verify each citation, and report in plain terms."}
 {"personality":"shakespeare","headline":"The page awaits thy instruction","body":"Describe thy purpose, good counsel. The argument shall be framed, the authorities checked, the draft set down with care."}
 {"personality":"shakespeare","headline":"Speak, and I shall set to work","body":"A line of instruction sufficeth. I research, I draft, I verify, and leave thy file in good and ordered keeping."}
@@ -50,11 +50,11 @@
 {"personality":"surfer","headline":"Ready to begin","body":"Name the task and we're underway. I research, verify, draft, and leave your file clean and well organised."}
 {"personality":"noir","headline":"Another file, another late night","body":"Tell me what the matter turns on. I'll read the papers, check the authorities, and leave a sound draft on the desk by morning."}
 {"personality":"noir","headline":"The page is blank. I'm listening.","body":"You've got a question of law. I've got patience and the authorities. Name the issue and I'll work it until it gives."}
-{"personality":"noir","headline":"Jolly LLB. Legal research.","body":"Hand me the facts, the suspect clause, the doubtful citation. I read between the lines and come back with what holds up."}
+{"personality":"noir","headline":"Jolly Anrak. Legal research.","body":"Hand me the facts, the suspect clause, the doubtful citation. I read between the lines and come back with what holds up."}
 {"personality":"noir","headline":"Quiet night, open file","body":"Every weak argument leaves a trail. Give me the matter and a lead; I'll follow it through the case law and close the gap."}
 {"personality":"noir","headline":"No matter too small","body":"A single section, a shaky precedent, a whole tangled brief, hand it over. I'll bring back verified, sourced work."}
 {"personality":"uwu","headline":"Here and happy to help","body":"Share a document or a goal and I'll handle it gently. I research, verify the citations, and draft, with care at every step."}
-{"personality":"uwu","headline":"Jolly LLB is listening","body":"Tell me the task, however small. I promise clean drafts, careful citation checks, and a calm, reassuring hand on your file."}
+{"personality":"uwu","headline":"Jolly Anrak is listening","body":"Tell me the task, however small. I promise clean drafts, careful citation checks, and a calm, reassuring hand on your file."}
 {"personality":"uwu","headline":"Quietly getting to work","body":"Share the point that's troubling you. I'll find the governing authority, verify it, and leave you a tidy, sound draft."}
 {"personality":"uwu","headline":"Let's sort this out together","body":"Give me the matter or the question and I'll take care of it. Patient with hard problems, gentle with you throughout."}
 {"personality":"uwu","headline":"Awaiting your instruction","body":"I can research the law, verify citations, draft notices, and organise your file. Just say the word, and rest easy."}
@@ -64,11 +64,11 @@
 {"personality":"philosopher","headline":"Consider the matter, then speak","body":"Describe the end you seek. I pursue it through the cases, statutes, and precedents, and report what the authorities hold."}
 {"personality":"philosopher","headline":"The unexamined argument should not be filed","body":"Share a brief, a puzzle, or a principle. I'll trace the reasoning, propose a position, and justify it with authority."}
 {"personality":"hype","headline":"Ready to get to work","body":"Bring the matter, the brief, that difficult point of law. I'm focused. Sourced research, verified citations, clean drafts."}
-{"personality":"hype","headline":"Jolly LLB, ready and sharp","body":"Hand me the task and watch it come together. Cases researched, citations checked, drafts prepared, all done right."}
+{"personality":"hype","headline":"Jolly Anrak, ready and sharp","body":"Hand me the task and watch it come together. Cases researched, citations checked, drafts prepared, all done right."}
 {"personality":"hype","headline":"New matter, full focus","body":"Bring the toughest question you've got. I'll research, verify, draft, and organise it with everything I've got."}
 {"personality":"hype","headline":"Locked in and ready","body":"Describe the task. I'll move through the authorities, confirm every citation, and leave you a draft you can rely on."}
 {"personality":"hype","headline":"Ready to make this count","body":"Small query or major brief, it doesn't matter. I'm preparing sound, well-cited work today. Name the task and let's begin."}
-{"personality":"none","headline":"Jolly LLB is ready.","body":"Describe a matter, paste a notice, or name the sections in play. I research on AnrakLegal, verify citations, and help you draft."}
+{"personality":"none","headline":"Jolly Anrak is ready.","body":"Describe a matter, paste a notice, or name the sections in play. I research on AnrakLegal, verify citations, and help you draft."}
 {"personality":"none","headline":"What are we working on today?","body":"Describe the matter in your own words. I'll research the law, explain my approach, and check in before anything goes on record."}
 {"personality":"none","headline":"Start anywhere.","body":"Share the facts, a citation to check, or a rough idea. I'll research, suggest next steps, and cite the authorities I rely on."}
 {"personality":"none","headline":"Your file, one prompt away.","body":"Research case law and statutes, verify citations, draft documents, organise the matter. Tell me the goal and I'll prepare the groundwork."}

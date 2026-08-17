@@ -3,7 +3,7 @@
 **Target:** {target_url}
 **Date:** {date}
 **Scope:** {scope_description}
-**Tester:** Jolly LLB (automated exploratory QA)
+**Tester:** Jolly Anrak (automated exploratory QA)
 
 ---
 

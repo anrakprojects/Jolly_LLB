@@ -102,10 +102,10 @@ export type {
 export class HermesGateway extends JsonRpcGatewayClient {
   constructor() {
     super({
-      closedErrorMessage: 'Jolly LLB gateway connection closed',
-      connectErrorMessage: 'Could not connect to Jolly LLB gateway',
+      closedErrorMessage: 'Jolly Anrak gateway connection closed',
+      connectErrorMessage: 'Could not connect to Jolly Anrak gateway',
       createRequestId: nextId => nextId,
-      notConnectedErrorMessage: 'Jolly LLB gateway is not connected',
+      notConnectedErrorMessage: 'Jolly Anrak gateway is not connected',
       requestTimeoutMs: DEFAULT_GATEWAY_REQUEST_TIMEOUT_MS
     })
   }

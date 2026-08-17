@@ -237,7 +237,7 @@ function normalizeAnsiForeground(color: string): string {
 // ── Defaults ─────────────────────────────────────────────────────────
 
 const BRAND: ThemeBrand = {
-  name: 'Jolly LLB',
+  name: 'Jolly Anrak',
   icon: '⚕',
   prompt: '❯',
   welcome: 'Type your message or /help for commands.',

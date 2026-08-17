@@ -1,6 +1,6 @@
 # Auto-update (electron-updater + Azure Blob)
 
-Installed Jolly LLB desktop apps check an Azure Blob feed on launch, download a
+Installed Jolly Anrak desktop apps check an Azure Blob feed on launch, download a
 newer signed build, and install it on restart — so you ship changes from your
 end without anyone reinstalling.
 

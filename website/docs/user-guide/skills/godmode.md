@@ -115,7 +115,7 @@ Each strategy is also retried with prefill messages added if it fails alone.
 
 ## Hermes Integration
 
-The godmode skill integrates with two Jolly LLB config mechanisms:
+The godmode skill integrates with two Jolly Anrak config mechanisms:
 
 ### Ephemeral System Prompt (`config.yaml`)
 

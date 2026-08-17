@@ -17,7 +17,7 @@ Spotify: play, search, queue, manage playlists and devices.
 | Source | Bundled (installed by default) |
 | Path | `skills/media/spotify` |
 | Version | `1.0.0` |
-| Author | Jolly LLB |
+| Author | Jolly Anrak |
 | License | MIT |
 | Platforms | linux, macos, windows |
 | Tags | `spotify`, `music`, `playback`, `playlists`, `media` |

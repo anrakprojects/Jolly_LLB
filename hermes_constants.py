@@ -1,4 +1,4 @@
-"""Shared constants for Jolly LLB.
+"""Shared constants for Jolly Anrak.
 
 Import-safe module with no dependencies — can be imported from anywhere
 without risk of circular imports.

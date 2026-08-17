@@ -8,7 +8,7 @@ const COMMON_COMMANDS: [string, string][] = [
   ['/resume', 'resume a prior session'],
   ['/details', 'control transcript detail level'],
   ['/copy', 'copy selection or last assistant message'],
-  ['/quit', 'exit Jolly LLB']
+  ['/quit', 'exit Jolly Anrak']
 ]
 
 const HOTKEYS: [string, string][] = [

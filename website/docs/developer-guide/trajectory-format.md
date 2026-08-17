@@ -1,6 +1,6 @@
 # Trajectory Format
 
-Jolly LLB saves conversation trajectories in ShareGPT-compatible JSONL format
+Jolly Anrak saves conversation trajectories in ShareGPT-compatible JSONL format
 for use as training data, debugging artifacts, and reinforcement learning datasets.
 
 Source files: `agent/trajectory.py`, `run_agent.py` (search for `_save_trajectory`), `batch_runner.py`

@@ -1,4 +1,4 @@
-# nix/packages.nix — Jolly LLB package built with uv2nix
+# nix/packages.nix — Jolly Anrak package built with uv2nix
 { inputs, ... }:
 {
   perSystem =

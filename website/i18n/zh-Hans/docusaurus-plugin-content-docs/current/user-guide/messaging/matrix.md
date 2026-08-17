@@ -1,12 +1,12 @@
 ---
 sidebar_position: 9
 title: "Matrix"
-description: "将 Jolly LLB 设置为 Matrix 机器人"
+description: "将 Jolly Anrak 设置为 Matrix 机器人"
 ---
 
 # Matrix 设置
 
-Jolly LLB 与 Matrix 集成，Matrix 是一种开放的联邦消息协议。Matrix 允许你运行自己的 homeserver，也可以使用 matrix.org 等公共 homeserver——无论哪种方式，你都保持对通信的控制权。机器人通过 `mautrix` Python SDK 连接，通过 Jolly LLB 管道（包括工具调用、记忆和推理）处理消息，并实时响应。它支持文本、文件附件、图片、音频、视频，以及可选的端对端加密（E2EE）。
+Jolly Anrak 与 Matrix 集成，Matrix 是一种开放的联邦消息协议。Matrix 允许你运行自己的 homeserver，也可以使用 matrix.org 等公共 homeserver——无论哪种方式，你都保持对通信的控制权。机器人通过 `mautrix` Python SDK 连接，通过 Jolly Anrak 管道（包括工具调用、记忆和推理）处理消息，并实时响应。它支持文本、文件附件、图片、音频、视频，以及可选的端对端加密（E2EE）。
 
 Hermes 兼容任何 Matrix homeserver——Synapse、Conduit、Dendrite 或 matrix.org。
 
@@ -154,7 +154,7 @@ MATRIX_PASSWORD=your-password
 
 ## 第三步：找到你的 Matrix 用户 ID
 
-Jolly LLB 使用你的 Matrix 用户 ID 来控制谁可以与机器人交互。Matrix 用户 ID 的格式为 `@username:server`。
+Jolly Anrak 使用你的 Matrix 用户 ID 来控制谁可以与机器人交互。Matrix 用户 ID 的格式为 `@username:server`。
 
 查找方式：
 
@@ -166,7 +166,7 @@ Jolly LLB 使用你的 Matrix 用户 ID 来控制谁可以与机器人交互。M
 Matrix 用户 ID 始终以 `@` 开头，并包含 `:` 后跟服务器名称。例如：`@alice:matrix.org`、`@bob:your-server.com`。
 :::
 
-## 第四步：配置 Jolly LLB
+## 第四步：配置 Jolly Anrak
 
 ### 方式 A：交互式设置（推荐）
 
@@ -463,7 +463,7 @@ pip install 'hermes-agent[matrix]'
        "type": "m.login.password",
        "identifier": {"type": "m.id.user", "user": "@hermes:your-server.org"},
        "password": "***",
-       "initial_device_display_name": "Jolly LLB"
+       "initial_device_display_name": "Jolly Anrak"
      }'
    ```
 
@@ -665,7 +665,7 @@ CMD ["hermes", "gateway"]
 始终设置 `MATRIX_ALLOWED_USERS` 以限制可与机器人交互的用户。若不设置，gateway 默认拒绝所有用户作为安全措施。只添加你信任的人的用户 ID——授权用户可完整访问 agent 的所有功能，包括工具调用和系统访问。
 :::
 
-有关保护 Jolly LLB 部署的更多信息，请参阅[安全指南](../security.md)。
+有关保护 Jolly Anrak 部署的更多信息，请参阅[安全指南](../security.md)。
 
 ## 注意事项
 

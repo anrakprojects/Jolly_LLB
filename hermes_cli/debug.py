@@ -1,4 +1,4 @@
-"""``hermes debug`` debug tools for Jolly LLB.
+"""``hermes debug`` debug tools for Jolly Anrak.
 
 Currently supports:
     hermes debug share    Upload debug report (system info + logs) to a

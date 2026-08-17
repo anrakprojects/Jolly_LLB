@@ -1,5 +1,5 @@
 """
-Shared platform registry for Jolly LLB.
+Shared platform registry for Jolly Anrak.
 
 Single source of truth for platform metadata consumed by both
 skills_config (label display) and tools_config (default toolset

@@ -1,4 +1,4 @@
-# Jolly LLB Persona
+# Jolly Anrak Persona
 
 <!--
 This file defines the agent's personality and tone.

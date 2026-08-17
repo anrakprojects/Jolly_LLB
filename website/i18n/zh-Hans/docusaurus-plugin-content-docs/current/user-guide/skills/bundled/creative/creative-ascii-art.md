@@ -17,7 +17,7 @@ ASCII art：pyfiglet、cowsay、boxes、image-to-ascii。
 | 来源 | 内置（默认安装） |
 | 路径 | `skills/creative/ascii-art` |
 | 版本 | `4.0.0` |
-| 作者 | 0xbyt4, Jolly LLB |
+| 作者 | 0xbyt4, Jolly Anrak |
 | 许可证 | MIT |
 | 平台 | linux, macos, windows |
 | 标签 | `ASCII`, `Art`, `Banners`, `Creative`, `Unicode`, `Text-Art`, `pyfiglet`, `figlet`, `cowsay`, `boxes` |

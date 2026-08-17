@@ -2,7 +2,7 @@
 name: node-inspect-debugger
 description: "Debug Node.js via --inspect + Chrome DevTools Protocol CLI."
 version: 1.0.0
-author: Jolly LLB
+author: Jolly Anrak
 license: MIT
 platforms: [linux, macos, windows]
 metadata:

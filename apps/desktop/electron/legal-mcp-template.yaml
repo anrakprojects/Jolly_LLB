@@ -1,4 +1,4 @@
-# Jolly LLB / AnrakLegal — first-run MCP provisioning template.
+# Jolly Anrak / AnrakLegal — first-run MCP provisioning template.
 #
 # This file is BUNDLED into the app (electron/**, packed into the asar) and read
 # at launch by legal-provisioner.cjs -> legal_provisioner.py, which merges the

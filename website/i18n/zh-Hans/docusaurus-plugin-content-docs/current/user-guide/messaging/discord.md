@@ -1,12 +1,12 @@
 ---
 sidebar_position: 3
 title: "Discord"
-description: "将 Jolly LLB 设置为 Discord 机器人"
+description: "将 Jolly Anrak 设置为 Discord 机器人"
 ---
 
 # Discord 设置
 
-Jolly LLB 以机器人形式与 Discord 集成，让你可以通过私信或服务器频道与 AI 助手对话。机器人接收你的消息，通过 Jolly LLB 管道（包括工具调用、记忆和推理）进行处理，并实时响应。它支持文本、语音消息、文件附件和斜杠命令。
+Jolly Anrak 以机器人形式与 Discord 集成，让你可以通过私信或服务器频道与 AI 助手对话。机器人接收你的消息，通过 Jolly Anrak 管道（包括工具调用、记忆和推理）进行处理，并实时响应。它支持文本、语音消息、文件附件和斜杠命令。
 
 在开始设置之前，先介绍大多数人最想了解的内容：Hermes 进入服务器后的行为方式。
 
@@ -33,7 +33,7 @@ Hermes 在 Discord 上不是无状态回复的 webhook（网络钩子）。它�
 2. 提及 / 自由响应检查
 3. 会话查找
 4. 会话记录加载
-5. 正常的 Jolly LLB 执行，包括工具、记忆和斜杠命令
+5. 正常的 Jolly Anrak 执行，包括工具、记忆和斜杠命令
 6. 将响应发送回 Discord
 
 这一点很重要，因为在繁忙服务器中的行为取决于 Discord 路由和 Hermes 会话策略两者。
@@ -86,7 +86,7 @@ Hermes 按会话键跟踪正在运行的 agent。
 
 1. 前往 [Discord 开发者门户](https://discord.com/developers/applications) 并使用你的 Discord 账号登录。
 2. 点击右上角的 **New Application**。
-3. 输入应用名称（例如"Jolly LLB"）并接受开发者服务条款。
+3. 输入应用名称（例如"Jolly Anrak"）并接受开发者服务条款。
 4. 点击 **Create**。
 
 你将进入 **General Information** 页面。记下 **Application ID**——稍后构建邀请 URL 时需要用到。
@@ -136,7 +136,7 @@ Hermes 按会话键跟踪正在运行的 agent。
 
 ## 第四步：获取机器人 Token
 
-机器人 token（令牌）是 Jolly LLB 用于以你的机器人身份登录的凭据。仍在 **Bot** 页面：
+机器人 token（令牌）是 Jolly Anrak 用于以你的机器人身份登录的凭据。仍在 **Bot** 页面：
 
 1. 在 **Token** 部分，点击 **Reset Token**。
 2. 如果你的 Discord 账号启用了双重身份验证，请输入你的 2FA 代码。
@@ -212,7 +212,7 @@ https://discord.com/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot+application
 
 ## 第七步：找到你的 Discord 用户 ID
 
-Jolly LLB 使用你的 Discord 用户 ID 来控制谁可以与机器人交互。查找方式：
+Jolly Anrak 使用你的 Discord 用户 ID 来控制谁可以与机器人交互。查找方式：
 
 1. 打开 Discord（桌面或网页应用）。
 2. 前往 **Settings** → **Advanced** → 将 **Developer Mode** 切换为 **ON**。
@@ -225,7 +225,7 @@ Jolly LLB 使用你的 Discord 用户 ID 来控制谁可以与机器人交互。
 开发者模式还允许你以相同方式复制**频道 ID** 和**服务器 ID**——右键点击频道或服务器名称并选择 Copy ID。如果你想手动设置主频道，将需要频道 ID。
 :::
 
-## 第八步：配置 Jolly LLB
+## 第八步：配置 Jolly Anrak
 
 ### 方式 A：交互式设置（推荐）
 
@@ -673,7 +673,7 @@ DISCORD_HOME_CHANNEL_NAME="#bot-updates"
 
 ## 语音消息
 
-Jolly LLB 支持 Discord 语音消息：
+Jolly Anrak 支持 Discord 语音消息：
 
 - **传入语音消息**使用配置的 STT 提供商自动转录：本地 `faster-whisper`（无需密钥）、Groq Whisper（`GROQ_API_KEY`）或 OpenAI Whisper（`VOICE_TOOLS_OPENAI_KEY`）。
 - **文字转语音**：使用 `/voice tts` 让机器人在文字回复的同时发送语音音频响应。
@@ -796,4 +796,4 @@ DISCORD_ALLOW_MENTION_REPLIED_USER=true
 除非你确切知道为什么需要，否则将 `everyone` 和 `roles` 保持为 `false`。LLM 很容易在看似正常的响应中生成字符串 `@everyone`；没有此保护，这将通知你服务器的每个成员。
 :::
 
-有关保护 Jolly LLB 部署的更多信息，请参阅[安全指南](../security.md)。
+有关保护 Jolly Anrak 部署的更多信息，请参阅[安全指南](../security.md)。

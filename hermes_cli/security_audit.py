@@ -1,4 +1,4 @@
-"""On-demand supply-chain audit for Jolly LLB installs.
+"""On-demand supply-chain audit for Jolly Anrak installs.
 
 Scans three surfaces a Hermes user actually controls and we can map to
 upstream advisories without auth or extra binaries:

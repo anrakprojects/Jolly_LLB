@@ -1,7 +1,7 @@
 ---
 sidebar_position: 15
 title: "Weixin (WeChat)"
-description: "Connect Jolly LLB to personal WeChat accounts via the iLink Bot API"
+description: "Connect Jolly Anrak to personal WeChat accounts via the iLink Bot API"
 ---
 
 # Weixin (WeChat)

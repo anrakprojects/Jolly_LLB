@@ -1,7 +1,7 @@
 ---
 sidebar_position: 10
 title: "Model Provider Plugins"
-description: "How to build a model provider (inference backend) plugin for Jolly LLB"
+description: "How to build a model provider (inference backend) plugin for Jolly Anrak"
 ---
 
 # Building a Model Provider Plugin

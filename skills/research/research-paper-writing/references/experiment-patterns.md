@@ -1,6 +1,6 @@
 # Experiment Design Patterns
 
-Patterns and best practices distilled from running research experiments at scale with the Jolly LLB. These cover experiment infrastructure, evaluation protocols, monitoring, and failure recovery.
+Patterns and best practices distilled from running research experiments at scale with the Jolly Anrak. These cover experiment infrastructure, evaluation protocols, monitoring, and failure recovery.
 
 ---
 

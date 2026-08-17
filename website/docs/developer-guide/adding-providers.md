@@ -1,7 +1,7 @@
 ---
 sidebar_position: 5
 title: "Adding Providers"
-description: "How to add a new inference provider to Jolly LLB — auth, runtime resolution, CLI flows, adapters, tests, and docs"
+description: "How to add a new inference provider to Jolly Anrak — auth, runtime resolution, CLI flows, adapters, tests, and docs"
 ---
 
 # Adding Providers

@@ -377,7 +377,7 @@ Effective on the next session. The Codex managed block stays in `~/.codex/config
 
 ## Limitations
 
-This runtime is **opt-in beta**. Working as of Jolly LLB 2026.5 + Codex CLI 0.130.0:
+This runtime is **opt-in beta**. Working as of Jolly Anrak 2026.5 + Codex CLI 0.130.0:
 
 - Multi-turn conversations
 - `commandExecution` and `fileChange` (apply_patch) approvals via Hermes UI

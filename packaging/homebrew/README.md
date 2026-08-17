@@ -1,4 +1,4 @@
-Homebrew packaging notes for Jolly LLB.
+Homebrew packaging notes for Jolly Anrak.
 
 Use `packaging/homebrew/hermes-agent.rb` as a tap or `homebrew-core` starting point.
 

@@ -2,7 +2,7 @@
 name: spike
 description: "Throwaway experiments to validate an idea before build."
 version: 1.0.0
-author: Jolly LLB (adapted from gsd-build/get-shit-done)
+author: Jolly Anrak (adapted from gsd-build/get-shit-done)
 license: MIT
 platforms: [linux, macos, windows]
 metadata:

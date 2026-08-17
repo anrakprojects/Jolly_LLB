@@ -1,9 +1,9 @@
 const PROVIDER_SETUP_ERROR_RE =
-  /No (?:inference|Jolly LLB) provider(?: is)? configured|no_provider_configured|OPENROUTER_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|set an API key|No usable credentials found/i
+  /No (?:inference|Jolly Anrak) provider(?: is)? configured|no_provider_configured|OPENROUTER_API_KEY|OPENAI_API_KEY|ANTHROPIC_API_KEY|set an API key|No usable credentials found/i
 
 // Messages that mean an existing OAuth sign-in has died and the user must sign
 // in again — refresh token consumed by another client (providers rotate
-// refresh tokens, so the Codex CLI / VS Code and Jolly LLB can invalidate each
+// refresh tokens, so the Codex CLI / VS Code and Jolly Anrak can invalidate each
 // other), tokens stripped after a failed refresh, or credentials missing from
 // the store the runtime actually reads.
 const PROVIDER_REAUTH_ERROR_RE =

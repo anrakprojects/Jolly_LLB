@@ -205,7 +205,7 @@ fn truncate_ref(s: &str) -> &str {
 }
 
 /// Reads a GitHub token from the environment for authenticating downloads
-/// from the internal Jolly LLB repo. Checked in priority order so a
+/// from the internal Jolly Anrak repo. Checked in priority order so a
 /// hermes-specific token wins over a generic one that other tooling may have
 /// set. Returns None (download proceeds unauthenticated) when nothing is set.
 fn github_token() -> Option<String> {
@@ -246,7 +246,7 @@ async fn download(kind: ScriptKind, commit_or_ref: &str, dest_path: &Path) -> Re
     let mut req = reqwest::Client::new()
         .get(&url)
         .header("User-Agent", "hermes-setup/0.0.1");
-    // The Jolly LLB repo (anrakprojects/Jolly_LLB) is an internal GitHub repo,
+    // The Jolly Anrak repo (anrakprojects/Jolly_LLB) is an internal GitHub repo,
     // so raw.githubusercontent returns 404 for anonymous requests. A GitHub
     // token (HERMES_GH_TOKEN / GITHUB_TOKEN / GH_TOKEN, set before launching the
     // installer) authorizes the fetch. raw.githubusercontent honours the
@@ -263,7 +263,7 @@ async fn download(kind: ScriptKind, commit_or_ref: &str, dest_path: &Path) -> Re
     if !response.status().is_success() {
         let status = response.status();
         let hint = if matches!(status.as_u16(), 401 | 403 | 404) {
-            "\n(Jolly LLB is an internal repo — set HERMES_GH_TOKEN to a GitHub token \
+            "\n(Jolly Anrak is an internal repo — set HERMES_GH_TOKEN to a GitHub token \
              with read access to anrakprojects/Jolly_LLB before launching the installer.)"
         } else {
             ""

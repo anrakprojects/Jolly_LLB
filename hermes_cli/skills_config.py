@@ -1,5 +1,5 @@
 """
-Skills configuration for Jolly LLB.
+Skills configuration for Jolly Anrak.
 `hermes skills` enters this module.
 
 Toggle individual skills or categories on/off, globally or per-platform.

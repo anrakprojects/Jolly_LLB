@@ -1,5 +1,5 @@
 # ============================================================================
-# Jolly LLB Installer for Windows
+# Jolly Anrak Installer for Windows
 # ============================================================================
 # Installation script for Windows (PowerShell).
 # Uses uv for fast Python provisioning and package management.
@@ -59,8 +59,8 @@ param(
     #     `hermes desktop` already builds on demand.
     [switch]$IncludeDesktop,
 
-    # --- Internal-repo auth (Jolly LLB distribution) ----------------------
-    # The Jolly LLB repo (anrakprojects/Jolly_LLB) is an INTERNAL GitHub repo,
+    # --- Internal-repo auth (Jolly Anrak distribution) ----------------------
+    # The Jolly Anrak repo (anrakprojects/Jolly_LLB) is an INTERNAL GitHub repo,
     # so anonymous SSH/HTTPS clones and ZIP archive downloads return 404 / fail.
     # Supply a GitHub token (PAT or fine-grained token) with read access to it.
     # Defaults from the environment so the desktop installer can pass it through
@@ -182,7 +182,7 @@ function Get-WindowsArch {
 function Write-Banner {
     Write-Host ""
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
-    Write-Host "|             * Jolly LLB Installer                    |" -ForegroundColor Magenta
+    Write-Host "|             * Jolly Anrak Installer                    |" -ForegroundColor Magenta
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
     Write-Host "|  An open source AI agent by Nous Research.              |" -ForegroundColor Magenta
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
@@ -1087,7 +1087,7 @@ function Install-Repository {
                 Copy-Item -LiteralPath $LocalSource -Destination $InstallDir -Recurse -Force
             } else {
                 # Bundled as a .zip (e.g. `git archive --format=zip HEAD`).
-                $extractPath = "$env:TEMP\jolly-llb-bundled-extract"
+                $extractPath = "$env:TEMP\jolly-anrak-bundled-extract"
                 if (Test-Path $extractPath) { Remove-Item -Recurse -Force $extractPath -ErrorAction SilentlyContinue }
                 Expand-Archive -Path $LocalSource -DestinationPath $extractPath -Force
                 # `git archive` zips lay the files out at the archive root; a
@@ -1271,7 +1271,7 @@ function Install-Repository {
                     # branch, tag, or commit SHA as the ref.
                     $zipUrl = "https://api.github.com/repos/anrakprojects/Jolly_LLB/zipball/$zipRef"
                     Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath -UseBasicParsing `
-                        -Headers @{ Authorization = "token $GitHubToken"; "User-Agent" = "jolly-llb-installer" }
+                        -Headers @{ Authorization = "token $GitHubToken"; "User-Agent" = "jolly-anrak-installer" }
                 } else {
                     if ($Commit) {
                         $zipUrl = "https://github.com/anrakprojects/Jolly_LLB/archive/$Commit.zip"
@@ -1755,7 +1755,7 @@ function Copy-ConfigTemplates {
     $soulPath = "$HermesHome\SOUL.md"
     if (-not (Test-Path $soulPath)) {
         $soulContent = @"
-# Jolly LLB Persona
+# Jolly Anrak Persona
 
 <!--
 This file defines the agent's personality and tone.
@@ -2240,7 +2240,7 @@ function New-DesktopShortcuts {
                 $sc.TargetPath = $TargetExe
                 $sc.WorkingDirectory = $workDir
                 $sc.IconLocation = $iconLocation
-                $sc.Description = 'Jolly LLB'
+                $sc.Description = 'Jolly Anrak'
                 $sc.Save()
                 Write-Success "Shortcut created: $lnkPath"
             } catch {

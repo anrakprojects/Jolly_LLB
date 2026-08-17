@@ -8,7 +8,7 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Sessions
 
-Jolly LLB automatically saves every conversation as a session. Sessions enable conversation resume, cross-session search, and full conversation history management.
+Jolly Anrak automatically saves every conversation as a session. Sessions enable conversation resume, cross-session search, and full conversation history management.
 
 ## How Sessions Work
 

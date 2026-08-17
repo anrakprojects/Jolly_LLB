@@ -1,7 +1,7 @@
 # Design System: IBM
 
 
-> **Jolly LLB — Implementation Notes**
+> **Jolly Anrak — Implementation Notes**
 >
 > The original site uses proprietary fonts. For self-contained HTML output, use these CDN substitutes:
 > - **Primary:** `IBM Plex Sans` | **Mono:** `IBM Plex Mono`

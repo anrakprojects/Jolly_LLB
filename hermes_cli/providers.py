@@ -1,5 +1,5 @@
 """
-Single source of truth for provider identity in Jolly LLB.
+Single source of truth for provider identity in Jolly Anrak.
 
 Two data sources, merged at runtime:
 

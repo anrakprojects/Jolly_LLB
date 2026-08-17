@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# Publish built update artifacts to Azure Blob Storage so installed Jolly LLB
+# Publish built update artifacts to Azure Blob Storage so installed Jolly Anrak
 # apps can auto-update (electron-updater `generic` feed).
 #
 # Run AFTER a build, e.g.:  npm run dist:mac && scripts/publish-azure.sh

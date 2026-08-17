@@ -50,7 +50,7 @@ export const en: Translations = {
   },
 
   app: {
-    brand: "Jolly LLB",
+    brand: "Jolly Anrak",
     brandShort: "AL",
     closeNavigation: "Close navigation",
     closeModelTools: "Close model and tools",
@@ -270,7 +270,7 @@ export const en: Translations = {
     enableRuntime: "Enable",
     forceReinstall: "Force reinstall (delete existing folder first)",
     headline:
-      "Discover, install, enable, and update Jolly LLB plugins (`hermes plugins` parity).",
+      "Discover, install, enable, and update Jolly Anrak plugins (`hermes plugins` parity).",
     identifierLabel: "Git URL or owner/repo",
     inactive: "inactive",
     installBtn: "Install",
@@ -436,11 +436,11 @@ export const en: Translations = {
   achievements: {
     hero: {
       kicker: "Agentic Gamerscore",
-      title: "Jolly LLB Achievements",
+      title: "Jolly Anrak Achievements",
       subtitle:
-        "Collectible Jolly LLB badges earned from real session history. Known unfinished achievements are shown as Discovered; Secret achievements stay hidden until the first matching behavior appears.",
+        "Collectible Jolly Anrak badges earned from real session history. Known unfinished achievements are shown as Discovered; Secret achievements stay hidden until the first matching behavior appears.",
       scan_subtitle:
-        "Scanning Jolly LLB session history. First scan can take 5–10 seconds on large histories.",
+        "Scanning Jolly Anrak session history. First scan can take 5–10 seconds on large histories.",
     },
     actions: {
       rescan: "Rescan",
@@ -455,7 +455,7 @@ export const en: Translations = {
       highest_tier: "Highest tier",
       highest_tier_hint: "Copper → Silver → Gold → Diamond → Olympian",
       latest: "Latest",
-      latest_hint_empty: "run Jolly LLB more",
+      latest_hint_empty: "run Jolly Anrak more",
       none_yet: "None yet",
     },
     state: {
@@ -486,10 +486,10 @@ export const en: Translations = {
       tiers_header: "Tiers",
       secret_header: "Secret achievements",
       secret_body:
-        "Secrets hide their exact trigger. Once Jolly LLB sees a related signal, the card becomes Discovered and shows its requirement.",
+        "Secrets hide their exact trigger. Once Jolly Anrak sees a related signal, the card becomes Discovered and shows its requirement.",
       scan_status_header: "Scan status",
       scan_status_body:
-        "Jolly LLB is scanning local history once, then cards will appear automatically. Nothing is stuck if this takes a few seconds.",
+        "Jolly Anrak is scanning local history once, then cards will appear automatically. Nothing is stuck if this takes a few seconds.",
       what_scanned_header: "What is scanned",
       what_scanned_body:
         "Sessions, tool calls, model metadata, errors, achievements, and local unlock state.",

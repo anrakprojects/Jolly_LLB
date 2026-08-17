@@ -1,7 +1,7 @@
 ---
 sidebar_position: 12
 title: "Web Search Provider Plugins"
-description: "How to build a web-search/extract/crawl backend plugin for Jolly LLB"
+description: "How to build a web-search/extract/crawl backend plugin for Jolly Anrak"
 ---
 
 # Building a Web Search Provider Plugin

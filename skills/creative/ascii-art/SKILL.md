@@ -2,7 +2,7 @@
 name: ascii-art
 description: "ASCII art: pyfiglet, cowsay, boxes, image-to-ascii."
 version: 4.0.0
-author: 0xbyt4, Jolly LLB
+author: 0xbyt4, Jolly Anrak
 license: MIT
 dependencies: []
 platforms: [linux, macos, windows]

@@ -1,11 +1,11 @@
 """
-Session Insights Engine for Jolly LLB.
+Session Insights Engine for Jolly Anrak.
 
 Analyzes historical session data from the SQLite state database to produce
 comprehensive usage insights — token consumption, cost estimates, tool usage
 patterns, activity trends, model/platform breakdowns, and session metrics.
 
-Inspired by Claude Code's /insights command, adapted for Jolly LLB's
+Inspired by Claude Code's /insights command, adapted for Jolly Anrak's
 multi-platform architecture with additional cost estimation and platform
 breakdown capabilities.
 

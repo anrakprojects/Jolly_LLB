@@ -43,7 +43,7 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Jolly LLB — pure-white canvas with near-black text/accent applied   */
+/* Jolly Anrak — pure-white canvas with near-black text/accent applied   */
 /* statically as the pre-mount default, so the first paint matches the */
 /* `default` (Pure White) theme before ThemeProvider hydrates and      */
 /* there's no flash of the previous dark palette.                      */

@@ -168,7 +168,7 @@ def _clear_task_cwd(task_id: str) -> None:
 
 @dataclass
 class SessionState:
-    """Tracks per-session state for an ACP-managed Jolly LLB."""
+    """Tracks per-session state for an ACP-managed Jolly Anrak."""
 
     session_id: str
     agent: Any  # AIAgent instance

@@ -1,4 +1,4 @@
-# OpenAI-Compatible API Server for Jolly LLB
+# OpenAI-Compatible API Server for Jolly Anrak
 
 ## Motivation
 

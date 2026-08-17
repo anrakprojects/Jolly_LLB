@@ -188,7 +188,7 @@ export function ChatView({
       }
 
       if (!gateway) {
-        throw new Error('Jolly LLB gateway unavailable')
+        throw new Error('Jolly Anrak gateway unavailable')
       }
 
       return gateway.request<ModelOptionsResponse>('model.options', { session_id: activeSessionId })

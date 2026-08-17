@@ -1,5 +1,5 @@
 """
-Interactive setup wizard for Jolly LLB.
+Interactive setup wizard for Jolly Anrak.
 
 Modular wizard with independently-runnable sections:
   1. Model & Provider — choose your AI provider and model
@@ -1792,7 +1792,7 @@ def _write_slack_manifest_and_instruct():
 
         manifest = _build_full_manifest(
             bot_name="Hermes",
-            bot_description="Your Jolly LLB on Slack",
+            bot_description="Your Jolly Anrak on Slack",
         )
         target = Path(get_hermes_home()) / "slack-manifest.json"
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -2940,7 +2940,7 @@ def run_setup_wizard(args):
     )
     print(
         color(
-            "│             ⚕ Jolly LLB Setup Wizard                │", Colors.MAGENTA
+            "│             ⚕ Jolly Anrak Setup Wizard                │", Colors.MAGENTA
         )
     )
     print(
@@ -2951,7 +2951,7 @@ def run_setup_wizard(args):
     )
     print(
         color(
-            "│  Let's configure your Jolly LLB installation.       │", Colors.MAGENTA
+            "│  Let's configure your Jolly Anrak installation.       │", Colors.MAGENTA
         )
     )
     print(

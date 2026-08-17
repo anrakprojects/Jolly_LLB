@@ -1,5 +1,5 @@
 """
-Cron job management tools for Jolly LLB.
+Cron job management tools for Jolly Anrak.
 
 Expose a single compressed action-oriented tool to avoid schema/context bloat.
 Compatibility wrappers remain for direct Python callers and legacy tests.

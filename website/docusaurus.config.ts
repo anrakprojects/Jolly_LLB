@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Jolly LLB',
+  title: 'Jolly Anrak',
   tagline: 'The self-improving AI agent',
   favicon: 'img/favicon.ico',
 
@@ -96,9 +96,9 @@ const config: Config = {
       },
     },
     navbar: {
-      title: 'Jolly LLB',
+      title: 'Jolly Anrak',
       logo: {
-        alt: 'Jolly LLB',
+        alt: 'Jolly Anrak',
         src: 'img/logo.png',
       },
       items: [

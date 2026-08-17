@@ -111,7 +111,7 @@ export function TitlebarControls({
       icon: <Codicon name="dashboard" />,
       id: 'open-dashboard',
       label: 'Open dashboard',
-      title: 'Open the Jolly LLB management dashboard in your browser',
+      title: 'Open the Jolly Anrak management dashboard in your browser',
       onSelect: () => {
         triggerHaptic('open')
         void window.hermesDesktop.openDashboard().catch(() => {})
@@ -205,7 +205,7 @@ function ProfilesMenuButton({ navigate }: { navigate: ReturnType<typeof useNavig
         <DropdownMenuLabel>
           <div className="text-sm font-medium text-foreground">Profiles</div>
           <div className="mt-1 text-xs font-normal leading-4 text-muted-foreground">
-            Advanced Jolly LLB environments for separate personas, config, skills, and SOUL.md.
+            Advanced Jolly Anrak environments for separate personas, config, skills, and SOUL.md.
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

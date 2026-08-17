@@ -1,5 +1,5 @@
 """
-Jolly LLB — Web UI server.
+Jolly Anrak — Web UI server.
 
 Provides a FastAPI backend serving the Vite/React frontend and REST API
 endpoints for managing configuration, environment variables, and sessions.
@@ -84,7 +84,7 @@ except ImportError:
 WEB_DIST = Path(os.environ["HERMES_WEB_DIST"]) if "HERMES_WEB_DIST" in os.environ else Path(__file__).parent / "web_dist"
 _log = logging.getLogger(__name__)
 
-app = FastAPI(title="Jolly LLB", version=__version__)
+app = FastAPI(title="Jolly Anrak", version=__version__)
 
 # ---------------------------------------------------------------------------
 # Session token for protecting sensitive endpoints (reveal).
@@ -4757,7 +4757,7 @@ async def mcp_connector_oauth_start(server_name: str, request: Request):
                 "params": {
                     "protocolVersion": "2025-03-26",
                     "capabilities": {},
-                    "clientInfo": {"name": "jolly-llb-desktop", "version": "1.0"},
+                    "clientInfo": {"name": "jolly-anrak-desktop", "version": "1.0"},
                 },
             }
             async with httpx.AsyncClient(
@@ -7071,7 +7071,7 @@ def mount_spa(application: FastAPI):
 # Built-in dashboard themes — label + description only.  The actual color
 # definitions live in the frontend (web/src/themes/presets.ts).
 _BUILTIN_DASHBOARD_THEMES = [
-    {"name": "default",       "label": "Pure White",         "description": "Clean pure-white canvas — the canonical Jolly LLB look"},
+    {"name": "default",       "label": "Pure White",         "description": "Clean pure-white canvas — the canonical Jolly Anrak look"},
     {"name": "default-large", "label": "Pure White (Large)", "description": "Pure White with bigger fonts and roomier spacing"},
     {"name": "midnight",      "label": "Midnight",            "description": "Deep blue-violet with cool accents"},
     {"name": "ember",     "label": "Ember",          "description": "Warm crimson and bronze — forge vibes"},
@@ -7990,7 +7990,7 @@ def start_server(
         if not list_providers():
             # Surface the *specific* reason any bundled provider declined
             # to register (e.g. missing HERMES_DASHBOARD_OAUTH_CLIENT_ID).
-            # Each provider plugin that ships with Jolly LLB exposes a
+            # Each provider plugin that ships with Jolly Anrak exposes a
             # module-level ``LAST_SKIP_REASON`` string for this purpose;
             # without it the operator would only see "no providers" which
             # is misleading when the provider IS installed but unconfigured.

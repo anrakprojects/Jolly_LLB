@@ -1,5 +1,5 @@
 """
-Microsoft Teams platform adapter for Jolly LLB.
+Microsoft Teams platform adapter for Jolly Anrak.
 
 Uses the microsoft-teams-apps SDK for authentication and activity processing.
 Runs an aiohttp webhook server to receive messages from Teams.

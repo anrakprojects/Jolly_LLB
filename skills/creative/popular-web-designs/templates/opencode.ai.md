@@ -1,7 +1,7 @@
 # Design System: OpenCode
 
 
-> **Jolly LLB — Implementation Notes**
+> **Jolly Anrak — Implementation Notes**
 >
 > The original site uses proprietary fonts. For self-contained HTML output, use these CDN substitutes:
 > - **Primary:** `JetBrains Mono` | **Mono:** `JetBrains Mono`

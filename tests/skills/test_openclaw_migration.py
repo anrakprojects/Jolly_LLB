@@ -48,12 +48,12 @@ def test_extract_markdown_entries_promotes_heading_context():
 
 ### Active Projects
 
-- Jolly LLB
+- Jolly Anrak
 """
     entries = mod.extract_markdown_entries(text)
     assert "Tyler Williams: Founder of VANTA Research" in entries
     assert "Tyler Williams: Timezone: America/Los_Angeles" in entries
-    assert "Tyler Williams > Active Projects: Jolly LLB" in entries
+    assert "Tyler Williams > Active Projects: Jolly Anrak" in entries
 
 
 def test_merge_entries_respects_limit_and_reports_overflow():

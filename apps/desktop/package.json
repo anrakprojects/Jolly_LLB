@@ -1,9 +1,9 @@
 {
   "name": "hermes",
-  "productName": "Jolly LLB",
+  "productName": "Jolly Anrak",
   "private": true,
   "version": "0.15.1",
-  "description": "Native desktop shell for Jolly LLB.",
+  "description": "Native desktop shell for Jolly Anrak.",
   "author": "AnrakLegal",
   "type": "module",
   "main": "electron/main.cjs",
@@ -128,10 +128,10 @@
   },
   "build": {
     "electronVersion": "40.9.3",
-    "appId": "legal.anrak.jollyllb",
-    "productName": "Jolly LLB",
-    "executableName": "JollyLLB",
-    "artifactName": "JollyLLB-${version}-${os}-${arch}.${ext}",
+    "appId": "legal.anrak.jollyanrak",
+    "productName": "Jolly Anrak",
+    "executableName": "JollyAnrak",
+    "artifactName": "JollyAnrak-${version}-${os}-${arch}.${ext}",
     "icon": "assets/icon",
     "directories": {
       "output": "release"
@@ -185,11 +185,11 @@
       "entitlements": "electron/entitlements.mac.plist",
       "entitlementsInherit": "electron/entitlements.mac.inherit.plist",
       "extendInfo": {
-        "CFBundleDisplayName": "Jolly LLB",
-        "CFBundleExecutable": "JollyLLB",
-        "CFBundleName": "Jolly LLB",
-        "NSAudioCaptureUsageDescription": "Jolly LLB uses audio capture for voice conversations.",
-        "NSMicrophoneUsageDescription": "Jolly LLB uses the microphone for voice input and voice conversations."
+        "CFBundleDisplayName": "Jolly Anrak",
+        "CFBundleExecutable": "JollyAnrak",
+        "CFBundleName": "Jolly Anrak",
+        "NSAudioCaptureUsageDescription": "Jolly Anrak uses audio capture for voice conversations.",
+        "NSMicrophoneUsageDescription": "Jolly Anrak uses the microphone for voice input and voice conversations."
       },
       "gatekeeperAssess": false,
       "hardenedRuntime": true,
@@ -199,7 +199,7 @@
       ]
     },
     "dmg": {
-      "title": "Install Jolly LLB",
+      "title": "Install Jolly Anrak",
       "backgroundColor": "#f5f5f7",
       "iconSize": 96,
       "window": {
@@ -221,7 +221,7 @@
       ]
     },
     "win": {
-      "legalTrademarks": "Jolly LLB",
+      "legalTrademarks": "Jolly Anrak",
       "target": [
         "nsis",
         "msi"
@@ -231,7 +231,7 @@
     "linux": {
       "category": "Office",
       "maintainer": "AnrakLegal <support@anrak.legal>",
-      "synopsis": "Native desktop shell for Jolly LLB.",
+      "synopsis": "Native desktop shell for Jolly Anrak.",
       "target": [
         "AppImage",
         "deb",
@@ -242,8 +242,8 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "perMachine": false,
-      "shortcutName": "Jolly LLB",
-      "uninstallDisplayName": "Jolly LLB",
+      "shortcutName": "Jolly Anrak",
+      "uninstallDisplayName": "Jolly Anrak",
       "warningsAsErrors": false
     },
     "publish": [

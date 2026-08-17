@@ -2,7 +2,7 @@
 name: jupyter-live-kernel
 description: "Iterative Python via live Jupyter kernel (hamelnb)."
 version: 1.0.0
-author: Jolly LLB
+author: Jolly Anrak
 license: MIT
 platforms: [linux, macos, windows]
 metadata:

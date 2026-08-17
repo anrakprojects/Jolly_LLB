@@ -2,7 +2,7 @@
 name: stocks
 description: Stock quotes, history, search, compare, crypto via Yahoo.
 version: 0.1.0
-author: Mibay (Mibayy), Jolly LLB
+author: Mibay (Mibayy), Jolly Anrak
 license: MIT
 platforms: [linux, macos, windows]
 metadata:

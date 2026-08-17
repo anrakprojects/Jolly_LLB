@@ -650,11 +650,11 @@ def test_looks_like_human_speaker():
     from plugins.google_meet.meet_bot import _looks_like_human_speaker
 
     # Blank, "unknown", "you", and the bot's own name → not human (no barge-in)
-    for s in ("", "   ", "Unknown", "unknown", "You", "you", "Jolly LLB", "Jolly LLB"):
-        assert not _looks_like_human_speaker(s, "Jolly LLB"), f"{s!r} should NOT be human"
+    for s in ("", "   ", "Unknown", "unknown", "You", "you", "Jolly Anrak", "Jolly Anrak"):
+        assert not _looks_like_human_speaker(s, "Jolly Anrak"), f"{s!r} should NOT be human"
     # Real names → human (barge-in)
     for s in ("Alice", "Bob Lee", "@teknium"):
-        assert _looks_like_human_speaker(s, "Jolly LLB"), f"{s!r} SHOULD be human"
+        assert _looks_like_human_speaker(s, "Jolly Anrak"), f"{s!r} SHOULD be human"
 
 
 def test_detect_admission_returns_false_on_error():

@@ -1,4 +1,4 @@
-// First-run paralegal identity provisioner for Jolly LLB.
+// First-run paralegal identity provisioner for Jolly Anrak.
 //
 // The rebranded shell bootstraps a GENERIC upstream Hermes runtime. The
 // AnrakLegal paralegal identity — the SOUL, the "anraklegal-paralegal" skill,

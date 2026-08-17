@@ -1,5 +1,5 @@
 """
-Lazy dependency installer for opt-in Jolly LLB backends.
+Lazy dependency installer for opt-in Jolly Anrak backends.
 
 Many Hermes features (Mistral TTS, ElevenLabs TTS, Honcho memory, Bedrock,
 Slack, Matrix, etc.) require Python packages that not every user needs. The

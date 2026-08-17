@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Jolly LLB / AnrakLegal — first-run config.yaml MCP merge helper.
+"""Jolly Anrak / AnrakLegal — first-run config.yaml MCP merge helper.
 
 Run once per launch by the Electron shell (legal-provisioner.cjs) via the
 runtime venv's Python — the SAME mechanism auto_provider.py uses. The .cjs side

@@ -1,7 +1,7 @@
 """
 Weixin platform adapter.
 
-Connects Jolly LLB to WeChat personal accounts via Tencent's iLink Bot API.
+Connects Jolly Anrak to WeChat personal accounts via Tencent's iLink Bot API.
 
 Design notes:
 - Long-poll ``getupdates`` drives inbound delivery.

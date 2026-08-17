@@ -559,7 +559,7 @@ class CopilotACPClient:
                     },
                     "clientInfo": {
                         "name": "hermes-agent",
-                        "title": "Jolly LLB",
+                        "title": "Jolly Anrak",
                         "version": "0.0.0",
                     },
                 },

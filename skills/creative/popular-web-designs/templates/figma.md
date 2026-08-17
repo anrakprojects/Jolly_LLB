@@ -1,7 +1,7 @@
 # Design System: Figma
 
 
-> **Jolly LLB — Implementation Notes**
+> **Jolly Anrak — Implementation Notes**
 >
 > The original site uses proprietary fonts. For self-contained HTML output, use these CDN substitutes:
 > - **Primary:** `Inter` | **Mono:** `JetBrains Mono`

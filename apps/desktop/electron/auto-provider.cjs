@@ -1,4 +1,4 @@
-// Zero-config provider auto-detection for Jolly LLB.
+// Zero-config provider auto-detection for Jolly Anrak.
 //
 // Runs auto_provider.py (a sibling file, read out of the asar and written to a
 // real path so the runtime's Python can execute it) once per launch, just

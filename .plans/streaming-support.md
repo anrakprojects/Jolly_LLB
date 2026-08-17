@@ -1,4 +1,4 @@
-# Streaming LLM Response Support for Jolly LLB
+# Streaming LLM Response Support for Jolly Anrak
 
 ## Overview
 

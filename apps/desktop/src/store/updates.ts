@@ -70,12 +70,12 @@ export function reportBackendContract(contract: number | undefined): void {
   }
 
   notify({
-    action: { label: 'Update Jolly LLB', onClick: () => void applyUpdates() },
+    action: { label: 'Update Jolly Anrak', onClick: () => void applyUpdates() },
     durationMs: 0,
     id: SKEW_TOAST_ID,
     kind: 'warning',
     message:
-      'Your Jolly LLB backend is older than this desktop build and may not work correctly. Update to align them.',
+      'Your Jolly Anrak backend is older than this desktop build and may not work correctly. Update to align them.',
     title: 'Backend out of date'
   })
 }
@@ -245,7 +245,7 @@ export function startUpdatePoller(): void {
   // Updates ship from AnrakLegal's own release pipeline, not raw upstream, so we
   // must never auto-pull. We intentionally drop the launch check, the on-focus
   // check, and the 30-minute background poll — that's what was nagging
-  // "Jolly LLB released an update" constantly. We still fetch the version string
+  // "Jolly Anrak released an update" constantly. We still fetch the version string
   // and wire progress streaming so a *manual*, user-initiated "check for
   // updates" still works (gated, opt-in), but nothing checks on its own.
   void window.hermesDesktop?.getVersion?.().then(info => $desktopVersion.set(info))

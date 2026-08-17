@@ -1,4 +1,4 @@
-# nix/hermes-agent.nix — Overridable Jolly LLB package
+# nix/hermes-agent.nix — Overridable Jolly Anrak package
 #
 # callPackage auto-wires nixpkgs args; flake inputs are passed explicitly.
 # Users override via:

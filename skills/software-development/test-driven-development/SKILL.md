@@ -2,7 +2,7 @@
 name: test-driven-development
 description: "TDD: enforce RED-GREEN-REFACTOR, tests before code."
 version: 1.1.0
-author: Jolly LLB (adapted from obra/superpowers)
+author: Jolly Anrak (adapted from obra/superpowers)
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
@@ -280,7 +280,7 @@ Can't check all boxes? You skipped TDD. Start over.
 | Must mock everything | Code too coupled. Use dependency injection. |
 | Test setup huge | Extract helpers. Still complex? Simplify the design. |
 
-## Jolly LLB Integration
+## Jolly Anrak Integration
 
 ### Running Tests
 

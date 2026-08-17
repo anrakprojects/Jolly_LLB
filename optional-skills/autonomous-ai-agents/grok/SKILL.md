@@ -2,7 +2,7 @@
 name: grok
 description: "Delegate coding to xAI Grok Build CLI (features, PRs)."
 version: 0.1.0
-author: Matt Maximo (MattMaximo), Jolly LLB
+author: Matt Maximo (MattMaximo), Jolly Anrak
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
@@ -283,7 +283,7 @@ Put global preferences in `~/.grok/config.toml` (not project-scoped
    `mktemp -d && git init` for scratch commit tasks.
 9. **Clean up tmux sessions** with `tmux kill-session -t <name>` when done.
 
-## Rules for Jolly LLBs
+## Rules for Jolly Anraks
 
 1. **Prefer headless `-p`** for single tasks — cleanest integration, structured
    output via `--output-format json`.

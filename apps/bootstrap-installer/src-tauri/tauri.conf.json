@@ -35,11 +35,11 @@
     "resources": {
       "resources/install.ps1": "scripts/install.ps1",
       "resources/install.sh": "scripts/install.sh",
-      "resources/jolly-llb-source.zip": "jolly-llb-source.zip"
+      "resources/jolly-anrak-source.zip": "jolly-anrak-source.zip"
     },
     "category": "DeveloperTool",
     "shortDescription": "Hermes Setup",
-    "longDescription": "Installs Jolly LLB on your machine. Drives scripts/install.ps1 (Windows) and scripts/install.sh (macOS/Linux).",
+    "longDescription": "Installs Jolly Anrak on your machine. Drives scripts/install.ps1 (Windows) and scripts/install.sh (macOS/Linux).",
     "publisher": "Nous Research",
     "copyright": "Copyright © 2026 Nous Research",
     "targets": [

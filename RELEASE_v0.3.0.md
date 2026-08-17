@@ -1,4 +1,4 @@
-# Jolly LLB v0.3.0 (v2026.3.17)
+# Jolly Anrak v0.3.0 (v2026.3.17)
 
 **Release Date:** March 17, 2026
 

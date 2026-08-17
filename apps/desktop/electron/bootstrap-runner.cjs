@@ -3,7 +3,7 @@
 /**
  * bootstrap-runner.cjs
  *
- * Drives apps/desktop's first-launch install of Jolly LLB by spawning
+ * Drives apps/desktop's first-launch install of Jolly Anrak by spawning
  * scripts/install.ps1 stage-by-stage and streaming progress events back to
  * the renderer.
  *
@@ -89,7 +89,7 @@ function downloadInstallScript(commit, destPath) {
   // .dmg was stamped with (write-build-stamp.cjs -> install-stamp.json). The
   // repo is public, so the SHA URL resolves on any machine; a SHA is immutable
   // so we don't need integrity verification beyond the syntax probe. Fresh
-  // installs clone OUR runtime (Jolly LLB / AnrakLegal), never upstream Nous.
+  // installs clone OUR runtime (Jolly Anrak / AnrakLegal), never upstream Nous.
   const url = `https://raw.githubusercontent.com/anrakprojects/Jolly_LLB/${commit}/scripts/${scriptName}`
   return new Promise((resolve, reject) => {
     fs.mkdirSync(path.dirname(destPath), { recursive: true })

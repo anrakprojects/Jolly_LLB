@@ -2,7 +2,7 @@
 name: popular-web-designs
 description: 54 real design systems (Stripe, Linear, Vercel) as HTML/CSS.
 version: 1.0.0
-author: Jolly LLB + Teknium (design systems sourced from VoltAgent/awesome-design-md)
+author: Jolly Anrak + Teknium (design systems sourced from VoltAgent/awesome-design-md)
 license: MIT
 tags: [design, css, html, ui, web-development, design-systems, templates]
 platforms: [linux, macos, windows]

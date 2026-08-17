@@ -7,7 +7,7 @@ import { ArrowRight } from 'lucide-react'
  * Welcome screen.
  *
  * Mirrors the desktop's chat intro (apps/desktop/src/components/chat/intro.tsx):
- *   - Jolly LLB wordmark rendered in Collapse Bold, uppercase, tracked
+ *   - Jolly Anrak wordmark rendered in Collapse Bold, uppercase, tracked
  *   - mix-blend-plus-lighter so the type "glows" on the canvas
  *   - fit-text utility so the wordmark sizes itself to the column
  *
@@ -31,9 +31,9 @@ export default function Welcome() {
           }
         >
           <span>
-            <span>Jolly LLB</span>
+            <span>Jolly Anrak</span>
           </span>
-          <span aria-hidden="true">Jolly LLB</span>
+          <span aria-hidden="true">Jolly Anrak</span>
         </p>
 
         <p className="m-0 text-center text-base leading-normal tracking-tight text-muted-foreground">

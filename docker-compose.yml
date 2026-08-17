@@ -1,5 +1,5 @@
 #
-# docker-compose.yml for Jolly LLB
+# docker-compose.yml for Jolly Anrak
 #
 # Usage:
 #   HERMES_UID=$(id -u) HERMES_GID=$(id -g) docker compose up -d

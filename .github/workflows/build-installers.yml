@@ -106,7 +106,7 @@ jobs:
           mkdir -p "$res"
           cp scripts/install.ps1 "$res/install.ps1"
           cp scripts/install.sh  "$res/install.sh"
-          git archive --format=zip -o "$res/jolly-llb-source.zip" HEAD
+          git archive --format=zip -o "$res/jolly-anrak-source.zip" HEAD
           ls -lh "$res"
 
       - name: Build installer

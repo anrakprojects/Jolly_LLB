@@ -642,13 +642,13 @@ export default function SkillsDashboard() {
   return (
     <Layout
       title="Skills Hub"
-      description="Browse all skills and plugins available for Jolly LLB"
+      description="Browse all skills and plugins available for Jolly Anrak"
     >
       <div className={styles.page}>
         <header className={styles.hero}>
           <div className={styles.heroGlow} />
           <div className={styles.heroContent}>
-            <p className={styles.heroEyebrow}>Jolly LLB</p>
+            <p className={styles.heroEyebrow}>Jolly Anrak</p>
             <h1 className={styles.heroTitle}>Skills Hub</h1>
             <p className={styles.heroSub}>
               Discover, search, and install from{" "}

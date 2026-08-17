@@ -272,14 +272,14 @@ async fn run_bootstrap(
     };
 
     // Self-contained installer: the .exe bundles scripts/install.{ps1,sh} and a
-    // jolly-llb-source.zip (git archive of the repo) as Tauri resources, so a
+    // jolly-anrak-source.zip (git archive of the repo) as Tauri resources, so a
     // private/internal-repo install needs no GitHub token and no network clone.
     // Resolve the resource dir, and when the bundled source archive is present
     // hand it to install.ps1 via env (inherited by the child process — never on
     // the command line, so it can't leak into a process listing).
     let bundled_dir = app.path().resource_dir().ok();
     if let Some(rd) = &bundled_dir {
-        let src_zip = rd.join("jolly-llb-source.zip");
+        let src_zip = rd.join("jolly-anrak-source.zip");
         if src_zip.exists() {
             std::env::set_var("HERMES_LOCAL_SOURCE", &src_zip);
             emit_log(&format!(

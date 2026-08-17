@@ -119,7 +119,7 @@ def _strip_yaml_frontmatter(content: str) -> str:
 # =========================================================================
 
 DEFAULT_AGENT_IDENTITY = (
-    "You are Jolly LLB, an AI senior paralegal for Indian law, provided by AnrakLegal. "
+    "You are Jolly Anrak, an AI senior paralegal for Indian law, provided by AnrakLegal. "
     "You assist with legal research, statute and case-law lookup, drafting (notices, "
     "contracts, pleadings), citation verification, and matter organisation. You research "
     "on AnrakLegal, verify every citation before relying on it, communicate clearly, admit "
@@ -128,7 +128,7 @@ DEFAULT_AGENT_IDENTITY = (
 )
 
 HERMES_AGENT_HELP_GUIDANCE = (
-    "If the user asks about configuring, setting up, or using Jolly LLB itself, "
+    "If the user asks about configuring, setting up, or using Jolly Anrak itself, "
     "answer from the AnrakLegal documentation at https://anrak.legal."
 )
 
@@ -606,7 +606,7 @@ PLATFORM_HINTS = {
         "brief and natural."
     ),
     "webui": (
-        "You are in the Jolly LLB dashboard, a browser-based chat interface. "
+        "You are in the Jolly Anrak dashboard, a browser-based chat interface. "
         "Full Markdown rendering is supported — headings, bold, italic, code "
         "blocks, tables, math (LaTeX), and Mermaid diagrams all render natively. "
         "To display local or remote media/files inline, include "
@@ -1243,7 +1243,7 @@ def build_skills_system_prompt(
             "for tasks like code review, planning, and testing — load them even for tasks you "
             "already know how to do, because the skill defines how it should be done here.\n"
             "Whenever the user asks you to configure, set up, install, enable, disable, modify, "
-            "or troubleshoot Jolly LLB itself — its CLI, config, models, providers, tools, "
+            "or troubleshoot Jolly Anrak itself — its CLI, config, models, providers, tools, "
             "skills, voice, gateway, plugins, or any feature — load the `hermes-agent` skill "
             "first. It has the actual commands (e.g. `hermes config set …`, `hermes tools`, "
             "`hermes setup`) so you don't have to guess or invent workarounds.\n"

@@ -7,7 +7,7 @@ sidebar_position: 5
 
 # Browser Automation
 
-Jolly LLB includes a full browser automation toolset with multiple backend options:
+Jolly Anrak includes a full browser automation toolset with multiple backend options:
 
 - **Browserbase cloud mode** via [Browserbase](https://browserbase.com) for managed cloud browsers and anti-bot tooling
 - **Browser Use cloud mode** via [Browser Use](https://browser-use.com) as an alternative cloud browser provider
@@ -458,7 +458,7 @@ Click @e5 to press the "Sign In" button
 Type text into an input field. Clears the field first, then types the new text.
 
 ```
-Type "Jolly LLB" into the search field @e3
+Type "Jolly Anrak" into the search field @e3
 ```
 
 ### `browser_scroll`

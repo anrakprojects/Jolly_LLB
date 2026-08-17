@@ -89,7 +89,7 @@ Z={QUERY}
 
 ---
 
-## Using with Jolly LLB
+## Using with Jolly Anrak
 
 ### As ephemeral system prompt (config.yaml)
 

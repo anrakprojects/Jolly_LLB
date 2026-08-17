@@ -81,10 +81,10 @@ export function ZoomableImage({ className, containerClassName, src, alt, slot, .
           notify({
             kind: 'info',
             title: 'Download started',
-            message: 'Restart Jolly LLB Desktop to use Save Image.'
+            message: 'Restart Jolly Anrak Desktop to use Save Image.'
           })
         } catch (fallbackError) {
-          notifyError(fallbackError, 'Restart Jolly LLB Desktop to save images')
+          notifyError(fallbackError, 'Restart Jolly Anrak Desktop to save images')
         }
 
         return

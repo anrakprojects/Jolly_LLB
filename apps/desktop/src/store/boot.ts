@@ -9,7 +9,7 @@ export interface DesktopBootState extends DesktopBootProgress {
 const INITIAL_BOOT_STATE: DesktopBootState = {
   error: null,
   fakeMode: false,
-  message: 'Starting Jolly LLB Desktop…',
+  message: 'Starting Jolly Anrak Desktop…',
   phase: 'renderer.init',
   progress: 2,
   running: true,
@@ -61,7 +61,7 @@ export function setDesktopBootStep(step: {
   })
 }
 
-export function completeDesktopBoot(message = 'Jolly LLB Desktop is ready') {
+export function completeDesktopBoot(message = 'Jolly Anrak Desktop is ready') {
   const current = $desktopBoot.get()
   $desktopBoot.set({
     ...current,

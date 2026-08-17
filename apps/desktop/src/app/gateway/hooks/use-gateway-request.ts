@@ -66,7 +66,7 @@ export function useGatewayRequest() {
       const gateway = gatewayRef.current
 
       if (!gateway) {
-        throw new Error('Jolly LLB gateway unavailable')
+        throw new Error('Jolly Anrak gateway unavailable')
       }
 
       try {

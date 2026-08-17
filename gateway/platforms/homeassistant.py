@@ -401,7 +401,7 @@ class HomeAssistantAdapter(BasePlatformAdapter):
             "Content-Type": "application/json",
         }
         payload = {
-            "title": "Jolly LLB",
+            "title": "Jolly Anrak",
             "message": content[:self.MAX_MESSAGE_LENGTH],
         }
 

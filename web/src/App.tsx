@@ -340,7 +340,7 @@ export default function App() {
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
   const isChatRoute = normalizedPath === "/chat";
   // No embedded chat in the management dashboard. The in-browser /chat host is
-  // the Nous/Jolly LLB PTY terminal and must never surface here; chatting is the
+  // the Nous/Jolly Anrak PTY terminal and must never surface here; chatting is the
   // desktop app's job. Forcing this false drops the /chat route and the
   // persistent terminal host entirely.
   const embeddedChat = false;

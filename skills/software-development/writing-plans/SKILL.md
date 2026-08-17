@@ -2,7 +2,7 @@
 name: writing-plans
 description: "Write implementation plans: bite-sized tasks, paths, code."
 version: 1.1.0
-author: Jolly LLB (adapted from obra/superpowers)
+author: Jolly Anrak (adapted from obra/superpowers)
 license: MIT
 platforms: [linux, macos, windows]
 metadata:

@@ -140,7 +140,7 @@ if (INSTALL_STAMP) {
   )
 }
 
-// HERMES_HOME — the user-facing root for everything Jolly LLB-related. Mirrors
+// HERMES_HOME — the user-facing root for everything Jolly Anrak-related. Mirrors
 // scripts/install.ps1's $HermesHome and scripts/install.sh's $HERMES_HOME.
 //
 // Defaults:
@@ -170,7 +170,7 @@ function resolveHermesHome() {
 }
 
 const HERMES_HOME = resolveHermesHome()
-// ACTIVE_HERMES_ROOT — the canonical mutable Jolly LLB install. Same path
+// ACTIVE_HERMES_ROOT — the canonical mutable Jolly Anrak install. Same path
 // install.ps1 / install.sh use, so a desktop-only user and a CLI-only user end
 // up with identical layouts and can share one install.
 const ACTIVE_HERMES_ROOT = path.join(HERMES_HOME, 'hermes-agent')
@@ -216,7 +216,7 @@ const BOOT_FAKE_STEP_MS = (() => {
   if (!Number.isFinite(raw) || raw <= 0) return 650
   return Math.max(120, raw)
 })()
-const APP_NAME = 'Jolly LLB'
+const APP_NAME = 'Jolly Anrak'
 const TITLEBAR_HEIGHT = 34
 const MACOS_TRAFFIC_LIGHTS_HEIGHT = 14
 const WINDOW_BUTTON_POSITION = {
@@ -438,7 +438,7 @@ function registerMediaProtocol() {
 
 let mainWindow = null
 let hermesProcess = null
-// Base URL of the running Jolly LLB dashboard backend (local or remote). Set once
+// Base URL of the running Jolly Anrak dashboard backend (local or remote). Set once
 // the backend is ready; used by the "Open Dashboard" titlebar button.
 let currentDashboardUrl = null
 let connectionPromise = null
@@ -458,7 +458,7 @@ let desktopLogFlushPromise = Promise.resolve()
 let bootProgressState = {
   error: null,
   fakeMode: BOOT_FAKE_MODE,
-  message: 'Waiting to start Jolly LLB backend',
+  message: 'Waiting to start Jolly Anrak backend',
   phase: 'idle',
   progress: 0,
   running: false,
@@ -863,7 +863,7 @@ function findSystemPython() {
   //      miss real Python 3.13 installs (user-reported case).
   //
   // We also restrict ourselves to Python 3.11–3.13. 3.14 is the latest
-  // CPython but several Jolly LLB deps (notably pywinpty's Rust-built
+  // CPython but several Jolly Anrak deps (notably pywinpty's Rust-built
   // windows_x86_64_msvc crate) don't yet publish 3.14 wheels, and
   // `pip install -e .` falls back to source-build, which fails without
   // a Rust toolchain. install.ps1 sidesteps this by pinning to 3.11
@@ -957,7 +957,7 @@ function findSystemPython() {
   return null
 }
 
-// findGitBash — locate bash.exe on Windows. Jolly LLB' terminal tool requires
+// findGitBash — locate bash.exe on Windows. Jolly Anrak' terminal tool requires
 // bash (POSIX shell), and on Windows that's almost always Git for Windows'
 // bundled Git Bash. We check the same set of locations tools/environments/
 // local.py:_find_bash() checks at runtime, so a positive result here means
@@ -1213,7 +1213,7 @@ function resolveUpdaterBinary() {
 //
 // The desktop is a pure consumer: it does NOT git pull / pip install / rebuild
 // itself (the old open-coded git dance lived here and drifted from
-// `hermes update`). Instead we spawn the staged Jolly LLB-Setup binary with
+// `hermes update`). Instead we spawn the staged Jolly Anrak-Setup binary with
 // --update and quit, so it can run `hermes update` (which refuses while we
 // hold the venv shim) and rebuild the desktop with our exe already gone.
 //
@@ -1263,7 +1263,7 @@ async function applyUpdates(opts = {}) {
       return { ok: true, manual: true, command, hermesRoot: updateRoot }
     }
 
-    emitUpdateProgress({ stage: 'restart', message: 'Handing off to the Jolly LLB updater…', percent: 100 })
+    emitUpdateProgress({ stage: 'restart', message: 'Handing off to the Jolly Anrak updater…', percent: 100 })
 
     // Detached so the updater outlives this process — it needs us GONE before
     // `hermes update` will run (the venv shim is locked while we live).
@@ -1348,7 +1348,7 @@ async function applyUpdatesPosixInApp(opts = {}) {
     return { ok: true, manual: true, command: 'hermes update', hermesRoot: updateRoot }
   }
 
-  // Put the Jolly LLB-managed Node and the venv on PATH so `hermes desktop`'s
+  // Put the Jolly Anrak-managed Node and the venv on PATH so `hermes desktop`'s
   // npm build can find them on a machine with no system Node.
   const extraPath = [path.join(HERMES_HOME, 'node', 'bin'), path.join(updateRoot, 'venv', 'bin')]
     .filter(Boolean)
@@ -1371,7 +1371,7 @@ async function applyUpdatesPosixInApp(opts = {}) {
     // best effort
   }
 
-  emitUpdateProgress({ stage: 'update', message: 'Updating Jolly LLB (git + dependencies)…', percent: 10 })
+  emitUpdateProgress({ stage: 'update', message: 'Updating Jolly Anrak (git + dependencies)…', percent: 10 })
   const updated = await runStreamedUpdate(hermes, ['update', '--yes', ...branchArgs], {
     cwd: updateRoot,
     env,
@@ -1391,15 +1391,15 @@ async function applyUpdatesPosixInApp(opts = {}) {
   if (rebuilt.code !== 0) {
     emitUpdateProgress({
       stage: 'error',
-      message: 'Backend updated, but the desktop rebuild failed. Restart Jolly LLB to retry.',
+      message: 'Backend updated, but the desktop rebuild failed. Restart Jolly Anrak to retry.',
       error: rebuilt.error || 'rebuild-failed'
     })
     return { ok: false, backendUpdated: true, error: 'desktop rebuild failed' }
   }
 
   const rebuiltApp = [
-    path.join(updateRoot, 'apps', 'desktop', 'release', 'mac-arm64', 'JollyLLB.app'),
-    path.join(updateRoot, 'apps', 'desktop', 'release', 'mac', 'JollyLLB.app')
+    path.join(updateRoot, 'apps', 'desktop', 'release', 'mac-arm64', 'JollyAnrak.app'),
+    path.join(updateRoot, 'apps', 'desktop', 'release', 'mac', 'JollyAnrak.app')
   ].find(directoryExists)
   const targetApp = runningAppBundle()
 
@@ -1408,7 +1408,7 @@ async function applyUpdatesPosixInApp(opts = {}) {
   if (!rebuiltApp || !targetApp) {
     emitUpdateProgress({
       stage: 'done',
-      message: 'Backend updated. Restart Jolly LLB to load the new version.',
+      message: 'Backend updated. Restart Jolly Anrak to load the new version.',
       percent: 100
     })
     return { ok: true, backendUpdated: true, rebuiltApp: rebuiltApp || null }
@@ -1444,7 +1444,7 @@ fi
   } catch (err) {
     emitUpdateProgress({
       stage: 'done',
-      message: 'Backend + app updated. Restart Jolly LLB to load the new version.',
+      message: 'Backend + app updated. Restart Jolly Anrak to load the new version.',
       percent: 100
     })
     rememberLog(`[updates] could not write swap script: ${err.message}; rebuilt app at ${rebuiltApp}`)
@@ -1618,7 +1618,7 @@ function createActiveBackend(dashboardArgs) {
 
   return {
     kind: 'python',
-    label: `Jolly LLB at ${ACTIVE_HERMES_ROOT}`,
+    label: `Jolly Anrak at ${ACTIVE_HERMES_ROOT}`,
     command: fileExists(venvPython) ? venvPython : findSystemPython(),
     args: ['-m', 'hermes_cli.main', ...dashboardArgs],
     env: {
@@ -1636,7 +1636,7 @@ function resolveHermesBackend(dashboardArgs) {
   //    checkout. Honour it as-is (no bootstrap; the user is driving).
   const overrideRoot = process.env.HERMES_DESKTOP_HERMES_ROOT && path.resolve(process.env.HERMES_DESKTOP_HERMES_ROOT)
   if (overrideRoot && isHermesSourceRoot(overrideRoot)) {
-    const backend = createPythonBackend(overrideRoot, `Jolly LLB source at ${overrideRoot}`, dashboardArgs)
+    const backend = createPythonBackend(overrideRoot, `Jolly Anrak source at ${overrideRoot}`, dashboardArgs)
     if (backend) return backend
   }
 
@@ -1645,7 +1645,7 @@ function resolveHermesBackend(dashboardArgs) {
   //    installed `hermes` on PATH so local Python edits are actually exercised.
   //    (In dev with no checkout, SOURCE_REPO_ROOT won't pass isHermesSourceRoot.)
   if (!IS_PACKAGED && isHermesSourceRoot(SOURCE_REPO_ROOT)) {
-    const backend = createPythonBackend(SOURCE_REPO_ROOT, `Jolly LLB source at ${SOURCE_REPO_ROOT}`, dashboardArgs)
+    const backend = createPythonBackend(SOURCE_REPO_ROOT, `Jolly Anrak source at ${SOURCE_REPO_ROOT}`, dashboardArgs)
     if (backend) return backend
   }
 
@@ -1675,7 +1675,7 @@ function resolveHermesBackend(dashboardArgs) {
       } else if (!isWindowsBinaryPathInWsl(hermesOverride, { isWsl: IS_WSL })) {
         hermesCommand = hermesOverride
       } else {
-        rememberLog(`Ignoring Windows Jolly LLB override under WSL: ${hermesOverride}`)
+        rememberLog(`Ignoring Windows Jolly Anrak override under WSL: ${hermesOverride}`)
       }
     } else {
       hermesCommand = findOnPath('hermes')
@@ -1683,7 +1683,7 @@ function resolveHermesBackend(dashboardArgs) {
 
     if (hermesCommand) {
       if (looksLikeDesktopAppBinary(hermesCommand)) {
-        rememberLog(`Ignoring desktop app executable on PATH while resolving Jolly LLB CLI: ${hermesCommand}`)
+        rememberLog(`Ignoring desktop app executable on PATH while resolving Jolly Anrak CLI: ${hermesCommand}`)
         hermesCommand = null
       }
     }
@@ -1699,7 +1699,7 @@ function resolveHermesBackend(dashboardArgs) {
       const shellForProbe = isCommandScript(hermesCommand)
       if (verifyHermesCli(hermesCommand, { shell: shellForProbe })) {
         return {
-          label: `existing Jolly LLB CLI at ${hermesCommand}`,
+          label: `existing Jolly Anrak CLI at ${hermesCommand}`,
           command: hermesCommand,
           args: dashboardArgs,
           bootstrap: false,
@@ -1709,7 +1709,7 @@ function resolveHermesBackend(dashboardArgs) {
         }
       }
       rememberLog(
-        `Ignoring existing Jolly LLB CLI at ${hermesCommand}: --version probe failed; falling through to bootstrap.`
+        `Ignoring existing Jolly Anrak CLI at ${hermesCommand}: --version probe failed; falling through to bootstrap.`
       )
     }
   }
@@ -1753,7 +1753,7 @@ function resolveHermesBackend(dashboardArgs) {
   //    is a recoverable state the GUI can drive through.
   return {
     kind: 'bootstrap-needed',
-    label: 'Jolly LLB not installed yet; bootstrap required',
+    label: 'Jolly Anrak not installed yet; bootstrap required',
     command: null,
     args: dashboardArgs,
     bootstrap: true,
@@ -1783,7 +1783,7 @@ async function ensureRuntime(backend) {
   // will rewire startup to spawn the window first and route bootstrap events
   // to a renderer-side install overlay.
   if (backend.kind === 'bootstrap-needed') {
-    rememberLog('[bootstrap] no Jolly LLB install found; starting first-launch bootstrap')
+    rememberLog('[bootstrap] no Jolly Anrak install found; starting first-launch bootstrap')
 
     // Eagerly flip the bootstrap UI state to 'active' so the renderer
     // shows the install overlay BEFORE the runner finishes fetching the
@@ -1830,7 +1830,7 @@ async function ensureRuntime(backend) {
 
     if (!bootstrapResult.ok) {
       const bootstrapError = new Error(
-        `Jolly LLB bootstrap failed${bootstrapResult.failedStage ? ` at stage '${bootstrapResult.failedStage}'` : ''}: ` +
+        `Jolly Anrak bootstrap failed${bootstrapResult.failedStage ? ` at stage '${bootstrapResult.failedStage}'` : ''}: ` +
           `${bootstrapResult.error || 'unknown error'}. ` +
           `Check ${path.join(HERMES_HOME, 'logs', 'desktop.log')} for the full transcript.`
       )
@@ -1857,12 +1857,12 @@ async function ensureRuntime(backend) {
   // attests they ran successfully).
   if (!isHermesSourceRoot(ACTIVE_HERMES_ROOT)) {
     throw new Error(
-      `Jolly LLB install at ${ACTIVE_HERMES_ROOT} is missing or incomplete. ` +
+      `Jolly Anrak install at ${ACTIVE_HERMES_ROOT} is missing or incomplete. ` +
         'Reinstall via the desktop installer or scripts/install.ps1.'
     )
   }
 
-  // On Windows, preflight Git Bash. Jolly LLB' terminal tool calls bash.exe
+  // On Windows, preflight Git Bash. Jolly Anrak' terminal tool calls bash.exe
   // directly (tools/environments/local.py); without it the agent can't run
   // terminal commands. install.ps1's Stage-Git puts PortableGit at
   // %LOCALAPPDATA%\hermes\git\, which findGitBash() picks up, so for any
@@ -1870,10 +1870,10 @@ async function ensureRuntime(backend) {
   // here via an external `hermes` on PATH, this check still helps.
   if (IS_WINDOWS && !findGitBash()) {
     throw new Error(
-      'Git for Windows is required for Jolly LLB on Windows (provides Git Bash, ' +
+      'Git for Windows is required for Jolly Anrak on Windows (provides Git Bash, ' +
         "which the agent's terminal tool uses). Install it from " +
         'https://git-scm.com/download/win or run `winget install -e --id Git.Git`, ' +
-        'then relaunch Jolly LLB.'
+        'then relaunch Jolly Anrak.'
     )
   }
 
@@ -1887,12 +1887,12 @@ async function ensureRuntime(backend) {
     // install.ps1 succeeds. If we hit this, the user (or a deleted venv)
     // broke the invariant; tell them to re-run the install.
     throw new Error(
-      `Jolly LLB venv missing at ${VENV_ROOT}. Re-run the desktop installer or ` + '`scripts/install.ps1` to rebuild it.'
+      `Jolly Anrak venv missing at ${VENV_ROOT}. Re-run the desktop installer or ` + '`scripts/install.ps1` to rebuild it.'
     )
   }
 
   backend.command = venvPython
-  backend.label = `Jolly LLB at ${ACTIVE_HERMES_ROOT} (venv: ${VENV_ROOT})`
+  backend.label = `Jolly Anrak at ${ACTIVE_HERMES_ROOT} (venv: ${VENV_ROOT})`
 
   // First-run paralegal identity: ensure SOUL.md, the anraklegal-paralegal
   // skill, and the (disabled, placeholder-token) AnrakLegal MCP entry exist in
@@ -1917,7 +1917,7 @@ async function ensureRuntime(backend) {
 
   updateBootProgress({
     phase: 'runtime.ready',
-    message: 'Jolly LLB runtime is ready',
+    message: 'Jolly Anrak runtime is ready',
     progress: 82,
     running: true,
     error: null
@@ -1951,7 +1951,7 @@ function fetchJson(url, token, options = {}) {
     const timeoutMs = resolveTimeoutMs(options.timeoutMs, DEFAULT_FETCH_TIMEOUT_MS)
 
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      reject(new Error(`Unsupported Jolly LLB backend URL protocol: ${parsed.protocol}`))
+      reject(new Error(`Unsupported Jolly Anrak backend URL protocol: ${parsed.protocol}`))
       return
     }
 
@@ -1988,7 +1988,7 @@ function fetchJson(url, token, options = {}) {
             reject(
               new Error(
                 `Expected JSON from ${url} but got HTML (status ${res.statusCode}). ` +
-                  'The endpoint is likely missing on the Jolly LLB backend.'
+                  'The endpoint is likely missing on the Jolly Anrak backend.'
               )
             )
             return
@@ -2004,7 +2004,7 @@ function fetchJson(url, token, options = {}) {
 
     req.on('error', reject)
     req.setTimeout(timeoutMs, () => {
-      req.destroy(new Error(`Timed out connecting to Jolly LLB backend after ${timeoutMs}ms`))
+      req.destroy(new Error(`Timed out connecting to Jolly Anrak backend after ${timeoutMs}ms`))
     })
     if (body) req.write(body)
     req.end()
@@ -2529,7 +2529,7 @@ async function waitForHermes(baseUrl, token) {
     }
   }
 
-  throw new Error(`Jolly LLB backend did not become ready: ${lastError?.message || 'timeout'}`)
+  throw new Error(`Jolly Anrak backend did not become ready: ${lastError?.message || 'timeout'}`)
 }
 
 function getWindowButtonPosition() {
@@ -2991,7 +2991,7 @@ function resolveRemoteBackend() {
     if (!rawEnvToken) {
       throw new Error(
         'HERMES_DESKTOP_REMOTE_URL is set but HERMES_DESKTOP_REMOTE_TOKEN is not. ' +
-          'Both must be provided to connect to a remote Jolly LLB backend.'
+          'Both must be provided to connect to a remote Jolly Anrak backend.'
       )
     }
 
@@ -3016,7 +3016,7 @@ function resolveRemoteBackend() {
 
   if (!token) {
     throw new Error(
-      'Remote Jolly LLB gateway is selected, but no session token is saved. ' +
+      'Remote Jolly Anrak gateway is selected, but no session token is saved. ' +
         'Open Settings → Gateway and save a token, or switch back to Local.'
     )
   }
@@ -3087,15 +3087,15 @@ async function startHermes() {
   if (connectionPromise) return connectionPromise
 
   connectionPromise = (async () => {
-    await advanceBootProgress('backend.resolve', 'Resolving Jolly LLB backend', 8)
+    await advanceBootProgress('backend.resolve', 'Resolving Jolly Anrak backend', 8)
     const remote = resolveRemoteBackend()
     if (remote) {
-      await advanceBootProgress('backend.remote', `Connecting to remote Jolly LLB backend at ${remote.baseUrl}`, 24)
+      await advanceBootProgress('backend.remote', `Connecting to remote Jolly Anrak backend at ${remote.baseUrl}`, 24)
       await waitForHermes(remote.baseUrl, remote.token)
       currentDashboardUrl = remote.baseUrl
       updateBootProgress({
         phase: 'backend.ready',
-        message: 'Remote Jolly LLB backend is ready',
+        message: 'Remote Jolly Anrak backend is ready',
         progress: 94,
         running: true,
         error: null
@@ -3115,13 +3115,13 @@ async function startHermes() {
     const port = await pickPort()
     const token = crypto.randomBytes(32).toString('base64url')
     const dashboardArgs = ['dashboard', '--no-open', '--tui', '--host', '127.0.0.1', '--port', String(port)]
-    await advanceBootProgress('backend.runtime', 'Resolving Jolly LLB runtime', 28)
+    await advanceBootProgress('backend.runtime', 'Resolving Jolly Anrak runtime', 28)
     const backend = await ensureRuntime(resolveHermesBackend(dashboardArgs))
     const hermesCwd = resolveHermesCwd()
     const webDist = resolveWebDist()
 
-    await advanceBootProgress('backend.spawn', `Starting Jolly LLB backend via ${backend.label}`, 84)
-    rememberLog(`Starting Jolly LLB backend via ${backend.label}`)
+    await advanceBootProgress('backend.spawn', `Starting Jolly Anrak backend via ${backend.label}`, 84)
+    rememberLog(`Starting Jolly Anrak backend via ${backend.label}`)
 
     hermesProcess = spawn(backend.command, backend.args, {
       cwd: hermesCwd,
@@ -3159,11 +3159,11 @@ async function startHermes() {
       rejectBackendStart = reject
     })
     hermesProcess.once('error', error => {
-      rememberLog(`Jolly LLB backend failed to start: ${error.message}`)
+      rememberLog(`Jolly Anrak backend failed to start: ${error.message}`)
       updateBootProgress(
         {
           error: error.message,
-          message: `Jolly LLB backend failed to start: ${error.message}`,
+          message: `Jolly Anrak backend failed to start: ${error.message}`,
           phase: 'backend.error',
           running: false
         },
@@ -3175,12 +3175,12 @@ async function startHermes() {
       rejectBackendStart?.(error)
     })
     hermesProcess.once('exit', (code, signal) => {
-      rememberLog(`Jolly LLB backend exited (${signal || code})`)
+      rememberLog(`Jolly Anrak backend exited (${signal || code})`)
       hermesProcess = null
       connectionPromise = null
       sendBackendExit({ code, signal })
       if (!backendReady) {
-        const message = `Jolly LLB backend exited before it became ready (${signal || code}).`
+        const message = `Jolly Anrak backend exited before it became ready (${signal || code}).`
         updateBootProgress(
           {
             error: message,
@@ -3192,7 +3192,7 @@ async function startHermes() {
         )
         rejectBackendStart?.(
           new Error(
-            `Jolly LLB backend exited before it became ready (${signal || code}). Log: ${DESKTOP_LOG_PATH}\n${recentHermesLog()}`
+            `Jolly Anrak backend exited before it became ready (${signal || code}). Log: ${DESKTOP_LOG_PATH}\n${recentHermesLog()}`
           )
         )
       }
@@ -3204,12 +3204,12 @@ async function startHermes() {
     // On loopback the server injects the session token into the SPA HTML and
     // the OAuth gate is off, so opening this URL "just works".
     currentDashboardUrl = baseUrl
-    await advanceBootProgress('backend.wait', 'Waiting for Jolly LLB backend to become ready', 90)
+    await advanceBootProgress('backend.wait', 'Waiting for Jolly Anrak backend to become ready', 90)
     await Promise.race([waitForHermes(baseUrl, token), backendStartFailed])
     backendReady = true
     updateBootProgress({
       phase: 'backend.ready',
-      message: 'Jolly LLB backend is ready. Finalizing desktop startup',
+      message: 'Jolly Anrak backend is ready. Finalizing desktop startup',
       progress: 94,
       running: true,
       error: null
@@ -3423,7 +3423,7 @@ ipcMain.handle('hermes:api', async (_event, request) => {
 ipcMain.handle('hermes:notify', (_event, payload) => {
   if (!Notification.isSupported()) return false
   new Notification({
-    title: payload?.title || 'Jolly LLB',
+    title: payload?.title || 'Jolly Anrak',
     body: payload?.body || '',
     silent: Boolean(payload?.silent)
   }).show()
@@ -3642,7 +3642,7 @@ function terminalShellEnv() {
 
   // Strip color/theme-detection vars that ride along when Electron is launched
   // from a non-tty agent shell (Cursor's runner sets NO_COLOR/FORCE_COLOR=0
-  // /TERM=dumb; some terminals set COLORFGBG which would flip Jolly LLB' TUI into
+  // /TERM=dumb; some terminals set COLORFGBG which would flip Jolly Anrak' TUI into
   // light-mode). Our PTY is a real xterm-compat terminal — force truecolor.
   delete env.NO_COLOR
   delete env.FORCE_COLOR
@@ -3651,7 +3651,7 @@ function terminalShellEnv() {
   env.COLORTERM = 'truecolor'
   env.LC_CTYPE = env.LC_CTYPE || 'UTF-8'
   env.TERM = 'xterm-256color'
-  env.TERM_PROGRAM = 'Jolly LLB'
+  env.TERM_PROGRAM = 'Jolly Anrak'
   env.TERM_PROGRAM_VERSION = app.getVersion()
 
   return env
@@ -3722,7 +3722,7 @@ ipcMain.handle('hermes:fs:gitRoot', async (_event, startPath) => {
 
 ipcMain.handle('hermes:terminal:start', async (event, payload = {}) => {
   if (!nodePty) {
-    throw new Error('PTY support is unavailable. Reinstall desktop dependencies and restart Jolly LLB.')
+    throw new Error('PTY support is unavailable. Reinstall desktop dependencies and restart Jolly Anrak.')
   }
 
   const id = crypto.randomUUID()
@@ -3812,9 +3812,9 @@ ipcMain.handle('hermes:updates:branch:set', async (_event, name) => {
   return { branch }
 })
 
-// Resolve the canonical Jolly LLB version (the one `release.py` bumps in
+// Resolve the canonical Jolly Anrak version (the one `release.py` bumps in
 // hermes_cli/__init__.py + pyproject.toml) so the desktop About panel shows the
-// real Jolly LLB version instead of the Electron app's own package.json version,
+// real Jolly Anrak version instead of the Electron app's own package.json version,
 // which historically drifted (stuck at 0.0.2). Falls back to app.getVersion()
 // when the source tree can't be read (e.g. a packaged build without the repo).
 function resolveHermesVersion() {

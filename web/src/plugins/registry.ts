@@ -117,7 +117,7 @@ export function exposePluginSDK() {
       createContext,
     },
 
-    // Jolly LLB API client
+    // Jolly Anrak API client
     api,
     // Raw fetchJSON for plugin-specific endpoints
     fetchJSON,

@@ -1,7 +1,7 @@
 ---
 sidebar_position: 1
 title: "Tools & Toolsets"
-description: "Overview of Jolly LLB's tools — what's available, how toolsets work, and terminal backends"
+description: "Overview of Jolly Anrak's tools — what's available, how toolsets work, and terminal backends"
 ---
 
 # Tools & Toolsets

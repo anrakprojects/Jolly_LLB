@@ -17,7 +17,7 @@ vite.config.js
 /src-tauri/gen/schemas/
 
 # Bundled self-contained-installer resources, staged by CI before the build
-# (scripts/install.* copies + jolly-llb-source.zip from `git archive`).
+# (scripts/install.* copies + jolly-anrak-source.zip from `git archive`).
 /src-tauri/resources/
 
 # Logs

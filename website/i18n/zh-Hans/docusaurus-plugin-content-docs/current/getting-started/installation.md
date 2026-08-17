@@ -1,12 +1,12 @@
 ---
 sidebar_position: 2
 title: "安装"
-description: "在 Linux、macOS、WSL2、原生 Windows 或通过 Termux 在 Android 上安装 Jolly LLB"
+description: "在 Linux、macOS、WSL2、原生 Windows 或通过 Termux 在 Android 上安装 Jolly Anrak"
 ---
 
 # 安装
 
-使用一行安装命令，两分钟内即可启动并运行 Jolly LLB。
+使用一行安装命令，两分钟内即可启动并运行 Jolly Anrak。
 
 ## 快速安装
 

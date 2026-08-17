@@ -2,7 +2,7 @@
 name: darwinian-evolver
 description: Evolve prompts/regex/SQL/code with Imbue's evolution loop.
 version: 0.1.0
-author: Bihruze (Asahi0x), Jolly LLB
+author: Bihruze (Asahi0x), Jolly Anrak
 license: MIT
 platforms: [linux, macos]
 metadata:

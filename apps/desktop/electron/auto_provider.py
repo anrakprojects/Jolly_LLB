@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Jolly LLB zero-config provider auto-detection.
+"""Jolly Anrak zero-config provider auto-detection.
 
 Run once per launch by the Electron shell (auto-provider.cjs) BEFORE the runtime
 backend starts. Detects whichever of the two supported logins already exists on

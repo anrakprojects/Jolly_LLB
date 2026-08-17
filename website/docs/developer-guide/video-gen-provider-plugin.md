@@ -1,7 +1,7 @@
 ---
 sidebar_position: 12
 title: "Video Generation Provider Plugins"
-description: "How to build a video-generation backend plugin for Jolly LLB"
+description: "How to build a video-generation backend plugin for Jolly Anrak"
 ---
 
 # Building a Video Generation Provider Plugin
