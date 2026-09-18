@@ -6,7 +6,6 @@ import type { ModelOptionProvider, ModelOptionsResponse, ModelPricing } from '@/
 import type { HermesGateway } from '../hermes'
 import { getGlobalModelOptions } from '../hermes'
 import { cn } from '../lib/utils'
-import { startManualOnboarding } from '../store/onboarding'
 
 import { InlineNotice } from './notifications'
 import { Button } from './ui/button'
@@ -64,13 +63,7 @@ export function ModelPickerDialog({
     enabled: open
   })
 
-  // Lock the picker to Claude (anthropic) + ChatGPT (openai-codex) only. Users
-  // sign in with their own subscription for unlimited usage — no Nous, no
-  // OpenRouter, no Gemini, no other providers anywhere in the product.
-  const ALLOWED_PROVIDER_SLUGS = new Set(['anthropic', 'openai-codex', 'google-gemini-cli'])
-  const providers = (modelOptions.data?.providers ?? []).filter((p) =>
-    ALLOWED_PROVIDER_SLUGS.has(p.slug)
-  )
+  const providers = modelOptions.data?.providers ?? []
   const optionsModel = String(modelOptions.data?.model ?? currentModel ?? '')
   const optionsProvider = String(modelOptions.data?.provider ?? currentProvider ?? '')
   const loading = modelOptions.isPending && !modelOptions.data
@@ -87,15 +80,6 @@ export function ModelPickerDialog({
       model,
       persistGlobal: persistGlobal || !sessionId
     })
-    onOpenChange(false)
-  }
-
-  // Open the full onboarding provider selector to add/switch a provider.
-  // Reuses the entire onboarding flow (OAuth rows, API-key form, device-code,
-  // model-confirm) instead of duplicating provider UI here. Closes the picker
-  // so the onboarding overlay (z-1300) isn't rendered underneath it.
-  const addProvider = () => {
-    startManualOnboarding()
     onOpenChange(false)
   }
 
@@ -142,9 +126,6 @@ export function ModelPickerDialog({
           </label>
 
           <div className="flex items-center gap-2">
-            <Button onClick={addProvider} variant="ghost">
-              Add provider
-            </Button>
             <Button onClick={() => onOpenChange(false)} variant="outline">
               Cancel
             </Button>
@@ -197,9 +178,6 @@ function ModelResults({
     provider.name.toLowerCase().includes(q) ||
     provider.slug.toLowerCase().includes(q)
 
-  // Only configured providers (those with curated models) are selectable
-  // here. Switching to a NOT-yet-configured provider goes through the
-  // "Add provider" footer button, which opens the full onboarding selector.
   const configured = providers.filter(p => (p.models ?? []).length > 0)
 
   return (

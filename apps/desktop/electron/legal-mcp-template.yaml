@@ -14,12 +14,10 @@
 #   This is preferred over the legacy https://anrak.legal/token/<token>/mcp URL
 #   (which embeds a per-user secret directly in the config).
 #
-# CONNECT FLOW (deliberate, not silent): the entry ships `enabled: false`. The
-# runtime skips disabled servers entirely (tools/mcp_tool.py register loop:
-# `_parse_boolish(v.get("enabled", True))`), so a fresh install never attempts a
-# connection or pops a browser unprompted. The user connects from the dashboard
-# Connectors page — toggling it on triggers the AnrakLegal OAuth sign-in once;
-# thereafter Hermes refreshes the token itself.
+# CONNECT FLOW: the entry ships `enabled: false` so the runtime does not open a
+# browser on its own. Desktop first-run is Anrak Legal OAuth only — the overlay
+# calls /api/mcp/oauth/<name>/start, and that endpoint enables the connector
+# after a successful sign-in.
 #
 # NOTE: the OAuth round-trip against AnrakLegal's /api/mcp/oauth/* still needs
 # one end-to-end verification with a real account before GA (desktop redirect

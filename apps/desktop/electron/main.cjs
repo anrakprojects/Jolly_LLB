@@ -25,7 +25,6 @@ const { fileURLToPath, pathToFileURL } = require('node:url')
 const { execFileSync, spawn } = require('node:child_process')
 const { isWindowsBinaryPathInWsl, isWslEnvironment } = require('./bootstrap-platform.cjs')
 const { runBootstrap } = require('./bootstrap-runner.cjs')
-const { autoConfigureProvider } = require('./auto-provider.cjs')
 const { provisionLegalIdentity } = require('./legal-provisioner.cjs')
 const { canImportHermesCli, verifyHermesCli } = require('./backend-probes.cjs')
 const {
@@ -69,6 +68,11 @@ if (USER_DATA_OVERRIDE) {
 
 const PORT_FLOOR = 9120
 const PORT_CEILING = 9199
+// First bind on a clean VM can exceed 45s: hermes_cli.main is a large import,
+// and without --skip-build the dashboard would npm-install `web/` before
+// uvicorn listens. Probe often so a late bind is noticed quickly.
+const BACKEND_READY_TIMEOUT_MS = 180_000
+const BACKEND_READY_PROBE_TIMEOUT_MS = 2_000
 const DEV_SERVER = process.env.HERMES_DESKTOP_DEV_SERVER
 const IS_PACKAGED = app.isPackaged
 const IS_MAC = process.platform === 'darwin'
@@ -1490,14 +1494,15 @@ function isBootstrapComplete() {
   if (!marker || typeof marker !== 'object') return false
   if (marker.schemaVersion !== BOOTSTRAP_MARKER_SCHEMA_VERSION) return false
   if (typeof marker.pinnedCommit !== 'string' || marker.pinnedCommit.length < 7) return false
-  // We DELIBERATELY do NOT verify that the checkout is currently at the
-  // pinned commit -- users update via the in-app update path or `hermes
-  // update`, which moves HEAD legitimately. The marker just attests "we
-  // ran the bootstrap successfully at least once." We DO additionally require
-  // a runnable venv: an interrupted or split-home install can leave the marker
-  // + checkout without a venv, and trusting that spawns a dead backend
-  // ("gateway offline") instead of re-running bootstrap to repair it.
-  return isHermesSourceRoot(ACTIVE_HERMES_ROOT) && fileExists(getVenvPython(VENV_ROOT))
+  if (!isHermesSourceRoot(ACTIVE_HERMES_ROOT) || !fileExists(getVenvPython(VENV_ROOT))) return false
+  // Packaged builds must re-copy bundled-runtime when this .exe is newer than
+  // the last bootstrap. Otherwise a rebuilt installer keeps serving the old
+  // checkout under HERMES_HOME/hermes-agent — the "works on my machine" mismatch.
+  if (IS_PACKAGED && INSTALL_STAMP) {
+    if (marker.pinnedCommit !== INSTALL_STAMP.commit) return false
+    if (INSTALL_STAMP.builtAt && marker.stampBuiltAt !== INSTALL_STAMP.builtAt) return false
+  }
+  return true
 }
 
 function writeBootstrapMarker(payload) {
@@ -1507,7 +1512,8 @@ function writeBootstrapMarker(payload) {
     pinnedCommit: payload.pinnedCommit || null,
     pinnedBranch: payload.pinnedBranch || null,
     completedAt: new Date().toISOString(),
-    desktopVersion: app.getVersion()
+    desktopVersion: app.getVersion(),
+    stampBuiltAt: (INSTALL_STAMP && INSTALL_STAMP.builtAt) || null
   }
   fs.writeFileSync(BOOTSTRAP_COMPLETE_MARKER, JSON.stringify(merged, null, 2) + '\n', 'utf8')
   return merged
@@ -1521,6 +1527,30 @@ function resolveWebDist() {
   if (directoryExists(unpackedDist)) return unpackedDist
 
   return path.join(APP_ROOT, 'dist')
+}
+
+// Python dashboard static files live in hermes_cli/web_dist, not the Electron
+// renderer dist. Passing the renderer path as HERMES_WEB_DIST (or omitting it
+// in a packaged build) makes `hermes dashboard` try `npm run build` in `web/`
+// before binding -- which times out as ECONNREFUSED 127.0.0.1:9120 on a VM.
+function resolveDashboardWebDist(backend) {
+  const override = process.env.HERMES_DESKTOP_WEB_DIST
+  if (override) {
+    const resolved = path.resolve(override)
+    if (fileExists(path.join(resolved, 'index.html')) && !resolved.includes('.asar')) {
+      return resolved
+    }
+  }
+
+  const roots = [backend && backend.root, ACTIVE_HERMES_ROOT, !IS_PACKAGED ? SOURCE_REPO_ROOT : null]
+  for (const root of roots) {
+    if (!root) continue
+    const dist = path.join(root, 'hermes_cli', 'web_dist')
+    if (fileExists(path.join(dist, 'index.html')) && !dist.includes('.asar')) {
+      return dist
+    }
+  }
+  return null
 }
 
 function resolveRendererIndex() {
@@ -1659,12 +1689,11 @@ function resolveHermesBackend(dashboardArgs) {
     return createActiveBackend(dashboardArgs)
   }
 
-  // 4. Existing `hermes` on PATH -- installed via install.ps1 / install.sh from
-  //    a previous tool-only setup, or pip-installed system-wide. Use it but
-  //    do NOT write a bootstrap marker; the user did this themselves and we
-  //    don't want to take ownership of an install we didn't perform.
+  // 4. Existing `hermes` on PATH — DEV ONLY. A packaged .exe that picks
+  //    `hermes` off PATH on the developer's machine runs the localhost
+  //    checkout; the same .exe on a clean PC bootstraps something else.
   //    HERMES_DESKTOP_IGNORE_EXISTING=1 forces the bootstrap path for testing.
-  if (process.env.HERMES_DESKTOP_IGNORE_EXISTING !== '1') {
+  if (!IS_PACKAGED && process.env.HERMES_DESKTOP_IGNORE_EXISTING !== '1') {
     let hermesCommand = null
     const hermesOverride = process.env.HERMES_DESKTOP_HERMES
 
@@ -1712,33 +1741,28 @@ function resolveHermesBackend(dashboardArgs) {
         `Ignoring existing Jolly Anrak CLI at ${hermesCommand}: --version probe failed; falling through to bootstrap.`
       )
     }
-  }
 
-  // 5. Last-ditch: pip-installed hermes_cli module via system Python.
-  //    Same rationale as #4 -- the user installed this; we use it but don't
-  //    take ownership.
-  const python = findSystemPython()
-  if (python) {
-    // Same smoke-test rationale as step 4: a system Python in the
-    // SUPPORTED_VERSIONS range can be registered (PEP 514) without
-    // having hermes_cli installed -- common on dev boxes that have
-    // a python.org install from prior unrelated work. Returning that
-    // backend hands the spawn step a guaranteed ModuleNotFoundError.
-    // Verify the import works before trusting the candidate; on
-    // failure, fall through to step 6 so the bootstrap runner pulls
-    // a uv-managed 3.11 into %LOCALAPPDATA%\hermes\hermes-agent\venv.
-    if (canImportHermesCli(python)) {
-      return {
-        kind: 'python',
-        label: `installed hermes_cli module via ${python}`,
-        command: python,
-        args: ['-m', 'hermes_cli.main', ...dashboardArgs],
-        bootstrap: false,
-        env: {},
-        shell: false
+    // 5. Last-ditch: pip-installed hermes_cli module via system Python.
+    //    Same rationale as #4 -- the user installed this; we use it but don't
+    //    take ownership. Packaged builds skip this so they cannot silently
+    //    attach to a leftover developer install.
+    const python = findSystemPython()
+    if (python) {
+      if (canImportHermesCli(python)) {
+        return {
+          kind: 'python',
+          label: `installed hermes_cli module via ${python}`,
+          command: python,
+          args: ['-m', 'hermes_cli.main', ...dashboardArgs],
+          bootstrap: false,
+          env: {},
+          shell: false
+        }
       }
+      rememberLog(`Ignoring system Python ${python}: hermes_cli is not importable; falling through to bootstrap.`)
     }
-    rememberLog(`Ignoring system Python ${python}: hermes_cli is not importable; falling through to bootstrap.`)
+  } else if (IS_PACKAGED) {
+    rememberLog('Packaged build: ignoring any existing hermes CLI / system hermes_cli; using bundled runtime.')
   }
 
   // 6. Nothing usable yet -- signal the bootstrap runner that we need to
@@ -1767,8 +1791,52 @@ function resolveHermesBackend(dashboardArgs) {
   }
 }
 
+function isBundledRuntimeReady() {
+  if (!BUNDLED_RUNTIME) return false
+  if (!fileExists(path.join(BUNDLED_RUNTIME, 'pyproject.toml'))) return false
+  return (
+    fileExists(path.join(BUNDLED_RUNTIME, 'scripts', 'install.ps1')) ||
+    fileExists(path.join(BUNDLED_RUNTIME, 'scripts', 'install.sh'))
+  )
+}
+
+function seedActiveRootFromBundle() {
+  if (!isBundledRuntimeReady()) return false
+  try {
+    fs.mkdirSync(ACTIVE_HERMES_ROOT, { recursive: true })
+    fs.cpSync(BUNDLED_RUNTIME, ACTIVE_HERMES_ROOT, { recursive: true, dereference: true })
+    const gitDir = path.join(ACTIVE_HERMES_ROOT, '.git')
+    if (directoryExists(gitDir) || fileExists(gitDir)) {
+      fs.rmSync(gitDir, { recursive: true, force: true })
+    }
+    rememberLog(`[bootstrap] seeded ${ACTIVE_HERMES_ROOT} from bundled-runtime`)
+    return isHermesSourceRoot(ACTIVE_HERMES_ROOT)
+  } catch (err) {
+    rememberLog(`[bootstrap] bundled-runtime copy failed: ${err && err.message ? err.message : err}`)
+    return false
+  }
+}
+
+function resolveProvisionPython(backend) {
+  if (backend && backend.kind === 'python' && backend.command && fileExists(backend.command)) {
+    return backend.command
+  }
+  const venvPython = getVenvPython(VENV_ROOT)
+  if (fileExists(venvPython)) return venvPython
+  return findSystemPython()
+}
+
+function applyLegalIdentity(backend) {
+  provisionLegalIdentity({
+    hermesHome: HERMES_HOME,
+    venvPython: resolveProvisionPython(backend),
+    log: msg => rememberLog(msg)
+  })
+}
+
 async function ensureRuntime(backend) {
   if (!backend.bootstrap) {
+    applyLegalIdentity(backend)
     await advanceBootProgress('runtime.external', `Using ${backend.label}`, 32)
     return backend
   }
@@ -1785,6 +1853,20 @@ async function ensureRuntime(backend) {
   if (backend.kind === 'bootstrap-needed') {
     rememberLog('[bootstrap] no Jolly Anrak install found; starting first-launch bootstrap')
 
+    if (IS_PACKAGED && !isBundledRuntimeReady()) {
+      throw new Error(
+        'This installer is missing the bundled Jolly Anrak runtime. ' +
+          'Rebuild with `npm run dist:win` from the Jolly Anrak checkout ' +
+          '(the pack step must include apps/desktop/build/bundled-runtime).'
+      )
+    }
+
+    const bundledRuntimeReady = isBundledRuntimeReady()
+    if (bundledRuntimeReady) {
+      await advanceBootProgress('runtime.bundle', 'Copying Jolly Anrak runtime from the installer', 16)
+      seedActiveRootFromBundle()
+    }
+
     // Eagerly flip the bootstrap UI state to 'active' so the renderer
     // shows the install overlay BEFORE the runner finishes fetching the
     // manifest (which on slow networks can take tens of seconds and would
@@ -1799,10 +1881,6 @@ async function ensureRuntime(backend) {
       })
     } catch {}
 
-    const bundledRuntimeReady =
-      BUNDLED_RUNTIME &&
-      fileExists(path.join(BUNDLED_RUNTIME, 'scripts', 'install.sh')) &&
-      fileExists(path.join(BUNDLED_RUNTIME, 'pyproject.toml'))
     const bootstrapResult = await runBootstrap({
       installStamp: backend.installStamp,
       activeRoot: backend.activeRoot,
@@ -1895,25 +1973,9 @@ async function ensureRuntime(backend) {
   backend.label = `Jolly Anrak at ${ACTIVE_HERMES_ROOT} (venv: ${VENV_ROOT})`
 
   // First-run paralegal identity: ensure SOUL.md, the anraklegal-paralegal
-  // skill, and the (disabled, placeholder-token) AnrakLegal MCP entry exist in
-  // HERMES_HOME before the runtime starts — so a fresh install behaves as the
-  // AnrakLegal paralegal, not generic Hermes. Idempotent, best-effort, never
-  // blocks the launch. Runs BEFORE autoConfigureProvider so the identity is in
-  // place on first boot.
-  provisionLegalIdentity({
-    hermesHome: HERMES_HOME,
-    venvPython,
-    log: msg => console.log(msg)
-  })
-
-  // Zero-config onboarding: before the backend starts, point the runtime at
-  // whichever supported login (Claude Code or ChatGPT/Codex) already exists on
-  // this machine. Best-effort — never blocks the launch.
-  autoConfigureProvider({
-    hermesHome: HERMES_HOME,
-    venvPython,
-    log: msg => console.log(msg)
-  })
+  // skill, and the AnrakLegal MCP entry exist in HERMES_HOME before the
+  // runtime starts. Idempotent, best-effort, never blocks the launch.
+  applyLegalIdentity(backend)
 
   updateBootProgress({
     phase: 'runtime.ready',
@@ -2516,12 +2578,12 @@ function closePreviewWatchers() {
 }
 
 async function waitForHermes(baseUrl, token) {
-  const deadline = Date.now() + 45_000
+  const deadline = Date.now() + BACKEND_READY_TIMEOUT_MS
   let lastError = null
 
   while (Date.now() < deadline) {
     try {
-      await fetchJson(`${baseUrl}/api/status`, token)
+      await fetchJson(`${baseUrl}/api/status`, token, { timeoutMs: BACKEND_READY_PROBE_TIMEOUT_MS })
       return
     } catch (error) {
       lastError = error
@@ -2529,7 +2591,12 @@ async function waitForHermes(baseUrl, token) {
     }
   }
 
-  throw new Error(`Jolly Anrak backend did not become ready: ${lastError?.message || 'timeout'}`)
+  const logTail = recentHermesLog()
+  throw new Error(
+    `Jolly Anrak backend did not become ready: ${lastError?.message || 'timeout'}. ` +
+      `Check ${DESKTOP_LOG_PATH}` +
+      (logTail ? `:\n${logTail}` : '')
+  )
 }
 
 function getWindowButtonPosition() {
@@ -3114,11 +3181,23 @@ async function startHermes() {
     await advanceBootProgress('backend.port', 'Finding an open local port', 16)
     const port = await pickPort()
     const token = crypto.randomBytes(32).toString('base64url')
-    const dashboardArgs = ['dashboard', '--no-open', '--tui', '--host', '127.0.0.1', '--port', String(port)]
+    // --skip-build: do not npm-install web/ on first launch. The packaged
+    // runtime already ships hermes_cli/web_dist; rebuilding it is what made
+    // clean VMs time out with ECONNREFUSED 127.0.0.1:9120.
+    const dashboardArgs = [
+      'dashboard',
+      '--no-open',
+      '--tui',
+      '--skip-build',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      String(port)
+    ]
     await advanceBootProgress('backend.runtime', 'Resolving Jolly Anrak runtime', 28)
     const backend = await ensureRuntime(resolveHermesBackend(dashboardArgs))
-    const hermesCwd = resolveHermesCwd()
-    const webDist = resolveWebDist()
+    const hermesCwd = (backend.root && directoryExists(backend.root)) ? backend.root : resolveHermesCwd()
+    const webDist = resolveDashboardWebDist(backend)
 
     await advanceBootProgress('backend.spawn', `Starting Jolly Anrak backend via ${backend.label}`, 84)
     rememberLog(`Starting Jolly Anrak backend via ${backend.label}`)
@@ -3136,16 +3215,13 @@ async function startHermes() {
         // directories. install.ps1 sets HERMES_HOME via setx; the desktop
         // can't reliably do that, so we set it inline for every spawn.
         HERMES_HOME,
+        PYTHONUNBUFFERED: '1',
+        PYTHONIOENCODING: 'utf-8',
+        PYTHONUTF8: '1',
         ...backend.env,
         HERMES_DASHBOARD_SESSION_TOKEN: token,
         HERMES_DASHBOARD_TUI: '1',
-        // Only hand the backend a web frontend dir it can actually read. In a
-        // packaged build, resolveWebDist() points inside app.asar, which the
-        // Python backend cannot read (the asar is a single archive file) — that
-        // made the in-browser dashboard return "Frontend not built". When the
-        // path is asar-trapped, omit the override so web_server.py falls back
-        // to the runtime's own hermes_cli/web_dist (the management dashboard).
-        ...(webDist && !webDist.includes('.asar') ? { HERMES_WEB_DIST: webDist } : {})
+        ...(webDist ? { HERMES_WEB_DIST: webDist } : {})
       },
       shell: backend.shell,
       stdio: ['ignore', 'pipe', 'pipe']

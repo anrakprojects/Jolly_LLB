@@ -200,7 +200,8 @@ function spawnPowerShell(scriptPath, args, { emit, stageName, abortSignal, herme
         ...process.env,
         // Pass HERMES_HOME through so install.ps1 respects the caller's
         // choice rather than re-computing the default.
-        HERMES_HOME: hermesHome || process.env.HERMES_HOME || ''
+        HERMES_HOME: hermesHome || process.env.HERMES_HOME || '',
+        HERMES_LOCAL_SOURCE: _localSource || process.env.HERMES_LOCAL_SOURCE || ''
       }
     })
 
@@ -271,7 +272,8 @@ function spawnBash(scriptPath, args, { emit, stageName, abortSignal, hermesHome 
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
-        HERMES_HOME: hermesHome || process.env.HERMES_HOME || ''
+        HERMES_HOME: hermesHome || process.env.HERMES_HOME || '',
+        HERMES_LOCAL_SOURCE: _localSource || process.env.HERMES_LOCAL_SOURCE || ''
       }
     })
 
@@ -343,6 +345,9 @@ function spawnBash(scriptPath, args, { emit, stageName, abortSignal, hermesHome 
 // instead of falling back to install.ps1's default ($Branch = "main").
 function buildPinArgs(installStamp) {
   const args = []
+  if (_localSource) {
+    args.push('-LocalSource', _localSource)
+  }
   if (installStamp && installStamp.commit) {
     args.push('-Commit', installStamp.commit)
   }

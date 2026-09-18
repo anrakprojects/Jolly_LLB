@@ -1065,61 +1065,65 @@ function Install-SystemPackages {
 # Installation
 # ============================================================================
 
+function Test-RuntimeLayout {
+    param([string]$Root)
+    return (Test-Path (Join-Path $Root "pyproject.toml")) -and (Test-Path (Join-Path $Root "hermes_cli\main.py"))
+}
+
+function Copy-RuntimeTree {
+    param([string]$Source, [string]$Destination)
+    New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+    Get-ChildItem -Force -LiteralPath $Source | ForEach-Object {
+        $target = Join-Path $Destination $_.Name
+        Copy-Item -LiteralPath $_.FullName -Destination $target -Recurse -Force
+    }
+    # A leftover private-repo .git makes later launches try `git fetch` and fail.
+    $gitDir = Join-Path $Destination ".git"
+    if (Test-Path $gitDir) {
+        Remove-Item -Recurse -Force $gitDir -ErrorAction SilentlyContinue
+    }
+}
+
 function Install-Repository {
     Write-Info "Installing to $InstallDir..."
 
     $didUpdate = $false
 
-    # Self-contained / bundled-source install.  When $LocalSource points at the
-    # repo shipped inside the installer (.zip from `git archive`, or an extracted
-    # directory), install from it verbatim -- no clone, no network, no token.
-    # This is the path the self-contained desktop installer takes; it wins over
-    # the existing-dir update and the GitHub clone paths below.
+    # Self-contained / bundled-source install. Copy the runtime shipped inside
+    # the desktop .exe — no clone, no network, no GitHub token. Never fall
+    # through to git fetch: the Jolly Anrak repo is private and exit 128 on a
+    # clean machine is the result of that fallback.
     if ($LocalSource -and (Test-Path $LocalSource)) {
-        try {
-            Write-Info "Installing from bundled source: $LocalSource"
-            if (Test-Path $InstallDir) { Remove-Item -Recurse -Force $InstallDir -ErrorAction SilentlyContinue }
-            New-Item -ItemType Directory -Force -Path (Split-Path $InstallDir) -ErrorAction SilentlyContinue | Out-Null
-
-            $srcItem = Get-Item -LiteralPath $LocalSource
-            if ($srcItem.PSIsContainer) {
-                # Bundled as an extracted directory tree -- copy it wholesale.
-                Copy-Item -LiteralPath $LocalSource -Destination $InstallDir -Recurse -Force
-            } else {
-                # Bundled as a .zip (e.g. `git archive --format=zip HEAD`).
-                $extractPath = "$env:TEMP\jolly-anrak-bundled-extract"
-                if (Test-Path $extractPath) { Remove-Item -Recurse -Force $extractPath -ErrorAction SilentlyContinue }
-                Expand-Archive -Path $LocalSource -DestinationPath $extractPath -Force
-                # `git archive` zips lay the files out at the archive root; a
-                # GitHub-style archive wraps them in one <repo>-<ref>/ dir. Handle
-                # both: descend into a lone wrapper directory, else move contents.
-                $entries = @(Get-ChildItem -Force -LiteralPath $extractPath)
-                if ($entries.Count -eq 1 -and $entries[0].PSIsContainer) {
-                    Move-Item -LiteralPath $entries[0].FullName -Destination $InstallDir -Force
-                } else {
-                    New-Item -ItemType Directory -Force -Path $InstallDir -ErrorAction SilentlyContinue | Out-Null
-                    # -Force on Get-ChildItem so dotfiles (.github, .gitignore) move too.
-                    Get-ChildItem -Force -LiteralPath $extractPath | Move-Item -Destination $InstallDir -Force
-                }
-                Remove-Item -Recurse -Force $extractPath -ErrorAction SilentlyContinue
+        Write-Info "Installing from bundled source: $LocalSource"
+        $srcItem = Get-Item -LiteralPath $LocalSource
+        if ($srcItem.PSIsContainer) {
+            if (-not (Test-RuntimeLayout $LocalSource)) {
+                throw "Bundled source at $LocalSource is missing pyproject.toml / hermes_cli"
             }
-
-            if (Test-Path (Join-Path $InstallDir "scripts")) {
-                # Make it a git repo so later updates work; origin uses the clean
-                # (tokenless) HTTPS URL.  Pulling updates from the internal repo
-                # will still need credentials, but install itself does not.
-                Push-Location $InstallDir
-                git -c windows.appendAtomically=false init 2>$null
-                git -c windows.appendAtomically=false config windows.appendAtomically false 2>$null
-                git remote add origin $RepoUrlHttps 2>$null
-                Pop-Location
-                Write-Success "Installed from bundled source (no network clone)"
-                return
+            Copy-RuntimeTree -Source $LocalSource -Destination $InstallDir
+        } else {
+            $extractPath = "$env:TEMP\jolly-anrak-bundled-extract"
+            if (Test-Path $extractPath) { Remove-Item -Recurse -Force $extractPath -ErrorAction SilentlyContinue }
+            Expand-Archive -Path $LocalSource -DestinationPath $extractPath -Force
+            $entries = @(Get-ChildItem -Force -LiteralPath $extractPath)
+            $unpacked = if ($entries.Count -eq 1 -and $entries[0].PSIsContainer) { $entries[0].FullName } else { $extractPath }
+            if (-not (Test-RuntimeLayout $unpacked)) {
+                throw "Bundled zip at $LocalSource did not contain a usable runtime"
             }
-            Write-Warn "Bundled source at $LocalSource missing expected layout; falling back to clone."
-        } catch {
-            Write-Warn "Bundled source install failed ($_); falling back to network clone."
+            Copy-RuntimeTree -Source $unpacked -Destination $InstallDir
+            Remove-Item -Recurse -Force $extractPath -ErrorAction SilentlyContinue
         }
+        if (-not (Test-RuntimeLayout $InstallDir)) {
+            throw "Bundled source copy did not produce a usable runtime at $InstallDir"
+        }
+        Write-Success "Installed from bundled source (no network clone)"
+        return
+    }
+
+    # Desktop shell already copied extraResources/bundled-runtime here.
+    if (Test-RuntimeLayout $InstallDir) {
+        Write-Success "Runtime already present at $InstallDir"
+        return
     }
 
     if (Test-Path $InstallDir) {

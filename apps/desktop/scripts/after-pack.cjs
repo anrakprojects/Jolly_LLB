@@ -20,10 +20,36 @@
  */
 
 const path = require('node:path')
+const fs = require('node:fs')
 
 const { stampExeIdentity } = require('./set-exe-identity.cjs')
 
+function bundledRuntimeDir(context) {
+  if (context.electronPlatformName === 'darwin') {
+    const name = context.packager?.appInfo?.productFilename || 'Jolly Anrak'
+    return path.join(context.appOutDir, `${name}.app`, 'Contents', 'Resources', 'bundled-runtime')
+  }
+  return path.join(context.appOutDir, 'resources', 'bundled-runtime')
+}
+
+function assertBundledRuntime(context) {
+  const bundled = bundledRuntimeDir(context)
+  const pyproject = path.join(bundled, 'pyproject.toml')
+  const winInstall = path.join(bundled, 'scripts', 'install.ps1')
+  const posixInstall = path.join(bundled, 'scripts', 'install.sh')
+  if (!fs.existsSync(pyproject) || (!fs.existsSync(winInstall) && !fs.existsSync(posixInstall))) {
+    throw new Error(
+      `[after-pack] bundled-runtime is missing from ${bundled}. ` +
+        'Run `npm run build` (it must stage apps/desktop/build/bundled-runtime) before packaging. ' +
+        'An installer without this folder will try `git fetch` on first launch and fail.'
+    )
+  }
+  console.log('[after-pack] bundled-runtime present at', bundled)
+}
+
 exports.default = async function afterPack(context) {
+  assertBundledRuntime(context)
+
   if (context.electronPlatformName !== 'win32') {
     return
   }
