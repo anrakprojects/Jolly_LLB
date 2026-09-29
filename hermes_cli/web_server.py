@@ -1813,6 +1813,148 @@ def get_auxiliary_models():
         raise HTTPException(status_code=500, detail="Failed to read auxiliary config")
 
 
+class ProviderActivation(BaseModel):
+    """Payload for POST /api/providers/{provider_id}/activate."""
+
+    model: str
+    # Optional key to save (to the provider's first api-key env var) before verifying.
+    api_key: str = ""
+
+
+def _verify_provider_credentials(provider_id: str, model: str) -> Dict[str, Any]:
+    """Send one tiny chat completion with the provider's resolved credentials.
+
+    Goes through the provider profile's own HTTP transport so provider wire
+    quirks (auth refresh, async tasks) apply exactly as they do at runtime.
+    """
+    import httpx
+    from hermes_cli.auth import resolve_api_key_provider_credentials
+    from providers import get_provider_profile
+
+    try:
+        creds = resolve_api_key_provider_credentials(provider_id)
+    except Exception as exc:
+        return {"ok": False, "reason": "unsupported", "message": str(exc)}
+    api_key = str(creds.get("api_key") or "").strip()
+    if not api_key:
+        return {"ok": False, "reason": "no_credentials", "message": "No API key or sign-in found."}
+
+    transport: Any = httpx.HTTPTransport()
+    profile = get_provider_profile(provider_id)
+    if profile is not None:
+        transport = profile.wrap_http_transport(transport)
+    body = {
+        "model": model,
+        "messages": [{"role": "user", "content": "Reply with the single word OK."}],
+        "max_tokens": 16,
+    }
+    try:
+        with httpx.Client(transport=transport, timeout=90.0) as client:
+            resp = client.post(
+                f"{str(creds.get('base_url') or '').rstrip('/')}/chat/completions",
+                json=body,
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+    except Exception as exc:
+        return {"ok": False, "reason": "network", "message": f"Could not reach the provider: {exc}"}
+
+    source = str(creds.get("source") or "")
+    if resp.status_code < 400:
+        try:
+            ok = bool(resp.json().get("choices"))
+        except Exception:
+            ok = False
+        if ok:
+            return {"ok": True, "reason": "ok", "source": source}
+        return {"ok": False, "reason": "error", "message": "Unexpected response from the provider.", "source": source}
+
+    try:
+        err = resp.json().get("error")
+        detail = err.get("message") if isinstance(err, dict) else (err or resp.text)
+    except Exception:
+        detail = resp.text
+    reason = {401: "unauthorized", 403: "unauthorized", 402: "plan", 429: "rate_limited"}.get(resp.status_code, "error")
+    return {
+        "ok": False,
+        "reason": reason,
+        "status": resp.status_code,
+        "message": str(detail or f"HTTP {resp.status_code}")[:500],
+        "source": source,
+    }
+
+
+@app.post("/api/providers/{provider_id}/activate")
+async def activate_provider(provider_id: str, body: ProviderActivation):
+    """Verify a provider's credentials and, if they work, make it primary.
+
+    The previous primary provider/model is kept as the first fallback so a
+    provider outage never dead-ends the chat. Applies to new sessions.
+    """
+    from hermes_cli.auth import PROVIDER_REGISTRY
+
+    provider_id = (provider_id or "").strip().lower()
+    model = (body.model or "").strip()
+    pconfig = PROVIDER_REGISTRY.get(provider_id)
+    if pconfig is None or pconfig.auth_type != "api_key":
+        raise HTTPException(status_code=400, detail=f"Unsupported provider: {provider_id}")
+    if not model:
+        raise HTTPException(status_code=400, detail="model is required")
+
+    api_key = (body.api_key or "").strip()
+    key_var = pconfig.api_key_env_vars[0] if pconfig.api_key_env_vars else ""
+    previous_key = None
+    if api_key:
+        if not key_var:
+            raise HTTPException(status_code=400, detail="Provider does not take an API key")
+        from hermes_cli.config import get_env_value
+
+        previous_key = get_env_value(key_var)
+        try:
+            save_env_value(key_var, api_key)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    result = await asyncio.to_thread(_verify_provider_credentials, provider_id, model)
+    if not result.get("ok"):
+        if api_key and result.get("reason") == "unauthorized":
+            # Don't leave a rejected key behind to shadow other credentials.
+            if previous_key:
+                save_env_value(key_var, previous_key)
+            else:
+                remove_env_value(key_var)
+        return result
+
+    cfg = load_config()
+    model_cfg = cfg.get("model")
+    if not isinstance(model_cfg, dict):
+        model_cfg = {"default": model_cfg} if isinstance(model_cfg, str) and model_cfg else {}
+    prev_provider = str(model_cfg.get("provider") or "").strip()
+    prev_model = str(model_cfg.get("default") or "").strip()
+    model_cfg["provider"] = provider_id
+    model_cfg["default"] = model
+    model_cfg.pop("context_length", None)
+    if model_cfg.get("base_url"):
+        model_cfg["base_url"] = ""
+    cfg["model"] = model_cfg
+
+    fallbacks = cfg.get("fallback_providers")
+    if not isinstance(fallbacks, list):
+        fallbacks = []
+    fallbacks = [
+        f for f in fallbacks
+        if not (isinstance(f, dict) and f.get("provider") == provider_id and f.get("model") == model)
+    ]
+    if prev_provider and prev_model and prev_provider != provider_id:
+        if not any(
+            isinstance(f, dict) and f.get("provider") == prev_provider and f.get("model") == prev_model
+            for f in fallbacks
+        ):
+            fallbacks.insert(0, {"provider": prev_provider, "model": prev_model})
+    cfg["fallback_providers"] = fallbacks
+    save_config(cfg)
+    return {**result, "provider": provider_id, "model": model}
+
+
 @app.post("/api/model/set")
 async def set_model_assignment(body: ModelAssignment):
     """Assign a model to the main slot or an auxiliary task slot.
@@ -6025,14 +6167,66 @@ class SkillToggle(BaseModel):
 
 @app.get("/api/skills")
 async def get_skills():
+    from agent.skill_utils import get_bundled_skill_names
     from tools.skills_tool import _find_all_skills
     from hermes_cli.skills_config import get_disabled_skills
     config = load_config()
     disabled = get_disabled_skills(config)
+    bundled = get_bundled_skill_names()
+    # Bundled skills outside the legal curation are already excluded here.
     skills = _find_all_skills(skip_disabled=True)
     for s in skills:
         s["enabled"] = s["name"] not in disabled
+        s["bundled"] = s["name"] in bundled
     return skills
+
+
+class CustomSkillCreate(BaseModel):
+    name: str
+    description: str
+    instructions: str
+    category: Optional[str] = "custom"
+
+
+@app.post("/api/skills/custom")
+async def create_custom_skill(body: CustomSkillCreate):
+    """Create a user-authored skill (e.g. a firm style guide or checklist).
+
+    Written to ``~/.hermes/skills/<category>/<name>/SKILL.md``. User-authored
+    skills are never curated out and are not marked agent-created, so the
+    background curator leaves them alone.
+    """
+    from tools.skill_manager_tool import _create_skill
+
+    name = (body.name or "").strip()
+    description = " ".join((body.description or "").split())
+    instructions = (body.instructions or "").strip()
+    category = (body.category or "").strip() or None
+    if not description:
+        raise HTTPException(status_code=400, detail="description is required")
+    if not instructions:
+        raise HTTPException(status_code=400, detail="instructions are required")
+
+    frontmatter = yaml.safe_dump(
+        {"name": name, "description": description},
+        default_flow_style=False,
+        sort_keys=False,
+        allow_unicode=True,
+        width=4096,
+    )
+    title = name.replace("-", " ").replace("_", " ").title()
+    content = f"---\n{frontmatter}---\n\n# {title}\n\n{instructions}\n"
+
+    result = await asyncio.to_thread(_create_skill, name, content, category)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error") or "Failed to create skill")
+    try:
+        from agent.prompt_builder import clear_skills_system_prompt_cache
+
+        clear_skills_system_prompt_cache(clear_snapshot=True)
+    except Exception:
+        pass
+    return {"ok": True, "name": name, "path": result.get("path")}
 
 
 @app.put("/api/skills/toggle")

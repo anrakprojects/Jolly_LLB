@@ -544,7 +544,7 @@ export default function App() {
                 >
                   Jolly
                   <br />
-                  LLB
+                  Anrak
                 </Typography>
               </div>
 

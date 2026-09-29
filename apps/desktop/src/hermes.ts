@@ -11,6 +11,7 @@ import type {
   CronJob,
   CronJobCreatePayload,
   CronJobUpdates,
+  CustomSkillPayload,
   ElevenLabsVoicesResponse,
   EnvVarInfo,
   HermesConfig,
@@ -32,8 +33,10 @@ import type {
   ProfileSetupCommand,
   ProfileSoul,
   ProfilesResponse,
+  ProviderActivationResult,
   SessionMessagesResponse,
   SessionSearchResponse,
+  SkillHubResult,
   SkillInfo,
   StatusResponse,
   ToolsetConfig,
@@ -60,6 +63,7 @@ export type {
   CronJobCreatePayload,
   CronJobSchedule,
   CronJobUpdates,
+  CustomSkillPayload,
   ElevenLabsVoice,
   ElevenLabsVoicesResponse,
   EnvVarInfo,
@@ -93,6 +97,7 @@ export type {
   SessionRuntimeInfo,
   SessionSearchResponse,
   SessionSearchResult,
+  SkillHubResult,
   SkillInfo,
   StatusResponse,
   ToolsetConfig,
@@ -349,6 +354,28 @@ export function toggleSkill(name: string, enabled: boolean): Promise<{ ok: boole
   })
 }
 
+export function createCustomSkill(body: CustomSkillPayload): Promise<{ ok: boolean; name: string; path?: string }> {
+  return window.hermesDesktop.api<{ ok: boolean; name: string; path?: string }>({
+    path: '/api/skills/custom',
+    method: 'POST',
+    body
+  })
+}
+
+export function searchSkillsHub(query: string, limit = 20): Promise<{ results: SkillHubResult[] }> {
+  return window.hermesDesktop.api<{ results: SkillHubResult[] }>({
+    path: `/api/skills/hub/search?q=${encodeURIComponent(query)}&limit=${limit}`
+  })
+}
+
+export function installSkillFromHub(identifier: string): Promise<ActionResponse> {
+  return window.hermesDesktop.api<ActionResponse>({
+    path: '/api/skills/hub/install',
+    method: 'POST',
+    body: { identifier }
+  })
+}
+
 export function getToolsets(): Promise<ToolsetInfo[]> {
   return window.hermesDesktop.api<ToolsetInfo[]>({
     path: '/api/tools/toolsets'
@@ -537,6 +564,16 @@ export interface RecommendedDefaultModel {
 export function getRecommendedDefaultModel(provider: string): Promise<RecommendedDefaultModel> {
   return window.hermesDesktop.api<RecommendedDefaultModel>({
     path: `/api/model/recommended-default?provider=${encodeURIComponent(provider)}`
+  })
+}
+
+// Verify a provider's credentials (optionally saving a pasted key first) and,
+// if they work, make it the primary model with the previous one as fallback.
+export function activateProvider(provider: string, model: string, apiKey = ''): Promise<ProviderActivationResult> {
+  return window.hermesDesktop.api<ProviderActivationResult>({
+    path: `/api/providers/${encodeURIComponent(provider)}/activate`,
+    method: 'POST',
+    body: { model, api_key: apiKey }
   })
 }
 

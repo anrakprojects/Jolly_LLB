@@ -16,6 +16,13 @@ setup screen:
                      ~/.hermes/auth.json ONCE as a bootstrap and Hermes refreshes
                      them itself from then on)
 
+Anrak Jolly (provider "anrak", model anraklegal/jolly) is the app's own model.
+It is never auto-selected here — the onboarding overlay activates it after a
+live check (POST /api/providers/anrak/activate). Once it is the configured
+primary and still has credentials (ANRAK_JOLLY_API_KEY or the Anrak Legal
+sign-in token), it is kept, and the ChatGPT/Gemini/Claude logins become its
+fallback ladder.
+
 Health, not presence: "logged in" is judged against the store the runtime
 actually uses. For ChatGPT that is Hermes' OWN token store (~/.hermes/auth.json)
 — OpenAI rotates refresh tokens, so a copy of the CLI's token dies the moment
@@ -163,6 +170,33 @@ def gemini_login():
     """True if Hermes' own Google OAuth store has a usable login (written by
     the in-app Google sign-in or `hermes auth add google-gemini-cli`)."""
     data = _read_json(GEMINI_CREDS) or {}
+    return bool(data.get("access_token") or data.get("refresh_token"))
+
+
+JOLLY_MODEL = "anraklegal/jolly"
+JOLLY_TOKENS = os.path.join(HERMES_HOME, "mcp-tokens", "Anrak_Legal.json")
+
+
+def _env_file_value(key):
+    try:
+        with open(ENV_PATH, "r", encoding="utf-8") as handle:
+            for line in handle:
+                stripped = line.strip()
+                if stripped.startswith("export "):
+                    stripped = stripped[len("export "):]
+                if stripped.startswith(key + "="):
+                    return stripped[len(key) + 1:].strip().strip("'\"")
+    except Exception:
+        pass
+    return ""
+
+
+def jolly_login():
+    """True if Anrak Jolly has a credential: a pasted API key, or the Anrak
+    Legal sign-in (MCP connector OAuth token, refreshable)."""
+    if (os.environ.get("ANRAK_JOLLY_API_KEY") or _env_file_value("ANRAK_JOLLY_API_KEY")).strip():
+        return True
+    data = _read_json(JOLLY_TOKENS) or {}
     return bool(data.get("access_token") or data.get("refresh_token"))
 
 
@@ -385,7 +419,16 @@ def fallback_ladder(primary, claude, gemini, codex, chatgpt_model):
     entries matching the failing provider+model.
     """
     entries = []
-    if primary == "anthropic":
+    if primary == "anrak":
+        if codex:
+            entries.append({"provider": "openai-codex", "model": chatgpt_model})
+        if gemini:
+            entries.append({"provider": "google-gemini-cli", "model": GEMINI_MODEL})
+        if claude:
+            entries.append({"provider": "anthropic", "model": CLAUDE_MODEL})
+            for model in CLAUDE_DOWNGRADE_MODELS:
+                entries.append({"provider": "anthropic", "model": model})
+    elif primary == "anthropic":
         entries.append({"provider": "anthropic", "model": CLAUDE_DOWNGRADE_MODELS[0]})
         if codex:
             entries.append({"provider": "openai-codex", "model": chatgpt_model})
@@ -449,6 +492,9 @@ def main():
             print("AUTOCONFIG=" + token)
 
     # Idempotent: already on a supported provider whose auth is HEALTHY.
+    if provider == "anrak" and jolly_login():
+        wire_skip("anrak", "skip-jolly")
+        return
     if provider == "openai-codex" and codex:
         if codex_status == "import":
             # Revive Hermes' dead/absent store from a fresher CLI login.
@@ -475,7 +521,7 @@ def main():
         )
         text = heal_rejected_codex_models(text, chatgpt_model)
         _atomic_write(CONFIG_PATH, text)
-        switched = "+switched" if provider in ("anthropic", "google-gemini-cli") else ""
+        switched = "+switched" if provider in ("anrak", "anthropic", "google-gemini-cli") else ""
         print("AUTOCONFIG=chatgpt" + switched)
         return
     if gemini:
@@ -485,7 +531,7 @@ def main():
         )
         text = heal_rejected_codex_models(text, chatgpt_model)
         _atomic_write(CONFIG_PATH, text)
-        switched = "+switched" if provider in ("anthropic", "openai-codex") else ""
+        switched = "+switched" if provider in ("anrak", "anthropic", "openai-codex") else ""
         print("AUTOCONFIG=gemini" + switched)
         return
     if claude:
@@ -496,14 +542,14 @@ def main():
         text = heal_rejected_codex_models(text, chatgpt_model)
         _atomic_write(CONFIG_PATH, text)
         clear_env_keys(["ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN"])
-        switched = "+switched" if provider in ("openai-codex", "google-gemini-cli") else ""
+        switched = "+switched" if provider in ("anrak", "openai-codex", "google-gemini-cli") else ""
         print("AUTOCONFIG=claude+fallback-ladder" + switched)
         return
 
     # No login is usable. If a supported provider is configured, its auth has
     # died — the runtime's setup.runtime_check will report it and the shell
     # surfaces the sign-in screen; we just name the state for the logs.
-    if provider in ("anthropic", "openai-codex", "google-gemini-cli"):
+    if provider in ("anrak", "anthropic", "openai-codex", "google-gemini-cli"):
         print("AUTOCONFIG=relogin-required")
     else:
         print("AUTOCONFIG=none")

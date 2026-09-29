@@ -532,7 +532,15 @@ def _is_skill_disabled(name: str, platform: str = None) -> bool:
     1. Explicit ``platform`` argument
     2. ``HERMES_PLATFORM`` environment variable
     3. ``HERMES_SESSION_PLATFORM`` from gateway session context
+
+    Bundled skills curated out of the legal set always count as disabled.
     """
+    try:
+        from agent.skill_utils import get_curated_out_skill_names
+        if name in get_curated_out_skill_names():
+            return True
+    except Exception:
+        pass
     try:
         from hermes_cli.config import load_config
         config = load_config()
@@ -553,18 +561,23 @@ def _find_all_skills(*, skip_disabled: bool = False) -> List[Dict[str, Any]]:
     Args:
         skip_disabled: If True, return ALL skills regardless of disabled
             state (used by ``hermes skills`` config UI). Default False
-            filters out disabled skills.
+            filters out disabled skills. Bundled skills curated out of the
+            legal set are excluded either way — they are not toggleable.
 
     Returns:
         List of skill metadata dicts (name, description, category).
     """
-    from agent.skill_utils import get_external_skills_dirs, iter_skill_index_files
+    from agent.skill_utils import (
+        get_curated_out_skill_names,
+        get_external_skills_dirs,
+        iter_skill_index_files,
+    )
 
     skills = []
     seen_names: set = set()
 
     # Load disabled set once (not per-skill)
-    disabled = set() if skip_disabled else _get_disabled_skill_names()
+    disabled = get_curated_out_skill_names() if skip_disabled else _get_disabled_skill_names()
 
     # Scan local dir first, then external dirs (local takes precedence)
     dirs_to_scan = []

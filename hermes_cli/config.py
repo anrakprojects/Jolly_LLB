@@ -1625,6 +1625,17 @@ DEFAULT_CONFIG = {
         # External hub installs (trusted/community sources) are always
         # scanned regardless of this setting.
         "guard_agent_created": False,
+        # Legal curation of the bundled skill set.  Jolly Anrak only exposes
+        # the legal-relevant bundled skills (agent.skill_utils.
+        # LEGAL_BUNDLED_SKILLS); every other bundled skill is hidden from the
+        # skills selector, the prompt index, and skill_view.  Skills users
+        # add themselves (hub installs, agent-created, external_dirs) are
+        # never curated.  Set enabled: false to expose the full upstream
+        # bundle, or list extra bundled names in allow_bundled.
+        "curation": {
+            "enabled": True,
+            "allow_bundled": [],
+        },
     },
 
     # Curator — background skill maintenance.
@@ -2291,6 +2302,13 @@ REQUIRED_ENV_VARS = {}
 # Optional environment variables that enhance functionality
 OPTIONAL_ENV_VARS = {
     # ── Provider (handled in provider selection, not shown in checklists) ──
+    "ANRAK_JOLLY_API_KEY": {
+        "description": "Anrak Jolly API key (optional when signed in with an Anrak account that includes Jolly)",
+        "prompt": "Anrak Jolly API key",
+        "url": "https://developers.anrak.legal/developers/jolly",
+        "password": True,
+        "category": "provider",
+    },
     "NOUS_BASE_URL": {
         "description": "Nous Portal base URL override",
         "prompt": "Nous Portal base URL (leave empty for default)",

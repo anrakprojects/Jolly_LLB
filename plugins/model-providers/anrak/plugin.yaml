@@ -1,0 +1,5 @@
+name: anrak-provider
+kind: model-provider
+version: 1.0.0
+description: Anrak Jolly (anraklegal/jolly) — AnrakLegal's multimodal legal model
+author: AnrakLegal

@@ -1,7 +1,12 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { $desktopOnboarding, type DesktopOnboardingState, type OnboardingContext } from '@/store/onboarding'
+import {
+  $desktopOnboarding,
+  $jollyAccess,
+  type DesktopOnboardingState,
+  type OnboardingContext
+} from '@/store/onboarding'
 
 import { DesktopOnboardingOverlay } from './desktop-onboarding-overlay'
 
@@ -12,6 +17,7 @@ function setOnboarding(overrides: Partial<DesktopOnboardingState> = {}) {
     configured: false,
     reason: 'Sign in with your Anrak Legal account.',
     requested: false,
+    stage: 'signin',
     ...overrides
   } satisfies DesktopOnboardingState)
 }
@@ -21,8 +27,10 @@ afterEach(() => {
   $desktopOnboarding.set({
     configured: null,
     reason: null,
-    requested: false
+    requested: false,
+    stage: 'signin'
   })
+  $jollyAccess.set({ step: 'idle' })
   vi.restoreAllMocks()
 })
 
@@ -84,5 +92,16 @@ describe('DesktopOnboardingOverlay', () => {
     fireEvent.click(screen.getByRole('button', { name: /sign in with anrak legal/i }))
 
     expect(await screen.findByText(/waiting for you to finish signing in/i)).toBeTruthy()
+  })
+
+  it('offers a Jolly API key fallback when sign-in access fails', () => {
+    setOnboarding({ configured: false, stage: 'jolly' })
+    $jollyAccess.set({ step: 'needs_key', message: 'Your Anrak sign-in does not include Jolly access yet.' })
+    render(<DesktopOnboardingOverlay enabled onCompleted={ctx.onCompleted} requestGateway={ctx.requestGateway} />)
+
+    expect(screen.getByText('Set up the Jolly model')).toBeTruthy()
+    expect(screen.getByPlaceholderText(/paste your jolly api key/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /retry sign-in access/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /save key/i })).toBeTruthy()
   })
 })
