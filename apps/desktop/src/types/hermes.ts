@@ -185,6 +185,17 @@ export interface ModelInfoResponse {
   provider: string
 }
 
+export interface ProviderActivationResult {
+  message?: string
+  model?: string
+  ok: boolean
+  provider?: string
+  reason: 'error' | 'network' | 'no_credentials' | 'ok' | 'plan' | 'rate_limited' | 'unauthorized' | 'unsupported'
+  /** Where the verified credential came from, e.g. "ANRAK_JOLLY_API_KEY" or "profile:anrak" (Anrak sign-in). */
+  source?: string
+  status?: number
+}
+
 export interface ModelPricing {
   /** Formatted $/Mtok input price, e.g. "$3.00", or "free", or "" if unknown. */
   input: string
@@ -441,10 +452,29 @@ export interface ProfilesResponse {
 }
 
 export interface SkillInfo {
+  /** Shipped with the app (legal-curated bundle) vs. added by the user. */
+  bundled?: boolean
   category: string
   description: string
   enabled: boolean
   name: string
+}
+
+export interface CustomSkillPayload {
+  category?: string
+  description: string
+  instructions: string
+  name: string
+}
+
+export interface SkillHubResult {
+  description: string
+  identifier: string
+  name: string
+  repo?: string | null
+  source: string
+  tags: string[]
+  trust_level: string
 }
 
 export interface ToolsetInfo {

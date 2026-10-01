@@ -598,6 +598,17 @@ def _resolve_api_key_provider_secret(
     except Exception:
         pass
 
+    # Fallback: provider-specific secret (e.g. reuse an existing OAuth sign-in).
+    try:
+        from providers import get_provider_profile
+        profile = get_provider_profile(provider_id)
+        if profile is not None:
+            key = str(profile.resolve_fallback_secret() or "").strip()
+            if has_usable_secret(key):
+                return key, f"profile:{provider_id}"
+    except Exception:
+        pass
+
     return "", ""
 
 

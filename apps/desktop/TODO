@@ -10,6 +10,6 @@
 
 ✔ Product name Jolly LLB → Jolly Anrak @done(26-08-17 10:38)
 
-☐ Curate legal-only default skills; let users add their own — legal-provisioner.cjs, hermes_cli/config.py (skills.disabled), src/app/skills/index.tsx, agent/skill_utils.py
+✔ Curate legal-only default skills; let users add their own — agent/skill_utils.py (LEGAL_BUNDLED_SKILLS), hermes_cli/config.py (skills.curation), src/app/skills/ @done(26-09-29 01:04)
 
 ☐ Legal-centric system prompt (swarms, long docs) — agent/prompt_builder.py, electron/legal-soul.md, electron/legal-skill.md, tools/delegate_tool.py

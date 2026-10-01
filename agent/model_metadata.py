@@ -137,6 +137,9 @@ MINIMUM_CONTEXT_LENGTH = 64_000
 # all miss. Replaced the previous 80+ entry dict.
 # For provider-specific context lengths, models.dev is the primary source.
 DEFAULT_CONTEXT_LENGTHS = {
+    # Anrak Jolly — window not published; conservative so compression
+    # kicks in before the server rejects long legal documents.
+    "anraklegal/jolly": 128000,
     # Anthropic Claude 4.6 (1M context) — bare IDs only to avoid
     # fuzzy-match collisions (e.g. "anthropic/claude-sonnet-4" is a
     # substring of "anthropic/claude-sonnet-4.6").

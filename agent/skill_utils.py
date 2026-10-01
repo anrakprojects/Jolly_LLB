@@ -172,6 +172,22 @@ def skill_matches_platform(frontmatter: Dict[str, Any]) -> bool:
 # ── Disabled skills ───────────────────────────────────────────────────────
 
 
+def _read_skills_config() -> Dict[str, Any]:
+    """Return the raw ``skills:`` mapping from config.yaml ({} if absent)."""
+    config_path = get_config_path()
+    if not config_path.exists():
+        return {}
+    try:
+        parsed = yaml_load(config_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        logger.debug("Could not read skill config %s: %s", config_path, e)
+        return {}
+    if not isinstance(parsed, dict):
+        return {}
+    skills_cfg = parsed.get("skills")
+    return skills_cfg if isinstance(skills_cfg, dict) else {}
+
+
 def get_disabled_skill_names(platform: str | None = None) -> Set[str]:
     """Read disabled skill names from config.yaml.
 
@@ -181,23 +197,16 @@ def get_disabled_skill_names(platform: str | None = None) -> Set[str]:
             ``HERMES_SESSION_PLATFORM`` env vars.  Falls back to the
             global disabled list when no platform is determined.
 
+    Bundled skills curated out of the legal set (see
+    ``get_curated_out_skill_names``) are always included.
+
     Reads the config file directly (no CLI config imports) to stay
     lightweight.
     """
-    config_path = get_config_path()
-    if not config_path.exists():
-        return set()
-    try:
-        parsed = yaml_load(config_path.read_text(encoding="utf-8"))
-    except Exception as e:
-        logger.debug("Could not read skill config %s: %s", config_path, e)
-        return set()
-    if not isinstance(parsed, dict):
-        return set()
-
-    skills_cfg = parsed.get("skills")
-    if not isinstance(skills_cfg, dict):
-        return set()
+    skills_cfg = _read_skills_config()
+    curated_out = _curated_out_from_config(skills_cfg)
+    if not skills_cfg:
+        return curated_out
 
     from gateway.session_context import get_session_env
     resolved_platform = (
@@ -210,8 +219,87 @@ def get_disabled_skill_names(platform: str | None = None) -> Set[str]:
             resolved_platform
         )
         if platform_disabled is not None:
-            return _normalize_string_set(platform_disabled)
-    return _normalize_string_set(skills_cfg.get("disabled"))
+            return _normalize_string_set(platform_disabled) | curated_out
+    return _normalize_string_set(skills_cfg.get("disabled")) | curated_out
+
+
+# ── Legal curation of bundled skills ─────────────────────────────────────
+
+# Jolly Anrak is a legal-work app.  The upstream bundle ships ~90 skills
+# (games, music, ML ops, smart-home, ...) that have no place in a lawyer's
+# skill selector or system prompt.  Only the bundled skills named here stay
+# visible; every other *bundled* skill is hidden and treated as disabled.
+# Skills the user adds themselves (hub installs, agent-created, the
+# provisioned ``anraklegal-paralegal`` skill, external dirs) are never
+# affected — curation only applies to names in the bundled manifest.
+#
+# Config (``skills.curation`` in config.yaml):
+#   enabled: false        -> show the full upstream bundle again
+#   allow_bundled: [name] -> keep extra bundled skills on top of this set
+LEGAL_BUNDLED_SKILLS = frozenset(
+    (
+        # Documents: PDFs, scans, decks
+        "nano-pdf",
+        "ocr-and-documents",
+        "powerpoint",
+        # Mail, calendar, drive, notes, matter tracking
+        "google-workspace",
+        "himalaya",
+        "notion",
+        "airtable",
+        "obsidian",
+        "apple-notes",
+        "apple-reminders",
+        "teams-meeting-pipeline",
+        # Research & knowledge bases
+        "llm-wiki",
+        "blogwatcher",
+        # Drafting
+        "humanizer",
+        "plan",
+        # Connectors / automation (AnrakLegal MCP, computer use)
+        "native-mcp",
+        "macos-computer-use",
+        # Multi-agent work queue (loaded by the kanban dispatcher/swarm)
+        "kanban-orchestrator",
+        "kanban-worker",
+        # Self-configuration help
+        "hermes-agent",
+    )
+)
+
+
+def get_bundled_skill_names() -> Set[str]:
+    """Names of skills seeded from the repo bundle (``.bundled_manifest``)."""
+    manifest = get_skills_dir() / ".bundled_manifest"
+    try:
+        lines = manifest.read_text(encoding="utf-8").splitlines()
+    except (OSError, IOError):
+        return set()
+    names = set()
+    for line in lines:
+        name = line.partition(":")[0].strip()
+        if name:
+            names.add(name)
+    return names
+
+
+def _curated_out_from_config(skills_cfg: Dict[str, Any]) -> Set[str]:
+    curation = skills_cfg.get("curation")
+    if not isinstance(curation, dict):
+        curation = {}
+    if curation.get("enabled", True) is False:
+        return set()
+    bundled = get_bundled_skill_names()
+    if not bundled:
+        return set()
+    allowed = LEGAL_BUNDLED_SKILLS | _normalize_string_set(curation.get("allow_bundled"))
+    return bundled - allowed
+
+
+def get_curated_out_skill_names() -> Set[str]:
+    """Bundled skills hidden by the legal curation (see ``LEGAL_BUNDLED_SKILLS``)."""
+    return _curated_out_from_config(_read_skills_config())
 
 
 def _normalize_string_set(values) -> Set[str]:

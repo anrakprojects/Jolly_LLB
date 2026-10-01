@@ -129,6 +129,27 @@ class ProviderProfile:
         """
         return {}, {}
 
+    def resolve_fallback_secret(self) -> str:
+        """Return a credential to use when none of ``env_vars`` holds a key.
+
+        Called by ``hermes_cli.auth`` credential resolution after env vars
+        and the credential pool come up empty. Override for providers whose
+        users may authenticate some other way (e.g. an existing OAuth
+        sign-in) instead of pasting an API key. Must be cheap and must not
+        raise. Default: no fallback.
+        """
+        return ""
+
+    def wrap_http_transport(self, transport: Any) -> Any:
+        """Wrap the ``httpx`` transport used by the main agent's API client.
+
+        Called once per OpenAI client construction with the keepalive
+        ``httpx.HTTPTransport``. Override for providers whose wire protocol
+        needs request/response adaptation below the SDK (async task polling,
+        auth refresh, non-SSE streaming). Default: pass-through.
+        """
+        return transport
+
     def get_max_tokens(self, model: str | None) -> int | None:
         """Return the default max_tokens cap for *model*.
 

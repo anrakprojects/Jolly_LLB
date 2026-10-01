@@ -17,8 +17,13 @@ import { asText, includesQuery, prettyName, toolNames } from '../settings/helper
 import { ToolsetConfigPanel } from '../settings/toolset-config-panel'
 import type { SetStatusbarItemGroup } from '../shell/statusbar-controls'
 
+import { AddSkillDialog } from './add-skill-dialog'
+
 const SKILLS_MODES = ['skills', 'toolsets'] as const
 type SkillsMode = (typeof SKILLS_MODES)[number]
+
+// Pseudo-category: skills the user added (not part of the curated legal bundle).
+const YOURS = '__yours__'
 
 function categoryFor(skill: SkillInfo): string {
   return asText(skill.category) || 'general'
@@ -29,7 +34,7 @@ function filteredSkills(skills: SkillInfo[], query: string, category: string | n
 
   return skills
     .filter(skill => {
-      if (category && categoryFor(skill) !== category) {
+      if (category === YOURS ? skill.bundled !== false : category && categoryFor(skill) !== category) {
         return false
       }
 
@@ -76,6 +81,7 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
   const [savingSkill, setSavingSkill] = useState<string | null>(null)
   const [savingToolset, setSavingToolset] = useState<string | null>(null)
   const [expandedToolset, setExpandedToolset] = useState<string | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
 
   const refreshCapabilities = useCallback(async () => {
     setRefreshing(true)
@@ -137,6 +143,7 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
   }, [visibleSkills])
 
   const totalSkills = skills?.length || 0
+  const yourSkills = skills?.filter(skill => skill.bundled === false).length || 0
   const enabledToolsets = toolsets?.filter(toolset => toolset.enabled).length || 0
 
   async function handleToggleSkill(skill: SkillInfo, enabled: boolean) {
@@ -162,8 +169,9 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
 
     try {
       await toggleToolset(toolset.name, enabled)
-      setToolsets(current =>
-        current?.map(row => (row.name === toolset.name ? { ...row, enabled, available: enabled } : row)) ?? current
+      setToolsets(
+        current =>
+          current?.map(row => (row.name === toolset.name ? { ...row, enabled, available: enabled } : row)) ?? current
       )
       notify({
         kind: 'success',
@@ -195,6 +203,14 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
               <TextTab active={activeCategory === null} onClick={() => setActiveCategory(null)}>
                 All <TextTabMeta>{totalSkills}</TextTabMeta>
               </TextTab>
+              {yourSkills > 0 && (
+                <TextTab
+                  active={activeCategory === YOURS}
+                  onClick={() => setActiveCategory(activeCategory === YOURS ? null : YOURS)}
+                >
+                  Yours <TextTabMeta>{yourSkills}</TextTabMeta>
+                </TextTab>
+              )}
               {categories.map(category => (
                 <TextTab
                   active={activeCategory === category.key}
@@ -211,18 +227,31 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
       onSearchChange={setQuery}
       searchPlaceholder={mode === 'skills' ? 'Search skills...' : 'Search toolsets...'}
       searchTrailingAction={
-        <Button
-          aria-label={refreshing ? 'Refreshing skills' : 'Refresh skills'}
-          className="text-(--ui-text-tertiary) hover:bg-transparent hover:text-foreground"
-          disabled={refreshing}
-          onClick={() => void refreshCapabilities()}
-          size="icon-xs"
-          title={refreshing ? 'Refreshing skills' : 'Refresh skills'}
-          type="button"
-          variant="ghost"
-        >
-          <Codicon name="refresh" size="0.875rem" spinning={refreshing} />
-        </Button>
+        <>
+          <Button
+            aria-label="Add skill"
+            className="text-(--ui-text-tertiary) hover:bg-transparent hover:text-foreground"
+            onClick={() => setAddOpen(true)}
+            size="icon-xs"
+            title="Add skill"
+            type="button"
+            variant="ghost"
+          >
+            <Codicon name="add" size="0.875rem" />
+          </Button>
+          <Button
+            aria-label={refreshing ? 'Refreshing skills' : 'Refresh skills'}
+            className="text-(--ui-text-tertiary) hover:bg-transparent hover:text-foreground"
+            disabled={refreshing}
+            onClick={() => void refreshCapabilities()}
+            size="icon-xs"
+            title={refreshing ? 'Refreshing skills' : 'Refresh skills'}
+            type="button"
+            variant="ghost"
+          >
+            <Codicon name="refresh" size="0.875rem" spinning={refreshing} />
+          </Button>
+        </>
       }
       searchValue={query}
     >
@@ -231,7 +260,10 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
       ) : mode === 'skills' ? (
         <div className="h-full overflow-y-auto px-4 py-3">
           {visibleSkills.length === 0 ? (
-            <EmptyState description="Try a broader search or different category." title="No skills found" />
+            <EmptyState
+              description="Try a broader search, or add your own skill with the + button."
+              title="No skills found"
+            />
           ) : (
             <div className="space-y-4">
               {skillGroups.map(([category, list]) => (
@@ -246,7 +278,10 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
                         key={skill.name}
                       >
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-medium">{skill.name}</div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate text-sm font-medium">{skill.name}</span>
+                            {skill.bundled === false && <StatusPill active>Yours</StatusPill>}
+                          </div>
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             {asText(skill.description) || 'No description.'}
                           </p>
@@ -288,7 +323,9 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
                             aria-expanded={expanded}
                             aria-label={`Configure ${label}`}
                             className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                            onClick={() => setExpandedToolset(current => (current === toolset.name ? null : toolset.name))}
+                            onClick={() =>
+                              setExpandedToolset(current => (current === toolset.name ? null : toolset.name))
+                            }
                             type="button"
                           >
                             <StatusPill active={toolset.configured}>
@@ -327,6 +364,7 @@ export function SkillsView({ setStatusbarItemGroup: _setStatusbarItemGroup, ...p
           )}
         </div>
       )}
+      <AddSkillDialog onAdded={refreshCapabilities} onOpenChange={setAddOpen} open={addOpen} />
     </PageSearchShell>
   )
 }

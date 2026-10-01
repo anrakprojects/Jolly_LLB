@@ -1400,14 +1400,53 @@ class TestNewEndpoints:
                 "description": "active",
                 "category": "demo",
                 "enabled": True,
+                "bundled": False,
             },
             {
                 "name": "disabled-skill",
                 "description": "disabled",
                 "category": "demo",
                 "enabled": False,
+                "bundled": False,
             },
         ]
+
+    def test_create_custom_skill_writes_skill_md(self, monkeypatch, tmp_path):
+        import tools.skill_manager_tool as skill_manager_tool
+
+        skills_dir = tmp_path / "skills"
+        monkeypatch.setattr(skill_manager_tool, "SKILLS_DIR", skills_dir)
+
+        resp = self.client.post(
+            "/api/skills/custom",
+            json={
+                "name": "nda-review",
+                "description": "Review NDAs: carve-outs, term, remedies.",
+                "instructions": "## Procedure\n1. Identify the parties.",
+            },
+        )
+
+        assert resp.status_code == 200, resp.text
+        skill_md = skills_dir / "custom" / "nda-review" / "SKILL.md"
+        text = skill_md.read_text(encoding="utf-8")
+        from agent.skill_utils import parse_frontmatter
+
+        frontmatter, body = parse_frontmatter(text)
+        assert frontmatter["name"] == "nda-review"
+        assert frontmatter["description"] == "Review NDAs: carve-outs, term, remedies."
+        assert "1. Identify the parties." in body
+
+    def test_create_custom_skill_rejects_invalid_name(self, monkeypatch, tmp_path):
+        import tools.skill_manager_tool as skill_manager_tool
+
+        monkeypatch.setattr(skill_manager_tool, "SKILLS_DIR", tmp_path / "skills")
+
+        resp = self.client.post(
+            "/api/skills/custom",
+            json={"name": "Bad Name!", "description": "x", "instructions": "y"},
+        )
+
+        assert resp.status_code == 400
 
     def test_toolsets_list(self):
         resp = self.client.get("/api/tools/toolsets")

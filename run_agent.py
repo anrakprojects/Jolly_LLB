@@ -2950,7 +2950,7 @@ class AIAgent:
         return False
 
     @staticmethod
-    def _build_keepalive_http_client(base_url: str = "") -> Any:
+    def _build_keepalive_http_client(base_url: str = "", provider: str = "") -> Any:
         try:
             import httpx as _httpx
             import socket as _socket
@@ -2967,6 +2967,20 @@ class AIAgent:
             # Explicitly read proxy settings while still honoring NO_PROXY for
             # loopback / local endpoints such as a locally hosted sub2api.
             _proxy = _get_proxy_for_base_url(base_url)
+            if provider:
+                # Provider-level wire adaptation (ProviderProfile.wrap_http_transport).
+                # The proxy moves onto the wrapped transport itself: a Client-level
+                # ``proxy=`` mounts a separate transport that would bypass the wrapper.
+                try:
+                    from providers import get_provider_profile
+                    _profile = get_provider_profile(provider)
+                    if _profile is not None:
+                        _base = _httpx.HTTPTransport(socket_options=_sock_opts, proxy=_proxy)
+                        _wrapped = _profile.wrap_http_transport(_base)
+                        if _wrapped is not _base:
+                            return _httpx.Client(transport=_wrapped)
+                except Exception:
+                    logger.debug("wrap_http_transport failed for %s", provider, exc_info=True)
             return _httpx.Client(
                 transport=_httpx.HTTPTransport(socket_options=_sock_opts),
                 proxy=_proxy,

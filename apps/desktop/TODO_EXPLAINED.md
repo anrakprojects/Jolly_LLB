@@ -85,6 +85,25 @@ Actionable pointers mapped to code. `@high` = ship blocker.
 
 ---
 
+## 4b. ✔ Anrak Jolly is the default model
+
+**Status:** Implemented; needs one live check against `anrak.legal` (see below).
+
+- **Provider plugin** — `plugins/model-providers/anrak/` registers provider `anrak`, model `anraklegal/jolly`, base `https://anrak.legal/api/jolly` (override: `ANRAK_JOLLY_BASE_URL`). Listed first in `hermes_cli/models.py` `CANONICAL_PROVIDERS`.
+- **Credentials** — `ANRAK_JOLLY_API_KEY` first; otherwise the Anrak Legal sign-in token (`mcp-tokens/Anrak_Legal.json`, refreshed on demand) via the generic `ProviderProfile.resolve_fallback_secret()` hook in `hermes_cli/auth.py`. Nothing is baked into the app.
+- **Wire protocol** — `JollyTransport` (generic `ProviderProfile.wrap_http_transport()` hook, applied in `run_agent._build_keepalive_http_client`): polls drafting `poll_url` tasks, replays `jolly.route` as `task` on tool follow-ups (full history kept), re-emits JSON answers as SSE for streaming requests, retries without `stream` if refused.
+- **Activation** — `POST /api/providers/{id}/activate` (web_server.py) sends one tiny test request, then makes the provider primary and keeps the previous primary as the first `fallback_providers` entry. A rejected pasted key is removed again.
+- **Onboarding** — after Anrak sign-in, `src/store/onboarding.ts` activates Jolly via the sign-in token; if that fails, the overlay offers "paste a Jolly API key", "retry sign-in access", or "use another model for now".
+- **Launch** — `electron/auto_provider.py` keeps `anrak` primary while it has credentials and wires ChatGPT/Gemini/Claude logins as its fallback ladder.
+
+**Unverified (docs don't specify; sandbox couldn't reach the API):**
+1. Whether the Anrak Legal MCP OAuth token is accepted by `/api/jolly` (managed access). If not, users get the paste-key step — works either way.
+2. Exact shape of the drafting task / poll response and of `jolly.route` (parser accepts several shapes; see `_find_completion` / `_task_text`).
+3. Whether Jolly supports SSE streaming natively (both paths handled).
+4. Real context window (set to a conservative 128k in `agent/model_metadata.py`).
+
+---
+
 ## 5. OAuth for ChatGPT (Codex) and Claude — reliable provider login
 
 **Problem:** Users always have ChatGPT Codex or Claude. Device-code OAuth exists but is flaky.
@@ -116,24 +135,17 @@ Actionable pointers mapped to code. `@high` = ship blocker.
 
 ---
 
-## 7. Legal-focused skills & toolsets curation
+## 7. ✔ Legal-focused skills curation
 
-**Problem:** Bundled skills include non-legal items (Discord, game pass, etc.). Lawyers need a curated default + ability to add their own.
+**Status:** Done @26-09-29 01:04.
 
-**Pointers:**
+- **Allowlist** — `agent/skill_utils.py` `LEGAL_BUNDLED_SKILLS`. Bundled skills (names in `~/.hermes/skills/.bundled_manifest`) outside it are folded into `get_disabled_skill_names()`, so they're hidden from the prompt index, `skills_list`, `skill_view`, slash commands, and the Skills page (`_find_all_skills` drops them even when listing disabled skills).
+- **User skills are never curated** — hub installs, agent-created skills, `anraklegal-paralegal`, and `external_dirs` are not in the bundled manifest.
+- **Config** — `skills.curation.enabled: false` shows the full upstream bundle; `skills.curation.allow_bundled: [name]` re-adds individual bundled skills (`hermes_cli/config.py` `DEFAULT_CONFIG`).
+- **Add your own** — Skills page `+` button → `src/app/skills/add-skill-dialog.tsx`: write a skill (`POST /api/skills/custom`) or install from the hub (`/api/skills/hub/*`). User skills get a "Yours" filter/pill (`bundled` flag on `GET /api/skills`).
+- **No provisioner change needed** — curation is the default, so `legal-provisioner.cjs` doesn't write anything.
 
-- **Skills UI** — `src/app/skills/index.tsx` (lists all skills/toolsets from backend; no legal filter yet).
-- **Disable mechanism** — `agent/skill_utils.py` `get_disabled_skill_names()`; persisted in `config.yaml` `skills.disabled`; honored by `agent/prompt_builder.py` and `tools/skills_tool.py`.
-- **Bundled vs optional** — `skills/` (default) vs `optional-skills/` (explicit install); see `tools/skills_hub.py`.
-- **Legal skill template** — `electron/legal-skill.md` → provisioned as `anraklegal-paralegal` by `electron/legal-provisioner.cjs`.
-- **Default config** — `hermes_cli/config.py` `DEFAULT_CONFIG` (add desktop/legal profile defaults for `skills.disabled` and `tools.*.disabled`).
-
-**Next steps:**
-
-1. Ship a `legal` profile distribution (or desktop-specific defaults) that disables non-legal bundled skills/toolsets on first provision.
-2. Extend `legal-provisioner.cjs` (or install stage) to write default `skills.disabled` list.
-3. Allow user-installed skills via existing `~/.hermes/skills/` + Skills UI toggle — keep bundled legal set as allowlist or opt-out list (product decision).
-4. Audit `optional-skills/` categories for anything that should never appear for legal tenants.
+**Still open:** toolset curation (`tools.*.disabled` defaults for non-legal toolsets like discord/spotify/yuanbao).
 
 ---
 
